@@ -7,6 +7,7 @@ export default function Dashboard() {
   const [url, setUrl] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
+  // Mock data for demonstration
   const stats = {
     totalKeywords: 1247,
     averagePosition: 4.8,
@@ -15,15 +16,14 @@ export default function Dashboard() {
   };
 
   const handleAnalyze = () => {
-    // Use a default URL if none provided
-    const targetUrl = url || 'https://example.com';
+    if (!url) return;
     setIsAnalyzing(true);
-    
     setTimeout(() => {
       setIsAnalyzing(false);
+      // Navigate to analysis page with URL
       navigate('/analysis', { 
         state: { 
-          url: targetUrl,
+          url: url,
           fromDashboard: true 
         } 
       });
@@ -51,15 +51,23 @@ export default function Dashboard() {
 
       {/* Quick Analysis Section */}
       <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Quick Website Analysis
+            </h2>
           </div>
-          <h2 className="text-xl font-semibold text-gray-900">
-            Quick Website Analysis
-          </h2>
+          <button 
+            onClick={() => navigate('/analysis')}
+            className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+          >
+            Full Analysis →
+          </button>
         </div>
         
         <div className="flex flex-col md:flex-row gap-4">
@@ -68,7 +76,7 @@ export default function Dashboard() {
               type="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://example.com (or leave empty for demo)"
+              placeholder="https://example.com"
               className="w-full border-2 border-gray-200 rounded-xl px-4 py-3.5 pl-12 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
               onKeyPress={(e) => e.key === 'Enter' && handleAnalyze()}
             />
@@ -81,9 +89,9 @@ export default function Dashboard() {
           
           <button
             onClick={handleAnalyze}
-            disabled={isAnalyzing}
+            disabled={!url || isAnalyzing}
             className={`px-8 py-3.5 rounded-xl font-medium text-white transition-all duration-200 
-              ${isAnalyzing 
+              ${!url || isAnalyzing 
                 ? 'bg-gray-300 cursor-not-allowed' 
                 : 'bg-blue-600 hover:bg-blue-700 hover:shadow-lg active:scale-95'
               }`}
@@ -94,19 +102,12 @@ export default function Dashboard() {
                 Analyzing...
               </div>
             ) : (
-              url ? 'Analyze Website' : '🚀 Try Demo Analysis'
+              'Analyze Website'
             )}
           </button>
         </div>
         
-        {!url && (
-          <p className="mt-2 text-sm text-blue-600 flex items-center gap-1">
-            <span>💡</span> 
-            Click "Try Demo Analysis" to see how it works with a sample website
-          </p>
-        )}
-        
-        <div className="mt-4 flex items-center gap-6 text-sm text-gray-500">
+        <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-gray-500">
           <div className="flex items-center gap-1">
             <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -128,10 +129,13 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Stats Grid - Same as before */}
+      {/* Stats Grid - Clickable */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {/* Total Keywords */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow duration-300">
+        {/* Total Keywords - Navigate to Keywords Page */}
+        <div 
+          onClick={() => navigate('/keywords')}
+          className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 cursor-pointer hover:border-blue-200"
+        >
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-medium text-gray-500">Total Keywords</p>
             <div className="p-2 bg-blue-50 rounded-lg">
@@ -168,8 +172,11 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* SEO Score */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow duration-300">
+        {/* SEO Score - Navigate to Analysis */}
+        <div 
+          onClick={() => navigate('/analysis')}
+          className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 cursor-pointer hover:border-green-200"
+        >
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-medium text-gray-500">SEO Score</p>
             <div className="p-2 bg-green-50 rounded-lg">
@@ -210,14 +217,26 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Recent Activity / Quick Actions - Same as before */}
+      {/* Recent Activity / Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Analyses */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Analyses</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Recent Analyses</h3>
+            <button 
+              onClick={() => navigate('/analysis')}
+              className="text-sm text-blue-600 hover:text-blue-800"
+            >
+              View All →
+            </button>
+          </div>
           <div className="space-y-3">
             {[1, 2, 3].map((item) => (
-              <div key={item} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-200">
+              <div 
+                key={item} 
+                onClick={() => navigate('/analysis')}
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-200 cursor-pointer"
+              >
                 <div>
                   <p className="font-medium text-gray-900">example-{item}.com</p>
                   <p className="text-sm text-gray-500">2 hours ago</p>
