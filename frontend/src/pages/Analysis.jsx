@@ -1,6 +1,7 @@
 import Navbar from "../components/Navbar";
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import axios from "axios";
 
 export default function Analysis() {
   const location = useLocation();
@@ -16,15 +17,31 @@ export default function Analysis() {
     }
   }, [location]);
 
-  const handleAnalyze = () => {
-    if (!url) return;
+const handleAnalyze = async () => {
+  if (!url) return;
+
+  try {
     setIsAnalyzing(true);
-    // Perform analysis
-    setTimeout(() => {
-      setIsAnalyzing(false);
-      alert(`Analysis complete for: ${url}`);
-    }, 2000);
-  };
+
+    const response = await axios.post(
+      "http://localhost:5000/api/analysis",
+      {
+        url,
+        keywords,
+      }
+    );
+
+    console.log(response.data);
+
+    alert("Analysis request sent successfully!");
+  } catch (error) {
+    console.error(error);
+
+    alert("Analysis failed");
+  } finally {
+    setIsAnalyzing(false);
+  }
+};
 
   return (
     <>

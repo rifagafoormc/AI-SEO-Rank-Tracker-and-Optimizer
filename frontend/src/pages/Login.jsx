@@ -1,8 +1,10 @@
+import axios from "axios";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -15,13 +17,34 @@ export default function Login() {
     });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  
 
-    console.log(formData);
+  try {
+    const response = await axios.post(
+      "http://localhost:5000/api/auth/login",
+      {
+        email: formData.email,
+        password: formData.password,
+      }
+    );
 
-    // Backend API will be added later
-  };
+    // Save JWT token
+    localStorage.setItem("token", response.data.token);
+    setFormData({
+      email: "",
+      password: "",
+    });
+
+    alert("Login Successful!");
+
+    navigate("/dashboard");
+
+  } catch (error) {
+    alert(error.response?.data?.message || "Login Failed");
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
