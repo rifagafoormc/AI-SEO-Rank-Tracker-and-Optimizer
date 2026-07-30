@@ -3,12 +3,14 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import axios from "axios";
 
+
 export default function Analysis() {
   const location = useLocation();
   const navigate = useNavigate();
   const [url, setUrl] = useState('');
   const [keywords, setKeywords] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [result, setResult] = useState(null);
 
   // Pre-fill URL if coming from dashboard
   useEffect(() => {
@@ -28,15 +30,20 @@ const handleAnalyze = async () => {
       {
         url,
         keywords,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        }
       }
     );
 
     console.log(response.data);
 
-    alert("Analysis request sent successfully!");
+    setResult(response.data.data);
+
   } catch (error) {
     console.error(error);
-
     alert("Analysis failed");
   } finally {
     setIsAnalyzing(false);
@@ -119,43 +126,59 @@ const handleAnalyze = async () => {
             </div>
           </div>
 
-          {/* Analysis Results - Your existing code */}
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-6">
-              Analysis Result
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="border rounded-lg p-4">
-                <h3 className="font-semibold">SEO Score</h3>
-                <p className="text-4xl font-bold text-green-600 mt-2">
-                  87 / 100
-                </p>
-              </div>
-              <div className="border rounded-lg p-4">
-                <h3 className="font-semibold">PageSpeed Score</h3>
-                <p className="text-4xl font-bold text-blue-600 mt-2">
-                  91
-                </p>
-              </div>
-              <div className="border rounded-lg p-4">
-                <h3 className="font-semibold">Meta Description</h3>
-                <p className="text-green-600 mt-2">
-                  ✔ Good
-                </p>
-              </div>
-              <div className="border rounded-lg p-4">
-                <h3 className="font-semibold">Image ALT Text</h3>
-                <p className="text-red-600 mt-2">
-                  ✖ Missing on 5 Images
-                </p>
-              </div>
-            </div>
-            <div className="mt-8">
-              <button className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition">
-                View AI Recommendations
-              </button>
-            </div>
-          </div>
+  <h2 className="text-xl font-semibold mb-6">
+    Rank Tracking Result
+  </h2>
+
+  {!result ? (
+    <p className="text-gray-500">
+      No tracking data yet. Enter a website and keywords.
+    </p>
+  ) : (
+    <>
+      <div className="mb-6">
+        <p className="font-medium text-gray-700">Website</p>
+        <p className="text-blue-600 break-all">{result.url}</p>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="border-b bg-gray-50">
+              <th className="text-left p-3">Keyword</th>
+              <th className="text-left p-3">Google Rank</th>
+              <th className="text-left p-3">Page</th>
+              <th className="text-left p-3">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {result.results.map((item, index) => (
+              <tr key={index} className="border-b hover:bg-gray-50">
+                <td className="p-3 font-medium">{item.keyword}</td>
+                <td className="p-3 text-blue-600 font-bold">#{item.rank}</td>
+                <td className="p-3">{item.page}</td>
+                <td className="p-3">
+                  {item.found ? (
+                    <span className="text-green-600 font-medium">Found</span>
+                  ) : (
+                    <span className="text-red-600 font-medium">Not Found</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="mt-8">
+        <button className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition">
+          View AI Optimization Suggestions
+        </button>
+      </div>
+    </>
+  )}
+</div>
         </div>
       </div>
     </>
