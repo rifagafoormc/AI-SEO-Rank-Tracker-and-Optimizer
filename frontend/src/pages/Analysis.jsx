@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import axios from "axios";
 
-
 export default function Analysis() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -11,6 +10,8 @@ export default function Analysis() {
   const [keywords, setKeywords] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState('');
 
   // Pre-fill URL if coming from dashboard
   useEffect(() => {
@@ -19,36 +20,39 @@ export default function Analysis() {
     }
   }, [location]);
 
-const handleAnalyze = async () => {
-  if (!url) return;
+  const handleAnalyze = async () => {
+    if (!url) return;
 
-  try {
-    setIsAnalyzing(true);
+    try {
+      setIsAnalyzing(true);
 
-    const response = await axios.post(
-      "http://localhost:5000/api/analysis",
-      {
-        url,
-        keywords,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`
+      const response = await axios.post(
+        "http://localhost:5000/api/analysis",
+        {
+          url,
+          keywords,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          }
         }
-      }
-    );
+      );
 
-    console.log(response.data);
+      console.log(response.data);
 
-    setResult(response.data.data);
+      setResult(response.data.data);
+      setAiSuggestions(
+        response.data.data.aiSuggestions || 'No AI suggestions available'
+      );
 
-  } catch (error) {
-    console.error(error);
-    alert("Analysis failed");
-  } finally {
-    setIsAnalyzing(false);
-  }
-};
+    } catch (error) {
+      console.error(error);
+      alert("Analysis failed");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   return (
     <>
@@ -127,58 +131,73 @@ const handleAnalyze = async () => {
           </div>
 
           <div className="bg-white rounded-xl shadow-md p-6">
-  <h2 className="text-xl font-semibold mb-6">
-    Rank Tracking Result
-  </h2>
+            <h2 className="text-xl font-semibold mb-6">
+              Rank Tracking Result
+            </h2>
 
-  {!result ? (
-    <p className="text-gray-500">
-      No tracking data yet. Enter a website and keywords.
-    </p>
-  ) : (
-    <>
-      <div className="mb-6">
-        <p className="font-medium text-gray-700">Website</p>
-        <p className="text-blue-600 break-all">{result.url}</p>
-      </div>
+            {!result ? (
+              <p className="text-gray-500">
+                No tracking data yet. Enter a website and keywords.
+              </p>
+            ) : (
+              <>
+                <div className="mb-6">
+                  <p className="font-medium text-gray-700">Website</p>
+                  <p className="text-blue-600 break-all">{result.url}</p>
+                </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="border-b bg-gray-50">
-              <th className="text-left p-3">Keyword</th>
-              <th className="text-left p-3">Google Rank</th>
-              <th className="text-left p-3">Page</th>
-              <th className="text-left p-3">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {result.results.map((item, index) => (
-              <tr key={index} className="border-b hover:bg-gray-50">
-                <td className="p-3 font-medium">{item.keyword}</td>
-                <td className="p-3 text-blue-600 font-bold">#{item.rank}</td>
-                <td className="p-3">{item.page}</td>
-                <td className="p-3">
-                  {item.found ? (
-                    <span className="text-green-600 font-medium">Found</span>
-                  ) : (
-                    <span className="text-red-600 font-medium">Not Found</span>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="border-b bg-gray-50">
+                        <th className="text-left p-3">Keyword</th>
+                        <th className="text-left p-3">Google Rank</th>
+                        <th className="text-left p-3">Page</th>
+                        <th className="text-left p-3">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {result.results.map((item, index) => (
+                        <tr key={index} className="border-b hover:bg-gray-50">
+                          <td className="p-3 font-medium">{item.keyword}</td>
+                          <td className="p-3 text-blue-600 font-bold">#{item.rank}</td>
+                          <td className="p-3">{item.page}</td>
+                          <td className="p-3">
+                            {item.found ? (
+                              <span className="text-green-600 font-medium">Found</span>
+                            ) : (
+                              <span className="text-red-600 font-medium">Not Found</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="mt-8">
+                  <button
+                    onClick={() => setShowSuggestions(!showSuggestions)}
+                    className="mt-4 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition"
+                  >
+                    {showSuggestions
+                      ? 'Hide AI Optimization Suggestions'
+                      : 'View AI Optimization Suggestions'}
+                  </button>
+                  {showSuggestions && aiSuggestions && (
+                    <div className="mt-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                      <h3 className="text-lg font-semibold text-purple-800 mb-2">
+                        AI SEO Suggestions
+                      </h3>
+                      <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans">
+                        {aiSuggestions}
+                      </pre>
+                    </div>
                   )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="mt-8">
-        <button className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition">
-          View AI Optimization Suggestions
-        </button>
-      </div>
-    </>
-  )}
-</div>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </>

@@ -32,10 +32,7 @@ const handleSubmit = async (e) => {
 
     // Save JWT token
     localStorage.setItem("token", response.data.token);
-    setFormData({
-      email: "",
-      password: "",
-    });
+    localStorage.setItem("user", JSON.stringify(response.data.user));
 
     alert("Login Successful!");
 

@@ -1,70 +1,205 @@
-import React, { useState } from 'react';
+import Navbar from "../components/Navbar";
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import axios from "axios";
 
-const WebsiteForm = () => {
-  const [url, setUrl] = useState('')
-  const [keywords, setKeywords] = useState('')
+export default function Analysis() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [url, setUrl] = useState('');
+  const [keywords, setKeywords] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [result, setResult] = useState(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState('');
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-
-    const data = {
-      url,
-      keywords: keywords.split(',').map(k => k.trim())
+  // Pre-fill URL if coming from dashboard
+  useEffect(() => {
+    if (location.state?.url) {
+      setUrl(location.state.url);
     }
+  }, [location]);
 
-    console.log(data)
-    alert('Analysis request submitted!')
+  const handleAnalyze = async () => {
+    if (!url) return;
 
-    // Later: send to backend with axios
-  }
+    try {
+      setIsAnalyzing(true);
+
+      const response = await axios.post(
+        "http://localhost:5000/api/analysis",
+        {
+          url,
+          keywords,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          }
+        }
+      );
+
+      console.log(response.data);
+
+      setResult(response.data.data);
+      setAiSuggestions(
+        response.data.data.aiSuggestions || 'No AI suggestions available'
+      );
+
+    } catch (error) {
+      console.error(error);
+      alert("Analysis failed");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   return (
-    <div className='max-w-2xl mx-auto bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6 mt-10'>
-      <h2 className='text-2xl font-bold mb-6 text-gray-800 dark:text-white'>
-        Website SEO Analysis
-      </h2>
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-6xl mx-auto px-6 py-8">
+          {/* Back to Dashboard */}
+          <button 
+            onClick={() => navigate('/dashboard')}
+            className="mb-6 text-blue-600 hover:text-blue-800 flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Dashboard
+          </button>
 
-      <form onSubmit={handleSubmit} className='space-y-4'>
-        <div>
-          <label className='block mb-2 font-medium text-gray-700 dark:text-gray-200'>
-            Website URL
-          </label>
-          <input
-            type='url'
-            placeholder='https://example.com'
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            required
-            className='w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500'
-          />
+          {/* Page Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                SEO Analysis
+              </h1>
+              <p className="text-gray-600 mt-1">
+                Get detailed SEO insights and AI-powered recommendations
+              </p>
+            </div>
+            <div className="bg-blue-50 px-4 py-2 rounded-lg">
+              <span className="text-sm text-blue-700">⏳ 9 analyses remaining today</span>
+            </div>
+          </div>
+
+          {/* Analysis Form */}
+          <div className="bg-white rounded-xl shadow-md p-6 mb-8">
+            <h2 className="text-xl font-semibold mb-6">
+              Website Details
+            </h2>
+            <div className="space-y-5">
+              <div>
+                <label className="block mb-2 font-medium text-gray-700">
+                  Website URL *
+                </label>
+                <input
+                  type="url"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  placeholder="https://example.com"
+                  className="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block mb-2 font-medium text-gray-700">
+                  Target Keywords
+                </label>
+                <input
+                  type="text"
+                  value={keywords}
+                  onChange={(e) => setKeywords(e.target.value)}
+                  placeholder="seo, digital marketing, react"
+                  className="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+                <p className="mt-1 text-sm text-gray-500">Separate keywords with commas</p>
+              </div>
+              <button 
+                onClick={handleAnalyze}
+                disabled={!url || isAnalyzing}
+                className={`px-8 py-3 rounded-lg text-white transition
+                  ${!url || isAnalyzing 
+                    ? 'bg-gray-300 cursor-not-allowed' 
+                    : 'bg-blue-600 hover:bg-blue-700'
+                  }`}
+              >
+                {isAnalyzing ? 'Analyzing...' : 'Analyze Website'}
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <h2 className="text-xl font-semibold mb-6">
+              Rank Tracking Result
+            </h2>
+
+            {!result ? (
+              <p className="text-gray-500">
+                No tracking data yet. Enter a website and keywords.
+              </p>
+            ) : (
+              <>
+                <div className="mb-6">
+                  <p className="font-medium text-gray-700">Website</p>
+                  <p className="text-blue-600 break-all">{result.url}</p>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="border-b bg-gray-50">
+                        <th className="text-left p-3">Keyword</th>
+                        <th className="text-left p-3">Google Rank</th>
+                        <th className="text-left p-3">Page</th>
+                        <th className="text-left p-3">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {result.results.map((item, index) => (
+                        <tr key={index} className="border-b hover:bg-gray-50">
+                          <td className="p-3 font-medium">{item.keyword}</td>
+                          <td className="p-3 text-blue-600 font-bold">#{item.rank}</td>
+                          <td className="p-3">{item.page}</td>
+                          <td className="p-3">
+                            {item.found ? (
+                              <span className="text-green-600 font-medium">Found</span>
+                            ) : (
+                              <span className="text-red-600 font-medium">Not Found</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="mt-8">
+                  <button
+                    onClick={() => setShowSuggestions(!showSuggestions)}
+                    className="mt-4 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition"
+                  >
+                    {showSuggestions
+                      ? 'Hide AI Optimization Suggestions'
+                      : 'View AI Optimization Suggestions'}
+                  </button>
+                  {showSuggestions && aiSuggestions && (
+                    <div className="mt-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                      <h3 className="text-lg font-semibold text-purple-800 mb-2">
+                        AI SEO Suggestions
+                      </h3>
+                      <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans">
+                        {aiSuggestions}
+                      </pre>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
         </div>
-
-        <div>
-          <label className='block mb-2 font-medium text-gray-700 dark:text-gray-200'>
-            Target Keywords
-          </label>
-          <textarea
-            rows='4'
-            placeholder='seo tools, rank tracker, website optimization'
-            value={keywords}
-            onChange={(e) => setKeywords(e.target.value)}
-            required
-            className='w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500'
-          />
-          <p className='text-sm text-gray-500 mt-1'>
-            Separate keywords with commas
-          </p>
-        </div>
-
-        <button
-          type='submit'
-          className='w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition'
-        >
-          Analyze Website
-        </button>
-      </form>
-    </div>
-  )
+      </div>
+    </>
+  );
 }
-
-export default WebsiteForm

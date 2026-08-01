@@ -1,6 +1,6 @@
-
-
 import axios from 'axios';
+import Analysis from '../models/Analysis.js';
+import { generateSeoSuggestions } from '../utils/gemini.js';
 
 export const analyzeWebsite = async (req, res) => {
   try {
@@ -38,8 +38,8 @@ export const analyzeWebsite = async (req, res) => {
           params: {
             engine: 'google',
             q: keyword,
-              gl: 'in',
-              hl: 'en',
+            gl: 'in',
+            hl: 'en',
             num: 100,
             api_key: process.env.SERP_API_KEY,
           },
@@ -50,20 +50,16 @@ export const analyzeWebsite = async (req, res) => {
 
       let rank = null;
 
-//console.log(`Searching for domain: ${domain}`);
-
-for (const item of organicResults) {
-  try {
-    //console.log(item.position, item.link);
-
-    if (item.link.includes(domain)) {
-      rank = item.position;
-      break;
-    }
-  } catch (err) {
-    console.log(err.message);
-  }
-}
+      for (const item of organicResults) {
+        try {
+          if (item.link.includes(domain)) {
+            rank = item.position;
+            break;
+          }
+        } catch (err) {
+          console.log(err.message);
+        }
+      }
 
       results.push({
         keyword,
@@ -73,13 +69,33 @@ for (const item of organicResults) {
       });
     }
 
+    // GENERATE AI SEO SUGGESTIONS
+    const aiSuggestions = await generateSeoSuggestions(
+      normalizedUrl,
+      results
+    );
+
+    // SAVE TO MONGODB
+    const savedAnalysis = await Analysis.create({
+      userId: req.user.id,
+      websiteUrl: normalizedUrl,
+      keywords: keywordArray,
+      rankingData: {
+        results,
+      },
+      aiSuggestions,
+      status: 'completed',
+    });
+
     res.status(200).json({
       success: true,
       message: 'Real Google rank tracking completed',
       data: {
         url: normalizedUrl,
         results,
+        aiSuggestions,
       },
+      analysisId: savedAnalysis._id,
     });
   } catch (error) {
     console.error(error.response?.data || error.message);
@@ -90,4 +106,3 @@ for (const item of organicResults) {
     });
   }
 };
-

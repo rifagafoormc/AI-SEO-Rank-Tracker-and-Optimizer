@@ -1,70 +1,91 @@
 import Navbar from "../components/Navbar";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function History() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
+  const [historyData, setHistoryData] = useState([]);
 
-  // Mock history data
-  const historyData = [
-    { 
-      id: 1,
-      website: 'google.com', 
-      score: 91, 
-      status: 'Excellent', 
-      statusColor: 'text-green-600',
-      bgColor: 'bg-green-50',
-      date: 'Today', 
-      keywords: 45,
-      issues: 3
-    },
-    { 
-      id: 2,
-      website: 'amazon.com', 
-      score: 84, 
-      status: 'Good', 
-      statusColor: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-      date: 'Yesterday', 
-      keywords: 38,
-      issues: 7
-    },
-    { 
-      id: 3,
-      website: 'example.com', 
-      score: 73, 
-      status: 'Needs Improvement', 
-      statusColor: 'text-yellow-600',
-      bgColor: 'bg-yellow-50',
-      date: '10 Jul 2026', 
-      keywords: 22,
-      issues: 15
-    },
-    { 
-      id: 4,
-      website: 'github.com', 
-      score: 95, 
-      status: 'Excellent', 
-      statusColor: 'text-green-600',
-      bgColor: 'bg-green-50',
-      date: '9 Jul 2026', 
-      keywords: 52,
-      issues: 2
-    },
-    { 
-      id: 5,
-      website: 'stackoverflow.com', 
-      score: 67, 
-      status: 'Poor', 
-      statusColor: 'text-red-600',
-      bgColor: 'bg-red-50',
-      date: '8 Jul 2026', 
-      keywords: 18,
-      issues: 23
-    },
-  ];
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const token = localStorage.getItem('token');
+
+        console.log('History token:', token);
+
+        if (!token) {
+          console.log('No token found');
+          navigate('/login');
+          return;
+        }
+
+        const response = await fetch('http://localhost:5000/api/history', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          const formattedData = data.history.map((item) => {
+            // calculate SEO score from ranking results
+            const results = item.rankingData?.results || [];
+
+            const foundRanks = results
+              .filter(r => r.found && typeof r.rank === 'number')
+              .map(r => r.rank);
+
+            let score = 50;
+
+            if (foundRanks.length > 0) {
+              const avgRank = foundRanks.reduce((a, b) => a + b, 0) / foundRanks.length;
+              score = Math.max(50, Math.min(100, 105 - avgRank * 2));
+            }
+
+            let status = 'Poor';
+            let statusColor = 'text-red-600';
+            let bgColor = 'bg-red-50';
+
+            if (score >= 90) {
+              status = 'Excellent';
+              statusColor = 'text-green-600';
+              bgColor = 'bg-green-50';
+            } else if (score >= 80) {
+              status = 'Good';
+              statusColor = 'text-blue-600';
+              bgColor = 'bg-blue-50';
+            } else if (score >= 70) {
+              status = 'Needs Improvement';
+              statusColor = 'text-yellow-600';
+              bgColor = 'bg-yellow-50';
+            }
+
+            return {
+              id: item._id,
+              website: new URL(item.websiteUrl).hostname,
+              score: Math.round(score),
+              status,
+              statusColor,
+              bgColor,
+              date: new Date(item.createdAt).toLocaleDateString(),
+              keywords: item.keywords.length,
+              issues: Math.max(0, 20 - Math.round(score / 5)),
+              aiSuggestions: item.aiSuggestions || 'No suggestions available',
+            };
+          });
+
+          setHistoryData(formattedData);
+        }
+      } catch (error) {
+        console.error('Failed to fetch history:', error);
+      }
+    };
+
+    fetchHistory();
+  }, []);
 
   // Filter data
   const filteredData = historyData.filter(item => {
@@ -127,14 +148,18 @@ export default function History() {
             <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
               <p className="text-sm text-gray-500">Average Score</p>
               <p className="text-2xl font-bold text-blue-600">
-                {(historyData.reduce((acc, curr) => acc + curr.score, 0) / historyData.length).toFixed(1)}
+                {historyData.length > 0
+                  ? (historyData.reduce((acc, curr) => acc + curr.score, 0) / historyData.length).toFixed(1)
+                  : '0.0'}
               </p>
             </div>
             <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
               <p className="text-sm text-gray-500">Best Score</p>
               <p className="text-2xl font-bold text-green-600">
-                {Math.max(...historyData.map(item => item.score))}
-              </p>
+                {historyData.length > 0
+                 ? Math.max(...historyData.map(item => item.score))
+                 : 0}
+                </p>
             </div>
             <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
               <p className="text-sm text-gray-500">Needs Attention</p>
@@ -190,13 +215,14 @@ export default function History() {
                     <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Keywords</th>
                     <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Issues</th>
                     <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Date</th>
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">AI Suggestions</th>
                     <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredData.length === 0 ? (
                     <tr>
-                      <td colSpan="8" className="text-center py-12 text-gray-500">
+                      <td colSpan="9" className="text-center py-12 text-gray-500">
                         <div className="text-6xl mb-4">📋</div>
                         <p className="text-lg font-medium">No analyses found</p>
                         <p className="text-sm mt-1">Try adjusting your search or filters</p>
@@ -237,6 +263,13 @@ export default function History() {
                           </span>
                         </td>
                         <td className="py-4 px-6 text-sm text-gray-500">{item.date}</td>
+                        <td className="py-4 px-6 text-sm text-gray-600 max-w-xs">
+                          <div className="truncate" title={item.aiSuggestions}>
+                            {item.aiSuggestions.length > 80
+                              ? item.aiSuggestions.slice(0, 80) + '...'
+                              : item.aiSuggestions}
+                          </div>
+                        </td>
                         <td className="py-4 px-6">
                           <button 
                             onClick={() => navigate(`/analysis/${item.id}`)}
