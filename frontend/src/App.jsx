@@ -14,81 +14,84 @@ import PublicRoute from "./components/PublicRoute";
 
 function App() {
   return (
-    <Routes>
-      {/* Public Pages */}
-      <Route
-        path="/"
-        element={
-          <PublicRoute>
-            <Home />
-          </PublicRoute>
-        }
-      />
+    // ✅ Wrapping Routes in a div to handle the background color transition
+    <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-300">
+      <Routes>
+        {/* Public Pages */}
+        <Route
+          path="/"
+          element={
+            <PublicRoute>
+              <Home />
+            </PublicRoute>
+          }
+        />
 
-      <Route
-        path="/login"
-        element={
-          <PublicRoute>
-            <Login />
-          </PublicRoute>
-        }
-      />
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
 
-      <Route
-        path="/register"
-        element={
-          <PublicRoute>
-            <Register />
-          </PublicRoute>
-        }
-      />
+        <Route
+          path="/register"
+          element={
+            <PublicRoute>
+              <Register />
+            </PublicRoute>
+          }
+        />
 
-      {/* Protected Pages */}
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
+        {/* Protected Pages */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/analysis"
-        element={
-          <ProtectedRoute>
-            <Analysis />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/analysis"
+          element={
+            <ProtectedRoute>
+              <Analysis />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/rankings"
-        element={
-          <ProtectedRoute>
-            <Rankings />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/rankings"
+          element={
+            <ProtectedRoute>
+              <Rankings />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/history"
-        element={
-          <ProtectedRoute>
-            <History />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/history"
+          element={
+            <ProtectedRoute>
+              <History />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        }
-      />
-    </Routes>
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </div>
   );
 }
 

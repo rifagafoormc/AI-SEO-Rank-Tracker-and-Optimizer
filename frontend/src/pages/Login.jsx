@@ -9,56 +9,60 @@ export default function Login() {
     email: "",
     password: "",
   });
+  
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleChange = (e) => {
+    setErrorMessage("");
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMessage("");
 
-  try {
-    const response = await axios.post(
-      "http://localhost:5000/api/auth/login",
-      {
-        email: formData.email,
-        password: formData.password,
-      }
-    );
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/auth/login",
+        {
+          email: formData.email,
+          password: formData.password,
+        }
+      );
 
-    // Save JWT token
-    localStorage.setItem("token", response.data.token);
-    localStorage.setItem("user", JSON.stringify(response.data.user));
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+      navigate("/dashboard");
 
-    alert("Login Successful!");
-
-    navigate("/dashboard");
-
-  } catch (error) {
-    alert(error.response?.data?.message || "Login Failed");
-  }
-};
+    } catch (error) {
+      const msg = error.response?.data?.message || "Invalid email or password";
+      setErrorMessage(msg);
+    }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
+    // ✅ Dark mode wrapper added
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-950 px-4 transition-colors duration-300">
+      
+      {/* ✅ Dark mode card added */}
+      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 transition-colors duration-300">
 
-        <h2 className="text-3xl font-bold text-center text-blue-600 mb-2">
+        {/* ✅ Dark mode text added */}
+        <h2 className="text-3xl font-bold text-center text-blue-600 dark:text-blue-400 mb-2">
           Welcome Back
         </h2>
 
-        <p className="text-center text-gray-500 mb-6">
+        <p className="text-center text-gray-500 dark:text-gray-400 mb-6">
           Login to your SEO Rank Tracker account
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-5">
 
           <div>
-            <label className="block mb-2 font-medium">
+            <label className="block mb-2 font-medium dark:text-gray-300">
               Email
             </label>
 
@@ -69,12 +73,12 @@ const handleSubmit = async (e) => {
               value={formData.email}
               onChange={handleChange}
               required
-              className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
             />
           </div>
 
           <div>
-            <label className="block mb-2 font-medium">
+            <label className="block mb-2 font-medium dark:text-gray-300">
               Password
             </label>
 
@@ -86,13 +90,13 @@ const handleSubmit = async (e) => {
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="w-full border rounded-lg p-3 pr-16 focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full border rounded-lg p-3 pr-16 focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
               />
 
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3 text-sm text-blue-600"
+                className="absolute right-3 top-3 text-sm text-blue-600 dark:text-blue-400"
               >
                 {showPassword ? "Hide" : "Show"}
               </button>
@@ -105,13 +109,20 @@ const handleSubmit = async (e) => {
           >
             Login
           </button>
+
+          {/* Error Message */}
+          {errorMessage && (
+            <div className="text-red-600 text-center text-sm font-medium mt-2 bg-red-50 dark:bg-red-900/30 dark:text-red-400 p-2 rounded border border-red-200 dark:border-red-800">
+              {errorMessage}
+            </div>
+          )}
         </form>
 
-        <p className="text-center mt-6 text-gray-600">
+        <p className="text-center mt-6 text-gray-600 dark:text-gray-400">
           Don't have an account?{" "}
           <Link
             to="/register"
-            className="text-blue-600 font-semibold hover:underline"
+            className="text-blue-600 dark:text-blue-400 font-semibold hover:underline"
           >
             Register
           </Link>
