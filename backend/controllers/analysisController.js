@@ -75,9 +75,9 @@ export const analyzeWebsite = async (req, res) => {
       results
     );
 
-    // SAVE TO MONGODB
+    // ✅ SAVE TO MONGODB - FIXED: Use req.userId instead of req.user.id
     const savedAnalysis = await Analysis.create({
-      userId: req.user.id,
+      userId: req.userId,  // ✅ This is the fix
       websiteUrl: normalizedUrl,
       keywords: keywordArray,
       rankingData: {

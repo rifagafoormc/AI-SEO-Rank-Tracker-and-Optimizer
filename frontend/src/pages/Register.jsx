@@ -36,6 +36,28 @@ export default function Register() {
       return;
     }
 
+    // ✅ Password validation
+    const password = formData.password;
+
+    const hasMinimumLength = password.length >= 6;
+    const hasNumber = /\d/.test(password);
+    const hasSpecialCharacter = /[!@#$%^&*(),.?":{}|<>_\-\[\]\\\/`~;'+=]/.test(password);
+
+    if (!hasMinimumLength) {
+      setErrorMessage("Password must be at least 6 characters long.");
+      return;
+    }
+
+    if (!hasNumber) {
+      setErrorMessage("Password must contain at least one number.");
+      return;
+    }
+
+    if (!hasSpecialCharacter) {
+      setErrorMessage("Password must contain at least one special character.");
+      return;
+    }
+
     try {
       const response = await axios.post(
         "http://localhost:5000/api/auth/register",
@@ -62,10 +84,8 @@ export default function Register() {
   };
 
   return (
-    // ✅ Dark mode wrapper added
     <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-950 px-4 transition-colors duration-300">
       
-      {/* ✅ Dark mode card added */}
       <div className="w-full max-w-md bg-white dark:bg-gray-800 shadow-lg rounded-xl p-8 transition-colors duration-300">
         
         <h2 className="text-3xl font-bold text-center text-blue-600 dark:text-blue-400 mb-2">
@@ -133,6 +153,9 @@ export default function Register() {
                 {showPassword ? "Hide" : "Show"}
               </button>
             </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Must be at least 6 characters, 1 number and 1 special character
+            </p>
           </div>
 
           <div>
@@ -158,14 +181,12 @@ export default function Register() {
             Create Account
           </button>
 
-          {/* Error Message */}
           {errorMessage && (
             <div className="text-red-600 text-center text-sm font-medium mt-2 bg-red-50 dark:bg-red-900/30 dark:text-red-400 p-2 rounded border border-red-200 dark:border-red-800">
               {errorMessage}
             </div>
           )}
 
-          {/* Success Message */}
           {successMessage && (
             <div className="text-green-700 text-center text-sm font-medium mt-2 bg-green-50 dark:bg-green-900/30 dark:text-green-400 p-2 rounded border border-green-200 dark:border-green-800">
               {successMessage}

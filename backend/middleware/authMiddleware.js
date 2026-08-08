@@ -1,4 +1,3 @@
-// authMiddleware.js
 import jwt from "jsonwebtoken";
 
 const authMiddleware = (req, res, next) => {
@@ -15,9 +14,11 @@ const authMiddleware = (req, res, next) => {
 
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+    
+    // ✅ Extract userId from the decoded token
+    req.userId = decoded.id;
+    
     next();
-
   } catch (error) {
     console.error("Auth middleware error:", error);
     res.status(401).json({

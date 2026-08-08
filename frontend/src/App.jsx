@@ -8,24 +8,17 @@ import Analysis from "./pages/Analysis";
 import Rankings from "./pages/Rankings";
 import History from "./pages/History";
 import Profile from "./pages/Profile";
+import ChangePassword from "./pages/ChangePassword"; // ✅ Import ChangePassword
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 
 function App() {
   return (
-    // ✅ Wrapping Routes in a div to handle the background color transition
-    <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-300">
+    <div className="min-h-screen bg-white dark:bg-[#1e293b] transition-colors duration-300">
       <Routes>
         {/* Public Pages */}
-        <Route
-          path="/"
-          element={
-            <PublicRoute>
-              <Home />
-            </PublicRoute>
-          }
-        />
+        <Route path="/" element={<Home />} />
 
         <Route
           path="/login"
@@ -87,6 +80,16 @@ function App() {
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ✅ Change Password Route - Protected */}
+        <Route
+          path="/change-password"
+          element={
+            <ProtectedRoute>
+              <ChangePassword />
             </ProtectedRoute>
           }
         />

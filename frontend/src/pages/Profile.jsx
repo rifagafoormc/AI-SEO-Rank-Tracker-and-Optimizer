@@ -17,7 +17,7 @@ export default function Profile() {
   return (
     <>
       <Navbar />
-
+      
       {/* ✅ 1. Outer Background: Lighter dark gray */}
       <div className="min-h-screen bg-gray-100 dark:bg-[#1e293b] transition-colors duration-300">
         <div className="max-w-4xl mx-auto px-6 py-8">
@@ -71,7 +71,10 @@ export default function Profile() {
 
             <div className="flex gap-4 mt-8">
 
-              <button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 transition">
+              <button
+                onClick={() => navigate("/change-password")}
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 transition"
+              >
                 Change Password
               </button>
 

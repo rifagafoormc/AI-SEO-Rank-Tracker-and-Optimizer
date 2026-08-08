@@ -7,112 +7,154 @@ export default function History() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
   const [historyData, setHistoryData] = useState([]);
+  const [deletingId, setDeletingId] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
 
   useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        const token = localStorage.getItem('token');
-
-        console.log('History token:', token);
-
-        if (!token) {
-          console.log('No token found');
-          navigate('/login');
-          return;
-        }
-
-        const response = await fetch('http://localhost:5000/api/history', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-
-        console.log('History response status:', response.status);
-
-        const data = await response.json();
-        
-        // ✅ UPDATED: Prints formatted JSON in the console
-        console.log('History API data:', JSON.stringify(data, null, 2));
-
-        if (data.success && Array.isArray(data.history)) {
-          const formattedData = data.history.map((item) => {
-            // Safe URL handling
-            let website = 'Unknown Website';
-
-            try {
-              if (item.websiteUrl) {
-                const formattedUrl = item.websiteUrl.startsWith('http')
-                  ? item.websiteUrl
-                  : `https://${item.websiteUrl}`;
-
-                website = new URL(formattedUrl).hostname;
-              }
-            } catch (err) {
-              console.error('Invalid URL:', item.websiteUrl);
-            }
-
-            // Calculate SEO score from ranking results
-            const results = item.rankingData?.results || [];
-
-            const foundRanks = results
-              .filter(r => r.found && typeof r.rank === 'number')
-              .map(r => r.rank);
-
-            let score = 50;
-
-            if (foundRanks.length > 0) {
-              const avgRank =
-                foundRanks.reduce((a, b) => a + b, 0) / foundRanks.length;
-
-              score = Math.max(50, Math.min(100, 105 - avgRank * 2));
-            }
-
-            let status = 'Poor';
-            let statusColor = 'text-red-600 dark:text-red-400';
-            let bgColor = 'bg-red-50 dark:bg-red-900/20';
-
-            if (score >= 90) {
-              status = 'Excellent';
-              statusColor = 'text-green-600 dark:text-green-400';
-              bgColor = 'bg-green-50 dark:bg-green-900/20';
-            } else if (score >= 80) {
-              status = 'Good';
-              statusColor = 'text-blue-600 dark:text-blue-400';
-              bgColor = 'bg-blue-50 dark:bg-blue-900/20';
-            } else if (score >= 70) {
-              status = 'Needs Improvement';
-              statusColor = 'text-yellow-600 dark:text-yellow-400';
-              bgColor = 'bg-yellow-50 dark:bg-yellow-900/20';
-            }
-
-            return {
-              id: item._id,
-              website,
-              score: Math.round(score),
-              status,
-              statusColor,
-              bgColor,
-              date: new Date(item.createdAt).toLocaleDateString(),
-              keywords: item.keywords?.length || 0,
-              issues: Math.max(0, 20 - Math.round(score / 5)),
-              aiSuggestions:
-                item.aiSuggestions || 'No suggestions available',
-            };
-          });
-
-          setHistoryData(formattedData);
-        } else {
-          console.log('No history found or invalid response');
-          setHistoryData([]);
-        }
-      } catch (error) {
-        console.error('Failed to fetch history:', error);
-        setHistoryData([]);
-      }
-    };
-
     fetchHistory();
   }, [navigate]);
+
+  const fetchHistory = async () => {
+    try {
+      const token = localStorage.getItem('token');
+
+      console.log('History token:', token);
+
+      if (!token) {
+        console.log('No token found');
+        navigate('/login');
+        return;
+      }
+
+      const response = await fetch('http://localhost:5000/api/history', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      console.log('History response status:', response.status);
+
+      const data = await response.json();
+      
+      console.log('History API data:', JSON.stringify(data, null, 2));
+
+      if (data.success && Array.isArray(data.history)) {
+        const formattedData = data.history.map((item) => {
+          let website = 'Unknown Website';
+
+          try {
+            if (item.websiteUrl) {
+              const formattedUrl = item.websiteUrl.startsWith('http')
+                ? item.websiteUrl
+                : `https://${item.websiteUrl}`;
+
+              website = new URL(formattedUrl).hostname;
+            }
+          } catch (err) {
+            console.error('Invalid URL:', item.websiteUrl);
+          }
+
+          const results = item.rankingData?.results || [];
+
+          const foundRanks = results
+            .filter(r => r.found && typeof r.rank === 'number')
+            .map(r => r.rank);
+
+          let score = 50;
+
+          if (foundRanks.length > 0) {
+            const avgRank =
+              foundRanks.reduce((a, b) => a + b, 0) / foundRanks.length;
+
+            score = Math.max(50, Math.min(100, 105 - avgRank * 2));
+          }
+
+          let status = 'Poor';
+          let statusColor = 'text-red-600 dark:text-red-400';
+          let bgColor = 'bg-red-50 dark:bg-red-900/20';
+
+          if (score >= 90) {
+            status = 'Excellent';
+            statusColor = 'text-green-600 dark:text-green-400';
+            bgColor = 'bg-green-50 dark:bg-green-900/20';
+          } else if (score >= 80) {
+            status = 'Good';
+            statusColor = 'text-blue-600 dark:text-blue-400';
+            bgColor = 'bg-blue-50 dark:bg-blue-900/20';
+          } else if (score >= 70) {
+            status = 'Needs Improvement';
+            statusColor = 'text-yellow-600 dark:text-yellow-400';
+            bgColor = 'bg-yellow-50 dark:bg-yellow-900/20';
+          }
+
+          return {
+            id: item._id,
+            website,
+            score: Math.round(score),
+            status,
+            statusColor,
+            bgColor,
+            date: new Date(item.createdAt).toLocaleDateString(),
+            keywords: item.keywords?.length || 0,
+            issues: Math.max(0, 20 - Math.round(score / 5)),
+            aiSuggestions:
+              item.aiSuggestions || 'No suggestions available',
+          };
+        });
+
+        setHistoryData(formattedData);
+      } else {
+        console.log('No history found or invalid response');
+        setHistoryData([]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch history:', error);
+      setHistoryData([]);
+    }
+  };
+
+  const handleDeleteClick = (item) => {
+    setItemToDelete(item);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!itemToDelete) return;
+
+    try {
+      setDeletingId(itemToDelete.id);
+      const token = localStorage.getItem('token');
+
+      const response = await fetch(`http://localhost:5000/api/history/${itemToDelete.id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Remove from UI
+        setHistoryData(historyData.filter(item => item.id !== itemToDelete.id));
+        setShowDeleteModal(false);
+        setItemToDelete(null);
+      } else {
+        alert('Failed to delete analysis');
+      }
+    } catch (error) {
+      console.error('Delete failed', error);
+      alert('Failed to delete analysis');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setItemToDelete(null);
+  };
 
   // Filter data
   const filteredData = historyData.filter(item => {
@@ -240,7 +282,7 @@ export default function History() {
                     <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600 dark:text-gray-400">Issues</th>
                     <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600 dark:text-gray-400">Date</th>
                     <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600 dark:text-gray-400">AI Suggestions</th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600 dark:text-gray-400">Action</th>
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600 dark:text-gray-400">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -300,15 +342,29 @@ export default function History() {
                           </div>
                         </td>
                         <td className="py-4 px-6">
-                          <button 
-                            onClick={() => navigate(`/analysis/${item.id}`)}
-                            className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium text-sm hover:underline flex items-center gap-1 transition"
-                          >
-                            View Report
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                          </button>
+                          <div className="flex items-center gap-3">
+                            <button 
+                              onClick={() => navigate(`/analysis/${item.id}`)}
+                              className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium text-sm hover:underline flex items-center gap-1 transition"
+                            >
+                              View Report
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => handleDeleteClick(item)}
+                              disabled={deletingId === item.id}
+                              className={`text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 font-medium text-sm transition flex items-center gap-1 ${
+                                deletingId === item.id ? 'opacity-50 cursor-not-allowed' : ''
+                              }`}
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                              {deletingId === item.id ? 'Deleting...' : 'Delete'}
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -344,6 +400,55 @@ export default function History() {
           </div>
         </div>
       </div>
+
+      {/* ✅ Custom Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={handleCancelDelete}
+          ></div>
+          
+          {/* Modal */}
+          <div className="relative bg-white dark:bg-[#1e293b] rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-200 dark:border-gray-700/50 animate-in fade-in zoom-in duration-200">
+            {/* Icon */}
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Title */}
+            <h3 className="text-xl font-bold text-center text-gray-900 dark:text-white mb-2">
+              Delete Analysis
+            </h3>
+            
+            {/* Message */}
+            <p className="text-center text-gray-600 dark:text-gray-300 mb-6">
+              Are you sure you want to permanently delete the analysis for <span className="font-semibold text-gray-900 dark:text-white">"{itemToDelete?.website}"</span>? This action cannot be undone.
+            </p>
+
+            {/* Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={handleCancelDelete}
+                className="flex-1 px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="flex-1 px-4 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition shadow-md shadow-red-600/20"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
