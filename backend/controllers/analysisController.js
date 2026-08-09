@@ -25,6 +25,8 @@ export const analyzeWebsite = async (req, res) => {
       ? url
       : `https://${url}`;
 
+    console.log('🔍 Analyzing URL:', normalizedUrl);
+
     // Extract domain
     const domain = new URL(normalizedUrl).hostname.replace('www.', '');
 
@@ -32,6 +34,8 @@ export const analyzeWebsite = async (req, res) => {
 
     // Check each keyword
     for (const keyword of keywordArray) {
+      console.log(`🔍 Checking keyword: ${keyword}`);
+      
       const response = await axios.get(
         'https://serpapi.com/search.json',
         {
@@ -69,36 +73,144 @@ export const analyzeWebsite = async (req, res) => {
       });
     }
 
+    console.log('✅ SERP results:', results);
+
+    // 🚀 FETCH PAGESPEED INSIGHTS DATA - Only Performance metrics
+    let pageSpeedData = {
+      performance: null,
+      lcp: null,
+      cls: null,
+      tbt: null,
+      fcp: null,
+    };
+
+    try {
+      console.log('🚀 Fetching PageSpeed data for:', normalizedUrl);
+      
+      const pageSpeedResponse = await axios.get(
+        'https://www.googleapis.com/pagespeedonline/v5/runPagespeed',
+        {
+          params: {
+            url: normalizedUrl,
+            key: process.env.GOOGLE_PAGESPEED_API_KEY,
+            strategy: 'desktop',
+          },
+          paramsSerializer: (params) => {
+            return [
+              `url=${encodeURIComponent(params.url)}`,
+              `key=${params.key}`,
+              `strategy=${params.strategy}`,
+              'category=performance',
+            ].join('&');
+          },
+        }
+      );
+
+      const lighthouseResult = pageSpeedResponse.data.lighthouseResult;
+      
+      if (lighthouseResult) {
+        const categories = lighthouseResult.categories;
+        
+        console.log('📊 Lighthouse categories:', Object.keys(categories));
+
+        // ✅ Only extract Performance score
+        pageSpeedData.performance = categories.performance?.score != null
+          ? Math.round(categories.performance.score * 100)
+          : null;
+
+        // Extract Core Web Vitals from audits
+        const audits = lighthouseResult.audits;
+        
+        // LCP (Largest Contentful Paint)
+        if (audits['largest-contentful-paint']) {
+          pageSpeedData.lcp = audits['largest-contentful-paint'].displayValue || 
+                             `${(audits['largest-contentful-paint'].numericValue / 1000).toFixed(1)}s`;
+        }
+
+        // CLS (Cumulative Layout Shift)
+        if (audits['cumulative-layout-shift']) {
+          pageSpeedData.cls = audits['cumulative-layout-shift'].displayValue || 
+                             audits['cumulative-layout-shift'].numericValue?.toFixed(2) || '0.00';
+        }
+
+        // TBT (Total Blocking Time)
+        if (audits['total-blocking-time']) {
+          pageSpeedData.tbt = audits['total-blocking-time'].displayValue || 
+                             `${Math.round(audits['total-blocking-time'].numericValue || 0)}ms`;
+        }
+
+        // FCP (First Contentful Paint)
+        if (audits['first-contentful-paint']) {
+          pageSpeedData.fcp = audits['first-contentful-paint'].displayValue || 
+                             `${(audits['first-contentful-paint'].numericValue / 1000).toFixed(1)}s`;
+        }
+      }
+
+      console.log('✅ PageSpeed Data fetched successfully:', pageSpeedData);
+
+    } catch (pageSpeedError) {
+      console.error(
+        '⚠️ PageSpeed API Error:',
+        pageSpeedError.response?.data || pageSpeedError.message
+      );
+
+      // Keep values null if API fails
+      pageSpeedData = {
+        performance: null,
+        lcp: null,
+        cls: null,
+        tbt: null,
+        fcp: null,
+      };
+    }
+
     // GENERATE AI SEO SUGGESTIONS
+    console.log('🤖 Generating AI suggestions...');
     const aiSuggestions = await generateSeoSuggestions(
       normalizedUrl,
-      results
+      results,
+      pageSpeedData
     );
 
-    // ✅ SAVE TO MONGODB - FIXED: Use req.userId instead of req.user.id
+    // 🔥 CRITICAL DEBUG: Log before saving
+    console.log('🔥 FINAL pageSpeedData BEFORE SAVE:', JSON.stringify(pageSpeedData, null, 2));
+
+    // ✅ SAVE TO MONGODB - Using pageSpeedData field
     const savedAnalysis = await Analysis.create({
-      userId: req.userId,  // ✅ This is the fix
+      userId: req.userId,
       websiteUrl: normalizedUrl,
       keywords: keywordArray,
       rankingData: {
         results,
       },
+      pageSpeedData: pageSpeedData,
       aiSuggestions,
       status: 'completed',
     });
 
+    console.log('✅ Analysis saved with ID:', savedAnalysis._id);
+    console.log('✅ Saved pageSpeedData:', savedAnalysis.pageSpeedData);
+
+    // 🚀 RETURN ALL DATA INCLUDING PAGESPEED
     res.status(200).json({
       success: true,
-      message: 'Real Google rank tracking completed',
+      message: 'Real Google rank tracking completed with PageSpeed data',
       data: {
         url: normalizedUrl,
         results,
         aiSuggestions,
+        // Only Performance metrics
+        performance: pageSpeedData.performance,
+        lcp: pageSpeedData.lcp,
+        cls: pageSpeedData.cls,
+        tbt: pageSpeedData.tbt,
+        fcp: pageSpeedData.fcp,
       },
       analysisId: savedAnalysis._id,
     });
+
   } catch (error) {
-    console.error(error.response?.data || error.message);
+    console.error('❌ Error in analyzeWebsite:', error.response?.data || error.message);
 
     res.status(500).json({
       success: false,

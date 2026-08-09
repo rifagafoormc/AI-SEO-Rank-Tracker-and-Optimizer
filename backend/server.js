@@ -5,6 +5,7 @@ import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import analysisRoutes from "./routes/analysisRoutes.js";
 import historyRoutes from "./routes/historyRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js"; // ✅ ADD THIS
 
 dotenv.config();
 connectDB();
@@ -14,9 +15,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/analysis", analysisRoutes);
 app.use("/api/history", historyRoutes);
+app.use("/api/admin", adminRoutes); // ✅ ADD THIS
 
 app.get("/", (req, res) => {
   res.send("AI SEO Rank Tracker Backend Running 🚀");

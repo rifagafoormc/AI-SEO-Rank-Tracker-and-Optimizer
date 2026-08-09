@@ -1,14 +1,13 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Sun, Moon } from "lucide-react"; 
-import { useTheme } from "../context/ThemeContext"; // ✅ Import the custom hook
+import { useTheme } from "../context/ThemeContext";
 
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
   
-  // ✅ Use the global theme context instead of local state/useEffect
   const { theme, toggleTheme } = useTheme();
 
   // User Auth State
@@ -19,6 +18,7 @@ export default function Navbar() {
   });
 
   const isLoggedIn = !!token;
+  const isAdmin = user?.role === 'admin';
   const publicRoutes = ["/", "/login", "/register"];
   const isPublicPage = publicRoutes.includes(location.pathname);
 
@@ -43,7 +43,7 @@ export default function Navbar() {
       <div className="flex justify-between items-center max-w-7xl mx-auto">
         {/* Logo */}
         <Link 
-          to={isLoggedIn && !isPublicPage ? "/dashboard" : "/"} 
+          to={isLoggedIn && !isPublicPage ? (isAdmin ? "/admin" : "/dashboard") : "/"} 
           className="text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition"
         >
           AI SEO Rank Tracker
@@ -52,26 +52,40 @@ export default function Navbar() {
         {/* Show Dashboard Navbar ONLY on protected pages when logged in */}
         {isLoggedIn && !isPublicPage ? (
           <>
-            {/* Navigation Links */}
+            {/* ✅ Navigation Links - Different for Admin */}
             <div className="hidden md:flex items-center gap-8">
-              <Link to="/dashboard" className={activeLink("/dashboard")}>
-                Dashboard
-              </Link>
-              <Link to="/analysis" className={activeLink("/analysis")}>
-                SEO Analysis
-              </Link>
-              <Link to="/rankings" className={activeLink("/rankings")}>
-                Rankings
-              </Link>
-              <Link to="/history" className={activeLink("/history")}>
-                History
-              </Link>
+              {isAdmin ? (
+                // ✅ ADMIN NAVBAR - Admin Dashboard + Manage Users
+                <>
+                  <Link to="/admin" className={activeLink("/admin")}>
+                    ⚙️ Admin Dashboard
+                  </Link>
+                  <Link to="/admin/users" className={activeLink("/admin/users")}>
+                    👥 Users
+                  </Link>
+                </>
+              ) : (
+                // ✅ USER NAVBAR - Full user pages
+                <>
+                  <Link to="/dashboard" className={activeLink("/dashboard")}>
+                    Dashboard
+                  </Link>
+                  <Link to="/analysis" className={activeLink("/analysis")}>
+                    SEO Analysis
+                  </Link>
+                  <Link to="/rankings" className={activeLink("/rankings")}>
+                    Rankings
+                  </Link>
+                  <Link to="/history" className={activeLink("/history")}>
+                    History
+                  </Link>
+                </>
+              )}
             </div>
 
             {/* Right Side: Theme Toggle + Profile Dropdown */}
             <div className="flex items-center gap-4">
               
-              {/* ✅ Inline Theme Button using context */}
               <button
                 onClick={toggleTheme}
                 className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:scale-105 transition duration-300"
@@ -103,7 +117,33 @@ export default function Navbar() {
                       <div className="px-4 py-3 border-b dark:border-gray-700">
                         <p className="font-semibold dark:text-white">{user?.name || 'User'}</p>
                         <p className="text-sm text-gray-500 dark:text-gray-400">{user?.email || ''}</p>
+                        {isAdmin && (
+                          <span className="inline-block mt-1 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded-full">
+                            🔑 Admin
+                          </span>
+                        )}
                       </div>
+                      
+                      {/* ✅ Admin links in dropdown (if admin) */}
+                      {isAdmin && (
+                        <>
+                          <Link
+                            to="/admin"
+                            className="block px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition dark:text-gray-300"
+                            onClick={() => setShowMenu(false)}
+                          >
+                            ⚙️ Admin Dashboard
+                          </Link>
+                          <Link
+                            to="/admin/users"
+                            className="block px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition dark:text-gray-300"
+                            onClick={() => setShowMenu(false)}
+                          >
+                            👥 Manage Users
+                          </Link>
+                        </>
+                      )}
+                      
                       <Link
                         to="/profile"
                         className="block px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition dark:text-gray-300"
@@ -111,6 +151,15 @@ export default function Navbar() {
                       >
                         👤 My Profile
                       </Link>
+
+                      <Link
+                        to="/change-password"
+                        className="block px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition dark:text-gray-300"
+                        onClick={() => setShowMenu(false)}
+                      >
+                        🔑 Change Password
+                      </Link>
+
                       <button
                         className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 text-red-600 transition border-t dark:border-gray-700"
                         onClick={handleLogout}
@@ -127,7 +176,6 @@ export default function Navbar() {
           /* Show Login/Register on Public Pages (Landing Page) */
           <div className="hidden md:flex items-center gap-6">
             
-            {/* ✅ Inline Theme Button using context */}
             <button
               onClick={toggleTheme}
               className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:scale-105 transition duration-300"

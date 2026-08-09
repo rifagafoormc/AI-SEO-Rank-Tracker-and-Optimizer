@@ -8,10 +8,13 @@ import Analysis from "./pages/Analysis";
 import Rankings from "./pages/Rankings";
 import History from "./pages/History";
 import Profile from "./pages/Profile";
-import ChangePassword from "./pages/ChangePassword"; // ✅ Import ChangePassword
+import ChangePassword from "./pages/ChangePassword";
+import AdminDashboard from "./pages/AdminDashboard";
+import ManageUsers from "./pages/ManageUsers"; // ✅ NEW
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
+import AdminRoute from "./components/AdminRoute";
 
 function App() {
   return (
@@ -38,7 +41,7 @@ function App() {
           }
         />
 
-        {/* Protected Pages */}
+        {/* Protected Pages - All Users */}
         <Route
           path="/dashboard"
           element={
@@ -84,13 +87,32 @@ function App() {
           }
         />
 
-        {/* ✅ Change Password Route - Protected */}
         <Route
           path="/change-password"
           element={
             <ProtectedRoute>
               <ChangePassword />
             </ProtectedRoute>
+          }
+        />
+
+        {/* ✅ Admin Routes */}
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          }
+        />
+
+        {/* ✅ Manage Users Route - Admin Only */}
+        <Route
+          path="/admin/users"
+          element={
+            <AdminRoute>
+              <ManageUsers />
+            </AdminRoute>
           }
         />
       </Routes>

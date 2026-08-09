@@ -35,7 +35,13 @@ export default function Login() {
 
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
-      navigate("/dashboard");
+
+      // ✅ Redirect based on user role
+      if (response.data.user.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/dashboard");
+      }
 
     } catch (error) {
       const msg = error.response?.data?.message || "Invalid email or password";
@@ -44,13 +50,10 @@ export default function Login() {
   };
 
   return (
-    // ✅ Dark mode wrapper added
     <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-950 px-4 transition-colors duration-300">
       
-      {/* ✅ Dark mode card added */}
       <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 transition-colors duration-300">
 
-        {/* ✅ Dark mode text added */}
         <h2 className="text-3xl font-bold text-center text-blue-600 dark:text-blue-400 mb-2">
           Welcome Back
         </h2>
@@ -110,7 +113,6 @@ export default function Login() {
             Login
           </button>
 
-          {/* Error Message */}
           {errorMessage && (
             <div className="text-red-600 text-center text-sm font-medium mt-2 bg-red-50 dark:bg-red-900/30 dark:text-red-400 p-2 rounded border border-red-200 dark:border-red-800">
               {errorMessage}

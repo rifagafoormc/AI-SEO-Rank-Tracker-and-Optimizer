@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
+import User from '../models/User.js';
 
-const authMiddleware = (req, res, next) => {
+export const authMiddleware = async (req, res, next) => {
   try {
     // Get token from header
     const token = req.header("Authorization")?.replace("Bearer ", "");
@@ -17,6 +18,12 @@ const authMiddleware = (req, res, next) => {
     
     // ✅ Extract userId from the decoded token
     req.userId = decoded.id;
+    
+    // ✅ Optional: Attach full user object for convenience
+    const user = await User.findById(req.userId).select('-password');
+    if (user) {
+      req.user = user;
+    }
     
     next();
   } catch (error) {

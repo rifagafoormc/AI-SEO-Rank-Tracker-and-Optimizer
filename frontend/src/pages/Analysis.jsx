@@ -12,6 +12,7 @@ export default function Analysis() {
   const [result, setResult] = useState(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState('');
+  const [analysisId, setAnalysisId] = useState(null);
 
   // Pre-fill URL if coming from dashboard
   useEffect(() => {
@@ -39,26 +40,31 @@ export default function Analysis() {
         }
       );
 
-      console.log(response.data);
+      console.log('Full API Response:', response.data);
 
       setResult(response.data.data);
       setAiSuggestions(
         response.data.data.aiSuggestions || 'No AI suggestions available'
       );
+      setAnalysisId(response.data.analysisId);
 
     } catch (error) {
-      console.error(error);
-      alert("Analysis failed");
+      console.error('Analysis Error:', error.response?.data || error.message);
+      alert(error.response?.data?.message || "Analysis failed. Please try again.");
     } finally {
       setIsAnalyzing(false);
     }
+  };
+
+  // Helper to check if value exists
+  const hasValue = (value) => {
+    return value !== null && value !== undefined;
   };
 
   return (
     <>
       <Navbar />
       
-      {/* ✅ 1. Outer Background: Lighter Dark Gray (Slate-800) */}
       <div className="min-h-screen bg-gray-100 dark:bg-[#1e293b] text-gray-900 dark:text-gray-100 p-6 transition-colors duration-300">
         <div className="max-w-6xl mx-auto px-6 py-8">
           
@@ -80,16 +86,12 @@ export default function Analysis() {
                 SEO Analysis
               </h1>
               <p className="text-gray-600 dark:text-gray-400 mt-1">
-                Get detailed SEO insights and AI-powered recommendations
+                Get detailed SEO insights, PageSpeed metrics, and AI-powered recommendations
               </p>
-            </div>
-            <div className="bg-blue-50 dark:bg-blue-900/30 px-4 py-2 rounded-lg border border-blue-200 dark:border-blue-800">
-              <span className="text-sm text-blue-700 dark:text-blue-300">⏳ 9 analyses remaining today</span>
             </div>
           </div>
 
           {/* Analysis Form */}
-          {/* ✅ 2. Inner Card: Darker than background (Slate-900) */}
           <div className="bg-white dark:bg-[#0f172a] rounded-xl shadow-lg dark:shadow-xl border border-gray-100 dark:border-gray-700/30 p-6 mb-8 transition-colors duration-300">
             <h2 className="text-xl font-semibold mb-6 dark:text-white">
               Website Details
@@ -99,7 +101,6 @@ export default function Analysis() {
                 <label className="block mb-2 font-medium text-gray-700 dark:text-gray-300">
                   Website URL *
                 </label>
-                {/* ✅ 3. Input: Matches the outer background color (sunken effect) */}
                 <input
                   type="url"
                   value={url}
@@ -140,7 +141,6 @@ export default function Analysis() {
           </div>
 
           {/* Results Section */}
-          {/* ✅ 4. Result Card: Same Darker color as the form card */}
           <div className="bg-white dark:bg-[#0f172a] rounded-xl shadow-lg dark:shadow-xl border border-gray-100 dark:border-gray-700/30 p-6 transition-colors duration-300">
             <h2 className="text-xl font-semibold mb-6 dark:text-white">
               Rank Tracking Result
@@ -152,11 +152,18 @@ export default function Analysis() {
               </p>
             ) : (
               <>
+                {/* Website Info */}
                 <div className="mb-6">
                   <p className="font-medium text-gray-700 dark:text-gray-300">Website</p>
                   <p className="text-blue-600 dark:text-blue-400 break-all">{result.url}</p>
+                  {analysisId && (
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                      Analysis ID: {analysisId}
+                    </p>
+                  )}
                 </div>
 
+                {/* Keyword Rankings Table */}
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead>
@@ -168,10 +175,12 @@ export default function Analysis() {
                       </tr>
                     </thead>
                     <tbody>
-                      {result.results.map((item, index) => (
+                      {result.results?.map((item, index) => (
                         <tr key={index} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                           <td className="p-3 font-medium dark:text-gray-300">{item.keyword}</td>
-                          <td className="p-3 text-blue-600 dark:text-blue-400 font-bold">#{item.rank}</td>
+                          <td className="p-3 text-blue-600 dark:text-blue-400 font-bold">
+                            {item.rank !== 'Not Found' ? `#${item.rank}` : '—'}
+                          </td>
                           <td className="p-3 dark:text-gray-400">{item.page}</td>
                           <td className="p-3">
                             {item.found ? (
@@ -186,6 +195,7 @@ export default function Analysis() {
                   </table>
                 </div>
 
+                {/* AI Suggestions */}
                 <div className="mt-8">
                   <button
                     onClick={() => setShowSuggestions(!showSuggestions)}
@@ -203,6 +213,84 @@ export default function Analysis() {
                       <pre className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300 font-sans">
                         {aiSuggestions}
                       </pre>
+                    </div>
+                  )}
+                </div>
+
+                {/* 🚀 PERFORMANCE ANALYSIS SECTION - Clean version with only 4 cards */}
+                <div className="mt-10 border-t border-gray-200 dark:border-gray-700 pt-8">
+                  <div className="flex items-center gap-2 mb-6">
+                    <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-2xl">
+                      ⚡
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                        Performance Analysis
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Google PageSpeed Insights & Core Web Vitals
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Only 4 Performance Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Performance</p>
+                      <p className={`text-3xl font-bold mt-2 ${
+                        hasValue(result.performance)
+                          ? result.performance >= 90 ? 'text-green-600 dark:text-green-400'
+                            : result.performance >= 50 ? 'text-yellow-600 dark:text-yellow-400'
+                            : 'text-red-600 dark:text-red-400'
+                          : 'text-gray-400 dark:text-gray-500'
+                      }`}>
+                        {hasValue(result.performance) 
+                          ? `${result.performance}/100` 
+                          : 'N/A'}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Overall speed score</p>
+                    </div>
+
+                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">LCP</p>
+                      <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-2">
+                        {hasValue(result.lcp) ? result.lcp : 'N/A'}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Largest Contentful Paint</p>
+                    </div>
+
+                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">CLS</p>
+                      <p className="text-3xl font-bold text-purple-600 dark:text-purple-400 mt-2">
+                        {hasValue(result.cls) ? result.cls : 'N/A'}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Cumulative Layout Shift</p>
+                    </div>
+
+                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">TBT</p>
+                      <p className={`text-3xl font-bold mt-2 ${
+                        hasValue(result.tbt)
+                          ? parseInt(result.tbt) < 200 ? 'text-green-600 dark:text-green-400'
+                            : parseInt(result.tbt) < 500 ? 'text-yellow-600 dark:text-yellow-400'
+                            : 'text-red-600 dark:text-red-400'
+                          : 'text-gray-400 dark:text-gray-500'
+                      }`}>
+                        {hasValue(result.tbt) ? result.tbt : 'N/A'}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Total Blocking Time</p>
+                    </div>
+                  </div>
+
+                  {/* Show message when no performance data is available */}
+                  {!hasValue(result.performance) && 
+                   !hasValue(result.lcp) && 
+                   !hasValue(result.cls) && 
+                   !hasValue(result.tbt) && (
+                    <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                      <p className="text-yellow-800 dark:text-yellow-300 text-center">
+                        ⚠️ PageSpeed data unavailable. Unable to fetch performance metrics right now. Please try again later.
+                      </p>
                     </div>
                   )}
                 </div>

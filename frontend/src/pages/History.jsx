@@ -19,8 +19,6 @@ export default function History() {
     try {
       const token = localStorage.getItem('token');
 
-      console.log('History token:', token);
-
       if (!token) {
         console.log('No token found');
         navigate('/login');
@@ -33,11 +31,9 @@ export default function History() {
         }
       });
 
-      console.log('History response status:', response.status);
-
       const data = await response.json();
       
-      console.log('History API data:', JSON.stringify(data, null, 2));
+      console.log('📊 History API data:', JSON.stringify(data, null, 2));
 
       if (data.success && Array.isArray(data.history)) {
         const formattedData = data.history.map((item) => {
@@ -55,19 +51,14 @@ export default function History() {
             console.error('Invalid URL:', item.websiteUrl);
           }
 
-          const results = item.rankingData?.results || [];
-
-          const foundRanks = results
-            .filter(r => r.found && typeof r.rank === 'number')
-            .map(r => r.rank);
-
-          let score = 50;
-
-          if (foundRanks.length > 0) {
-            const avgRank =
-              foundRanks.reduce((a, b) => a + b, 0) / foundRanks.length;
-
-            score = Math.max(50, Math.min(100, 105 - avgRank * 2));
+          // ✅ Read performance from pageSpeedData
+          const score = item.pageSpeedData?.performance ?? 0;
+          
+          // Debug: Log what we're reading
+          if (item.pageSpeedData) {
+            console.log(`📊 ${website} - Performance: ${score}`, item.pageSpeedData);
+          } else {
+            console.log(`⚠️ ${website} - No pageSpeedData found`);
           }
 
           let status = 'Poor';
@@ -92,14 +83,17 @@ export default function History() {
             id: item._id,
             website,
             score: Math.round(score),
+            performanceScore: item.pageSpeedData?.performance ?? 0,
+            lcp: item.pageSpeedData?.lcp || 'N/A',
+            cls: item.pageSpeedData?.cls || 'N/A',
+            tbt: item.pageSpeedData?.tbt || 'N/A',
             status,
             statusColor,
             bgColor,
             date: new Date(item.createdAt).toLocaleDateString(),
             keywords: item.keywords?.length || 0,
             issues: Math.max(0, 20 - Math.round(score / 5)),
-            aiSuggestions:
-              item.aiSuggestions || 'No suggestions available',
+            aiSuggestions: item.aiSuggestions || 'No suggestions available',
           };
         });
 
@@ -136,7 +130,6 @@ export default function History() {
       const data = await response.json();
 
       if (data.success) {
-        // Remove from UI
         setHistoryData(historyData.filter(item => item.id !== itemToDelete.id));
         setShowDeleteModal(false);
         setItemToDelete(null);
@@ -156,7 +149,6 @@ export default function History() {
     setItemToDelete(null);
   };
 
-  // Filter data
   const filteredData = historyData.filter(item => {
     const matchesSearch = item.website.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'All' || item.status === filterStatus;
@@ -189,7 +181,7 @@ export default function History() {
                 </span>
               </div>
               <p className="text-gray-600 dark:text-gray-400 mt-1">
-                View all previously analyzed websites and their SEO scores
+                View all previously analyzed websites and their real PageSpeed Performance scores
               </p>
             </div>
             <button 
@@ -210,7 +202,7 @@ export default function History() {
               <p className="text-2xl font-bold text-gray-900 dark:text-white">{historyData.length}</p>
             </div>
             <div className="bg-white dark:bg-[#0f172a] rounded-xl shadow-lg dark:shadow-xl border border-gray-100 dark:border-gray-700/30 p-4 transition-colors duration-300">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Average Score</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Average Performance</p>
               <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {historyData.length > 0
                   ? (historyData.reduce((acc, curr) => acc + curr.score, 0) / historyData.length).toFixed(1)
@@ -218,7 +210,7 @@ export default function History() {
               </p>
             </div>
             <div className="bg-white dark:bg-[#0f172a] rounded-xl shadow-lg dark:shadow-xl border border-gray-100 dark:border-gray-700/30 p-4 transition-colors duration-300">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Best Score</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Best Performance</p>
               <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {historyData.length > 0
                  ? Math.max(...historyData.map(item => item.score))
@@ -276,7 +268,7 @@ export default function History() {
                   <tr>
                     <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600 dark:text-gray-400">#</th>
                     <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600 dark:text-gray-400">Website</th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600 dark:text-gray-400">SEO Score</th>
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600 dark:text-gray-400">Performance Score</th>
                     <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600 dark:text-gray-400">Status</th>
                     <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600 dark:text-gray-400">Keywords</th>
                     <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600 dark:text-gray-400">Issues</th>
@@ -401,18 +393,15 @@ export default function History() {
         </div>
       </div>
 
-      {/* ✅ Custom Delete Confirmation Modal */}
+      {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          {/* Backdrop */}
           <div 
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={handleCancelDelete}
           ></div>
           
-          {/* Modal */}
           <div className="relative bg-white dark:bg-[#1e293b] rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-200 dark:border-gray-700/50 animate-in fade-in zoom-in duration-200">
-            {/* Icon */}
             <div className="flex justify-center mb-4">
               <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
                 <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -421,17 +410,14 @@ export default function History() {
               </div>
             </div>
 
-            {/* Title */}
             <h3 className="text-xl font-bold text-center text-gray-900 dark:text-white mb-2">
               Delete Analysis
             </h3>
             
-            {/* Message */}
             <p className="text-center text-gray-600 dark:text-gray-300 mb-6">
               Are you sure you want to permanently delete the analysis for <span className="font-semibold text-gray-900 dark:text-white">"{itemToDelete?.website}"</span>? This action cannot be undone.
             </p>
 
-            {/* Buttons */}
             <div className="flex gap-3">
               <button
                 onClick={handleCancelDelete}

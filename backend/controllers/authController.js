@@ -42,16 +42,17 @@ export const registerUser = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create new user
+    // Create new user with default role
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
+      role: 'user', // ✅ Set default role
     });
 
     // Generate JWT Token
     const token = jwt.sign(
-      { id: user._id },
+      { id: user._id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -64,6 +65,7 @@ export const registerUser = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role, // ✅ Send role to frontend
       },
     });
   } catch (error) {
@@ -102,7 +104,7 @@ export const loginUser = async (req, res) => {
 
     // Generate JWT Token
     const token = jwt.sign(
-      { id: user._id },
+      { id: user._id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -115,6 +117,7 @@ export const loginUser = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role, // ✅ Send role to frontend
       },
     });
   } catch (error) {
