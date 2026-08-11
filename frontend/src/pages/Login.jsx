@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Mail, Lock, Eye, EyeOff, LogIn, Sparkles } from "lucide-react";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -11,6 +12,7 @@ export default function Login() {
   });
   
   const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
     setErrorMessage("");
@@ -23,6 +25,7 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage("");
+    setIsLoading(true);
 
     try {
       const response = await axios.post(
@@ -36,7 +39,6 @@ export default function Login() {
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
 
-      // ✅ Redirect based on user role
       if (response.data.user.role === "admin") {
         navigate("/admin");
       } else {
@@ -46,46 +48,57 @@ export default function Login() {
     } catch (error) {
       const msg = error.response?.data?.message || "Invalid email or password";
       setErrorMessage(msg);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-950 px-4 transition-colors duration-300">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black to-gray-900 px-4 transition-colors duration-300">
       
-      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 transition-colors duration-300">
-
-        <h2 className="text-3xl font-bold text-center text-blue-600 dark:text-blue-400 mb-2">
-          Welcome Back
-        </h2>
-
-        <p className="text-center text-gray-500 dark:text-gray-400 mb-6">
-          Login to your SEO Rank Tracker account
-        </p>
+      <div className="w-full max-w-md bg-gradient-to-br from-gray-900/90 to-black/90 rounded-2xl shadow-2xl border border-purple-500/20 p-8 transition-colors duration-300 backdrop-blur-sm">
+        
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-600 to-purple-800 shadow-lg shadow-purple-500/30 mb-4">
+            <Sparkles className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-3xl font-bold text-white">
+            Welcome Back
+          </h2>
+          <p className="text-purple-300/70 mt-2">
+            Login to your SEO Rank Tracker account
+          </p>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
 
+          {/* Email Field */}
           <div>
-            <label className="block mb-2 font-medium dark:text-gray-300">
-              Email
+            <label className="block mb-2 text-sm font-medium text-purple-300">
+              Email Address
             </label>
-
-            <input
-              type="email"
-              name="email"
-              placeholder="Enter your email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
-            />
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
+              <input
+                type="email"
+                name="email"
+                placeholder="Enter your email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none bg-black/50 border-purple-500/30 text-white placeholder:text-gray-500 transition-all"
+              />
+            </div>
           </div>
 
+          {/* Password Field */}
           <div>
-            <label className="block mb-2 font-medium dark:text-gray-300">
+            <label className="block mb-2 text-sm font-medium text-purple-300">
               Password
             </label>
-
             <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
@@ -93,40 +106,57 @@ export default function Login() {
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="w-full border rounded-lg p-3 pr-16 focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                className="w-full pl-10 pr-12 py-3 border rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none bg-black/50 border-purple-500/30 text-white placeholder:text-gray-500 transition-all"
               />
-
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3 text-sm text-blue-600 dark:text-blue-400"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-400 hover:text-purple-300 transition"
               >
-                {showPassword ? "Hide" : "Show"}
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
           </div>
 
+          {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg transition"
+            disabled={isLoading}
+            className="w-full bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 disabled:from-purple-400 disabled:to-purple-500 text-white py-3.5 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-purple-600/30 hover:shadow-purple-600/50"
           >
-            Login
+            {isLoading ? (
+              <>
+                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Logging in...
+              </>
+            ) : (
+              <>
+                <LogIn className="w-5 h-5" />
+                Login
+              </>
+            )}
           </button>
 
+          {/* Error Message */}
           {errorMessage && (
-            <div className="text-red-600 text-center text-sm font-medium mt-2 bg-red-50 dark:bg-red-900/30 dark:text-red-400 p-2 rounded border border-red-200 dark:border-red-800">
+            <div className="flex items-center gap-2 text-red-400 text-sm bg-red-950/30 p-3 rounded-xl border border-red-800/50">
+              <span className="text-lg">⚠️</span>
               {errorMessage}
             </div>
           )}
         </form>
 
-        <p className="text-center mt-6 text-gray-600 dark:text-gray-400">
+        {/* Footer */}
+        <p className="text-center mt-6 text-purple-300/60">
           Don't have an account?{" "}
           <Link
             to="/register"
-            className="text-blue-600 dark:text-blue-400 font-semibold hover:underline"
+            className="text-purple-400 font-semibold hover:text-purple-300 hover:underline transition"
           >
-            Register
+            Create one now
           </Link>
         </p>
 

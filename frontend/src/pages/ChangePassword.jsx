@@ -2,6 +2,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import axios from "axios";
+import { 
+  Lock, Key, CheckCircle, XCircle, 
+  ArrowLeft, Shield, Eye, EyeOff
+} from 'lucide-react';
 
 export default function ChangePassword() {
   const navigate = useNavigate();
@@ -11,6 +15,9 @@ export default function ChangePassword() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -94,88 +101,165 @@ export default function ChangePassword() {
     <>
       <Navbar />
 
-      <div className="min-h-screen bg-gray-100 dark:bg-[#1e293b] flex items-center justify-center p-6 transition-colors duration-300">
-        <div className="bg-white dark:bg-[#0f172a] p-8 rounded-xl shadow-lg w-full max-w-md border border-gray-100 dark:border-gray-700/30 transition-colors duration-300">
+      <div className="min-h-screen bg-gray-50 dark:bg-[#070714] text-gray-900 dark:text-white relative overflow-hidden transition-colors duration-300">
+        
+        {/* Background Glows - Light/Dark mode aware */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-violet-300/20 dark:bg-violet-600/15 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 -left-40 w-96 h-96 bg-cyan-200/20 dark:bg-cyan-500/8 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-200/20 dark:bg-indigo-500/5 rounded-full blur-3xl" />
           
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            Change Password
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Enter your current password and choose a new one
-          </p>
+          {/* Grid Pattern - Dark mode only */}
+          <div
+            className="absolute inset-0 opacity-[0.04] dark:opacity-[0.08]"
+            style={{
+              backgroundImage: `
+                linear-gradient(rgba(139,92,246,0.15) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(139,92,246,0.15) 1px, transparent 1px)
+              `,
+              backgroundSize: "48px 48px",
+            }}
+          />
+        </div>
 
-          {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg mb-4 text-sm">
-              {error}
-            </div>
-          )}
+        <div className="relative z-10 flex items-center justify-center min-h-screen p-6">
+          
+          <div className="bg-white dark:bg-[#0a0a1a]/80 backdrop-blur-xl border border-violet-200 dark:border-violet-500/20 rounded-2xl shadow-lg shadow-gray-200/50 dark:shadow-xl dark:shadow-black/20 hover:border-violet-300 dark:hover:border-violet-400/30 transition-all duration-300 w-full max-w-md p-8">
+            
+            {/* Back Button */}
+            <button
+              onClick={() => navigate("/profile")}
+              className="mb-4 text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-300 flex items-center gap-2 transition"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Profile
+            </button>
 
-          {success && (
-            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-600 dark:text-green-400 px-4 py-3 rounded-lg mb-4 text-sm">
-              {success}
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 rounded-xl bg-violet-100 dark:bg-violet-500/10">
+                <Key className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Change Password
+              </h2>
             </div>
-          )}
+            <p className="text-gray-600 dark:text-violet-300/60 mb-6">
+              Enter your current password and choose a new one
+            </p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Current Password
-              </label>
-              <input
-                type="password"
-                placeholder="Enter current password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full border rounded-lg px-4 py-3 bg-white dark:bg-[#1e293b] border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 transition-colors duration-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
-            </div>
+            {/* Error Message */}
+            {error && (
+              <div className="flex items-center gap-2 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-700 dark:text-rose-400 px-4 py-3 rounded-xl mb-4 text-sm">
+                <XCircle className="w-5 h-5 flex-shrink-0" />
+                {error}
+              </div>
+            )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                New Password
-              </label>
-              <input
-                type="password"
-                placeholder="Enter new password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full border rounded-lg px-4 py-3 bg-white dark:bg-[#1e293b] border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 transition-colors duration-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Must be at least 6 characters, 1 number and 1 special character
-              </p>
-            </div>
+            {/* Success Message */}
+            {success && (
+              <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-4 py-3 rounded-xl mb-4 text-sm">
+                <CheckCircle className="w-5 h-5 flex-shrink-0" />
+                {success}
+              </div>
+            )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Confirm New Password
-              </label>
-              <input
-                type="password"
-                placeholder="Confirm new password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full border rounded-lg px-4 py-3 bg-white dark:bg-[#1e293b] border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 transition-colors duration-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
-            </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              
+              {/* Current Password */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-violet-300 mb-1">
+                  Current Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-violet-400" />
+                  <input
+                    type={showCurrentPassword ? "text" : "password"}
+                    placeholder="Enter current password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="w-full pl-10 pr-12 py-3 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-violet-500/20 rounded-xl focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition"
+                  >
+                    {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
 
-            <div className="flex gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => navigate("/profile")}
-                className="flex-1 px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex-1 bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? "Updating..." : "Update Password"}
-              </button>
-            </div>
-          </form>
+              {/* New Password */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-violet-300 mb-1">
+                  New Password
+                </label>
+                <div className="relative">
+                  <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-violet-400" />
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    placeholder="Enter new password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full pl-10 pr-12 py-3 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-violet-500/20 rounded-xl focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition"
+                  >
+                    {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                  Must be at least 6 characters, 1 number and 1 special character
+                </p>
+              </div>
+
+              {/* Confirm Password */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-violet-300 mb-1">
+                  Confirm New Password
+                </label>
+                <div className="relative">
+                  <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-violet-400" />
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Confirm new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full pl-10 pr-12 py-3 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-violet-500/20 rounded-xl focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition"
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => navigate("/profile")}
+                  className="flex-1 px-4 py-3 rounded-xl border border-gray-300 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 bg-gradient-to-r from-violet-600 to-violet-700 hover:from-violet-500 hover:to-violet-600 text-white px-4 py-3 rounded-xl transition shadow-lg shadow-violet-600/30 hover:shadow-violet-600/50 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? "Updating..." : "Update Password"}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </>

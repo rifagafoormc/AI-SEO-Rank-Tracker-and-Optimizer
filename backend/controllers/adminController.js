@@ -5,13 +5,16 @@ import mongoose from 'mongoose';
 // Get admin dashboard stats
 export const getAdminStats = async (req, res) => {
   try {
-    // Get total users
-    const totalUsers = await User.countDocuments();
+    // ✅ Get total users (only regular users, not admins)
+    const totalUsers = await User.countDocuments({ role: 'user' });
 
     // Get users created today
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    
+    // ✅ New users today (only regular users)
     const newUsersToday = await User.countDocuments({
+      role: 'user',
       createdAt: { $gte: today }
     });
 
@@ -214,12 +217,12 @@ export const getAIUsageStats = async (req, res) => {
   }
 };
 
-// ✅ NEW: Get all users (except the requesting admin)
+// Get all users (only regular users, not admins)
 export const getAllUsers = async (req, res) => {
   try {
-    // Get all users except the current admin
-    const users = await User.find({ 
-      _id: { $ne: req.userId } 
+    // ✅ Get only regular users (not admins)
+    const users = await User.find({
+      role: 'user'
     }).select('-password').sort({ createdAt: -1 });
 
     // Get analysis count for each user
@@ -250,7 +253,7 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
-// ✅ NEW: Delete a user (admin only)
+// Delete a user (admin only)
 export const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
