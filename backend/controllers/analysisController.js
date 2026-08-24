@@ -4,7 +4,8 @@ import { generateSeoSuggestions } from '../utils/gemini.js';
 
 export const analyzeWebsite = async (req, res) => {
   try {
-    const { url, keywords } = req.body;
+    // ✅ UPDATED: Added country and searchDepth to destructuring
+    const { url, keywords, country, searchDepth } = req.body;
 
     // Validate input
     if (!url || !keywords) {
@@ -13,6 +14,10 @@ export const analyzeWebsite = async (req, res) => {
         message: 'Website URL and keywords are required',
       });
     }
+
+    // ✅ NEW: Set default values for country and search depth
+    const selectedCountry = country || 'in';
+    const selectedSearchDepth = Number(searchDepth) || 100;
 
     // Convert keywords into array
     const keywordArray = keywords
@@ -25,7 +30,10 @@ export const analyzeWebsite = async (req, res) => {
       ? url
       : `https://${url}`;
 
+    // ✅ UPDATED: Added logging for new parameters
     console.log('🔍 Analyzing URL:', normalizedUrl);
+    console.log('🌍 Country:', selectedCountry);
+    console.log('🔎 Search Depth:', selectedSearchDepth);
 
     // Extract domain
     const domain = new URL(normalizedUrl).hostname.replace('www.', '');
@@ -36,15 +44,16 @@ export const analyzeWebsite = async (req, res) => {
     for (const keyword of keywordArray) {
       console.log(`🔍 Checking keyword: ${keyword}`);
       
+      // ✅ UPDATED: Using dynamic country and search depth values
       const response = await axios.get(
         'https://serpapi.com/search.json',
         {
           params: {
             engine: 'google',
             q: keyword,
-            gl: 'in',
+            gl: selectedCountry,        // ✅ Dynamic country
             hl: 'en',
-            num: 100,
+            num: selectedSearchDepth,   // ✅ Dynamic search depth
             api_key: process.env.SERP_API_KEY,
           },
         }
@@ -175,7 +184,7 @@ export const analyzeWebsite = async (req, res) => {
     // 🔥 CRITICAL DEBUG: Log before saving
     console.log('🔥 FINAL pageSpeedData BEFORE SAVE:', JSON.stringify(pageSpeedData, null, 2));
 
-    // ✅ SAVE TO MONGODB - Using pageSpeedData field
+    // ✅ SAVE TO MONGODB - Updated to include country and searchDepth
     const savedAnalysis = await Analysis.create({
       userId: req.userId,
       websiteUrl: normalizedUrl,
@@ -186,12 +195,17 @@ export const analyzeWebsite = async (req, res) => {
       pageSpeedData: pageSpeedData,
       aiSuggestions,
       status: 'completed',
+      // ✅ NEW: Save the selected parameters
+      country: selectedCountry,
+      searchDepth: selectedSearchDepth,
     });
 
     console.log('✅ Analysis saved with ID:', savedAnalysis._id);
     console.log('✅ Saved pageSpeedData:', savedAnalysis.pageSpeedData);
+    console.log('✅ Saved with country:', savedAnalysis.country);
+    console.log('✅ Saved with searchDepth:', savedAnalysis.searchDepth);
 
-    // 🚀 RETURN ALL DATA INCLUDING PAGESPEED
+    // 🚀 RETURN ALL DATA INCLUDING PAGESPEED AND SELECTED PARAMETERS
     res.status(200).json({
       success: true,
       message: 'Real Google rank tracking completed with PageSpeed data',
@@ -205,6 +219,9 @@ export const analyzeWebsite = async (req, res) => {
         cls: pageSpeedData.cls,
         tbt: pageSpeedData.tbt,
         fcp: pageSpeedData.fcp,
+        // ✅ NEW: Include selected parameters in response
+        selectedCountry: selectedCountry,
+        selectedSearchDepth: selectedSearchDepth,
       },
       analysisId: savedAnalysis._id,
     });

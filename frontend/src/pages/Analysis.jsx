@@ -1,11 +1,12 @@
 import Navbar from "../components/Navbar";
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from "axios";
 import { 
   ArrowLeft, Search, Sparkles, TrendingUp, Award, 
   Zap, Clock, BarChart3, Eye, EyeOff, 
-  ChevronRight, CheckCircle, XCircle 
+  ChevronRight, CheckCircle, XCircle,
+  ChevronDown 
 } from 'lucide-react';
 
 export default function Analysis() {
@@ -13,11 +14,19 @@ export default function Analysis() {
   const navigate = useNavigate();
   const [url, setUrl] = useState('');
   const [keywords, setKeywords] = useState('');
+  const [country, setCountry] = useState('in');
+  const [searchDepth, setSearchDepth] = useState(100);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState('');
   const [analysisId, setAnalysisId] = useState(null);
+
+  // State for custom dropdowns
+  const [isCountryOpen, setIsCountryOpen] = useState(false);
+  const [isDepthOpen, setIsDepthOpen] = useState(false);
+  const countryRef = useRef(null);
+  const depthRef = useRef(null);
 
   // Pre-fill URL if coming from dashboard
   useEffect(() => {
@@ -25,6 +34,21 @@ export default function Analysis() {
       setUrl(location.state.url);
     }
   }, [location]);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (countryRef.current && !countryRef.current.contains(event.target)) {
+        setIsCountryOpen(false);
+      }
+      if (depthRef.current && !depthRef.current.contains(event.target)) {
+        setIsDepthOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleAnalyze = async () => {
     if (!url) return;
@@ -37,6 +61,8 @@ export default function Analysis() {
         {
           url,
           keywords,
+          country,
+          searchDepth,
         },
         {
           headers: {
@@ -66,11 +92,69 @@ export default function Analysis() {
     return value !== null && value !== undefined;
   };
 
+  // Country data
+  const countries = [
+    { code: 'in', name: 'India', flag: '🇮🇳' },
+    { code: 'us', name: 'United States', flag: '🇺🇸' },
+    { code: 'gb', name: 'United Kingdom', flag: '🇬🇧' },
+    { code: 'ca', name: 'Canada', flag: '🇨🇦' },
+    { code: 'au', name: 'Australia', flag: '🇦🇺' },
+    { code: 'de', name: 'Germany', flag: '🇩🇪' },
+    { code: 'fr', name: 'France', flag: '🇫🇷' },
+    { code: 'jp', name: 'Japan', flag: '🇯🇵' },
+    { code: 'br', name: 'Brazil', flag: '🇧🇷' },
+    { code: 'mx', name: 'Mexico', flag: '🇲🇽' },
+    { code: 'it', name: 'Italy', flag: '🇮🇹' },
+    { code: 'es', name: 'Spain', flag: '🇪🇸' },
+    { code: 'nl', name: 'Netherlands', flag: '🇳🇱' },
+    { code: 'se', name: 'Sweden', flag: '🇸🇪' },
+    { code: 'no', name: 'Norway', flag: '🇳🇴' },
+    { code: 'dk', name: 'Denmark', flag: '🇩🇰' },
+    { code: 'fi', name: 'Finland', flag: '🇫🇮' },
+    { code: 'pl', name: 'Poland', flag: '🇵🇱' },
+    { code: 'ru', name: 'Russia', flag: '🇷🇺' },
+    { code: 'tr', name: 'Turkey', flag: '🇹🇷' },
+    { code: 'ae', name: 'UAE', flag: '🇦🇪' },
+    { code: 'sa', name: 'Saudi Arabia', flag: '🇸🇦' },
+    { code: 'eg', name: 'Egypt', flag: '🇪🇬' },
+    { code: 'za', name: 'South Africa', flag: '🇿🇦' },
+    { code: 'ng', name: 'Nigeria', flag: '🇳🇬' },
+    { code: 'ke', name: 'Kenya', flag: '🇰🇪' },
+    { code: 'sg', name: 'Singapore', flag: '🇸🇬' },
+    { code: 'my', name: 'Malaysia', flag: '🇲🇾' },
+    { code: 'ph', name: 'Philippines', flag: '🇵🇭' },
+    { code: 'vn', name: 'Vietnam', flag: '🇻🇳' },
+    { code: 'th', name: 'Thailand', flag: '🇹🇭' },
+    { code: 'id', name: 'Indonesia', flag: '🇮🇩' },
+    { code: 'pk', name: 'Pakistan', flag: '🇵🇰' },
+    { code: 'bd', name: 'Bangladesh', flag: '🇧🇩' },
+    { code: 'lk', name: 'Sri Lanka', flag: '🇱🇰' },
+    { code: 'np', name: 'Nepal', flag: '🇳🇵' },
+  ];
+
+  const depthOptions = [
+    { value: 10, label: 'Top 10 Results' },
+    { value: 20, label: 'Top 20 Results' },
+    { value: 50, label: 'Top 50 Results' },
+    { value: 100, label: 'Top 100 Results' },
+  ];
+
+  const getCountryLabel = (code) => {
+    const country = countries.find(c => c.code === code);
+    return country ? `${country.flag} ${country.name}` : code;
+  };
+
+  const getDepthLabel = (value) => {
+    const option = depthOptions.find(d => d.value === value);
+    return option ? option.label : `${value} Results`;
+  };
+
   return (
     <>
       <Navbar />
       
-      <div className="min-h-screen bg-gray-50 dark:bg-[#070714] text-gray-900 dark:text-white relative overflow-hidden transition-colors duration-300">
+      {/* ✅ FIX 1: Removed overflow-hidden */}
+      <div className="min-h-screen bg-gray-50 dark:bg-[#070714] text-gray-900 dark:text-white relative transition-colors duration-300">
         
         {/* Background Glows - Light/Dark mode aware */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -114,13 +198,14 @@ export default function Analysis() {
             </div>
           </div>
 
-          {/* Analysis Form */}
-          <div className="bg-white dark:bg-[#0a0a1a]/80 backdrop-blur-xl border border-violet-200 dark:border-violet-500/20 rounded-2xl p-6 mb-8 shadow-lg shadow-gray-200/50 dark:shadow-xl dark:shadow-black/20 hover:border-violet-300 dark:hover:border-violet-400/30 transition-all duration-300">
+          {/* ✅ FIX 2: Analysis Form with z-20 */}
+          <div className="relative z-20 bg-white dark:bg-[#0a0a1a]/80 backdrop-blur-xl border border-violet-200 dark:border-violet-500/20 rounded-2xl p-6 mb-8 shadow-lg shadow-gray-200/50 dark:shadow-xl dark:shadow-black/20 hover:border-violet-300 dark:hover:border-violet-400/30 transition-all duration-300">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
               <Search className="w-5 h-5 text-violet-600 dark:text-violet-400" />
               Website Details
             </h2>
             <div className="space-y-5">
+              {/* Website URL */}
               <div>
                 <label className="block mb-2 font-medium text-gray-700 dark:text-violet-300">
                   Website URL *
@@ -133,9 +218,11 @@ export default function Analysis() {
                   className="w-full bg-gray-100 dark:bg-white/5 border border-violet-200 dark:border-violet-500/20 rounded-xl px-4 py-3 focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none"
                 />
               </div>
+
+              {/* Target Keywords */}
               <div>
                 <label className="block mb-2 font-medium text-gray-700 dark:text-violet-300">
-                  Target Keywords
+                  Target Keywords *
                 </label>
                 <input
                   type="text"
@@ -146,17 +233,113 @@ export default function Analysis() {
                 />
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-500">Separate keywords with commas</p>
               </div>
+
+              {/* Country and Search Depth - Custom Dropdowns */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Country Custom Dropdown */}
+                <div ref={countryRef}>
+                  <label className="block mb-2 font-medium text-gray-700 dark:text-violet-300">
+                    Target Country
+                  </label>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsCountryOpen(!isCountryOpen);
+                        setIsDepthOpen(false);
+                      }}
+                      className="w-full bg-gray-100 dark:bg-white/5 border border-violet-200 dark:border-violet-500/20 rounded-xl px-4 py-3 focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200 text-gray-900 dark:text-white outline-none flex items-center justify-between"
+                    >
+                      <span>{getCountryLabel(country)}</span>
+                      <ChevronDown className={`w-5 h-5 transition-transform duration-200 ${isCountryOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    
+                    {isCountryOpen && (
+                      <div className="absolute z-50 w-full mt-2 bg-white dark:bg-[#1a1a2e] border border-violet-200 dark:border-violet-500/20 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                        {countries.map((c) => (
+                          <button
+                            key={c.code}
+                            type="button"
+                            onClick={() => {
+                              setCountry(c.code);
+                              setIsCountryOpen(false);
+                            }}
+                            className={`w-full px-4 py-2.5 text-left hover:bg-violet-50 dark:hover:bg-violet-500/10 transition-colors flex items-center gap-2 ${
+                              country === c.code 
+                                ? 'bg-violet-50 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400' 
+                                : 'text-gray-700 dark:text-gray-300'
+                            }`}
+                          >
+                            <span>{c.flag}</span>
+                            <span>{c.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-500">
+                    Check Google rankings for the selected country
+                  </p>
+                </div>
+
+                {/* Search Depth Custom Dropdown */}
+                <div ref={depthRef}>
+                  <label className="block mb-2 font-medium text-gray-700 dark:text-violet-300">
+                    Search Depth
+                  </label>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsDepthOpen(!isDepthOpen);
+                        setIsCountryOpen(false);
+                      }}
+                      className="w-full bg-gray-100 dark:bg-white/5 border border-violet-200 dark:border-violet-500/20 rounded-xl px-4 py-3 focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200 text-gray-900 dark:text-white outline-none flex items-center justify-between"
+                    >
+                      <span>{getDepthLabel(searchDepth)}</span>
+                      <ChevronDown className={`w-5 h-5 transition-transform duration-200 ${isDepthOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    
+                    {isDepthOpen && (
+                      <div className="absolute z-50 w-full mt-2 bg-white dark:bg-[#1a1a2e] border border-violet-200 dark:border-violet-500/20 rounded-xl shadow-lg">
+                        {depthOptions.map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => {
+                              setSearchDepth(option.value);
+                              setIsDepthOpen(false);
+                            }}
+                            className={`w-full px-4 py-2.5 text-left hover:bg-violet-50 dark:hover:bg-violet-500/10 transition-colors ${
+                              searchDepth === option.value 
+                                ? 'bg-violet-50 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400' 
+                                : 'text-gray-700 dark:text-gray-300'
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-500">
+                    How many Google results to search
+                  </p>
+                </div>
+              </div>
+
+              {/* Analyze Button */}
               <button 
                 onClick={handleAnalyze}
-                disabled={!url || isAnalyzing}
-                className={`px-8 py-3.5 rounded-xl font-medium text-white transition-all duration-200
-                  ${!url || isAnalyzing 
+                disabled={!url || !keywords || isAnalyzing}
+                className={`w-full px-8 py-3.5 rounded-xl font-medium text-white transition-all duration-200
+                  ${!url || !keywords || isAnalyzing 
                     ? 'bg-gray-200 dark:bg-white/5 cursor-not-allowed text-gray-400 dark:text-gray-500' 
                     : 'bg-gradient-to-r from-violet-600 to-violet-700 hover:from-violet-500 hover:to-violet-600 shadow-lg shadow-violet-600/30 hover:shadow-violet-600/50 active:scale-95'
                   }`}
               >
                 {isAnalyzing ? (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-center gap-2">
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     Analyzing...
                   </div>
@@ -167,8 +350,8 @@ export default function Analysis() {
             </div>
           </div>
 
-          {/* Results Section */}
-          <div className="bg-white dark:bg-[#0a0a1a]/80 backdrop-blur-xl border border-violet-200 dark:border-violet-500/20 rounded-2xl p-6 shadow-lg shadow-gray-200/50 dark:shadow-xl dark:shadow-black/20 hover:border-violet-300 dark:hover:border-violet-400/30 transition-all duration-300">
+          {/* ✅ FIX 3: Results Section with z-10 */}
+          <div className="relative z-10 bg-white dark:bg-[#0a0a1a]/80 backdrop-blur-xl border border-violet-200 dark:border-violet-500/20 rounded-2xl p-6 shadow-lg shadow-gray-200/50 dark:shadow-xl dark:shadow-black/20 hover:border-violet-300 dark:hover:border-violet-400/30 transition-all duration-300">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-violet-600 dark:text-violet-400" />
               Rank Tracking Result
@@ -184,6 +367,12 @@ export default function Analysis() {
                 <div className="mb-6 p-4 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/5">
                   <p className="font-medium text-gray-700 dark:text-violet-300">Website</p>
                   <p className="text-gray-900 dark:text-white break-all">{result.url}</p>
+                  {result.selectedCountry && (
+                    <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                      🌍 Country: {result.selectedCountry.toUpperCase()} | 
+                      🔎 Depth: {result.selectedSearchDepth || 100} results
+                    </p>
+                  )}
                   {analysisId && (
                     <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                       Analysis ID: {analysisId}

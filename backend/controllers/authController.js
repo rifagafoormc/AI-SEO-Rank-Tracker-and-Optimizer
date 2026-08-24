@@ -6,7 +6,7 @@ export const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // ✅ Backend Password Validation
+    //  Backend Password Validation
     if (!password || password.length < 6) {
       return res.status(400).json({
         success: false,

@@ -14,6 +14,18 @@ const analysisSchema = new mongoose.Schema({
     type: [String],
     required: true,
   },
+  // ✅ NEW: Country field to store which Google country was searched
+  country: {
+    type: String,
+    default: 'in',
+    required: false,
+  },
+  // ✅ NEW: Search Depth field to store how many results were searched
+  searchDepth: {
+    type: Number,
+    default: 100,
+    required: false,
+  },
   pageSpeedData: {
     type: Object,
     default: null,
@@ -34,6 +46,11 @@ const analysisSchema = new mongoose.Schema({
 }, {
   timestamps: true,
 });
+
+// ✅ OPTIONAL: Add indexes for better query performance
+analysisSchema.index({ userId: 1, createdAt: -1 });
+analysisSchema.index({ websiteUrl: 1 });
+analysisSchema.index({ status: 1 });
 
 const Analysis = mongoose.model("Analysis", analysisSchema);
 
