@@ -5,7 +5,8 @@ import axios from 'axios';
 import { 
   Users, Search, 
   User, Mail, Calendar, BarChart3, Trash2, 
-  ArrowLeft, AlertTriangle, CheckCircle, XCircle
+  ArrowLeft, AlertTriangle, CheckCircle, XCircle,
+  Plus, Eye, EyeOff
 } from 'lucide-react';
 
 export default function ManageUsers() {
@@ -17,6 +18,16 @@ export default function ManageUsers() {
   const [userToDelete, setUserToDelete] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [message, setMessage] = useState({ type: '', text: '' });
+  
+  // Add User states
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [creatingUser, setCreatingUser] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [newUser, setNewUser] = useState({
+    name: '',
+    email: '',
+    password: ''
+  });
 
   useEffect(() => {
     fetchUsers();
@@ -95,6 +106,73 @@ export default function ManageUsers() {
     setUserToDelete(null);
   };
 
+  // Create User Handler
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+
+    if (!newUser.name || !newUser.email || !newUser.password) {
+      setMessage({
+        type: 'error',
+        text: 'Please fill in all fields.'
+      });
+      return;
+    }
+
+    try {
+      setCreatingUser(true);
+
+      const token = localStorage.getItem('token');
+
+      const response = await axios.post(
+        'http://localhost:5000/api/admin/users',
+        newUser,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.data.success) {
+        // Add newly created user to the table
+        setUsers(prevUsers => [
+          response.data.user,
+          ...prevUsers
+        ]);
+
+        setMessage({
+          type: 'success',
+          text: `User ${response.data.user.name} created successfully!`
+        });
+
+        // Reset form
+        setNewUser({
+          name: '',
+          email: '',
+          password: ''
+        });
+
+        setShowAddUserModal(false);
+        setShowPassword(false);
+
+        setTimeout(() => {
+          setMessage({ type: '', text: '' });
+        }, 3000);
+      }
+    } catch (error) {
+      console.error('Create user failed:', error);
+
+      setMessage({
+        type: 'error',
+        text:
+          error.response?.data?.message ||
+          'Failed to create user'
+      });
+    } finally {
+      setCreatingUser(false);
+    }
+  };
+
   const filteredUsers = users.filter(user => {
     const search = searchTerm.toLowerCase();
     return (
@@ -150,7 +228,7 @@ export default function ManageUsers() {
 
         <div className="relative z-10 max-w-7xl mx-auto p-6">
           
-          {/* Header */}
+          {/* Header - Updated with Add User button */}
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -160,6 +238,13 @@ export default function ManageUsers() {
                 View and manage all registered users
               </p>
             </div>
+            <button
+              onClick={() => setShowAddUserModal(true)}
+              className="flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-medium shadow-lg shadow-violet-600/20 transition-all duration-200"
+            >
+              <Plus className="w-5 h-5" />
+              Add User
+            </button>
           </div>
 
           {/* Message Alert */}
@@ -363,6 +448,172 @@ export default function ManageUsers() {
                 Delete
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add User Modal */}
+      {showAddUserModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => {
+              if (!creatingUser) {
+                setShowAddUserModal(false);
+                setShowPassword(false);
+              }
+            }}
+          ></div>
+
+          {/* Modal */}
+          <div className="relative bg-white dark:bg-[#0a0a1a] rounded-2xl shadow-2xl max-w-md w-full p-6 border border-violet-200 dark:border-violet-500/20">
+
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 rounded-xl bg-violet-100 dark:bg-violet-500/10 flex items-center justify-center">
+                <User className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+              </div>
+
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Add New User
+                </h3>
+
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Create a new user account
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleCreateUser}>
+
+              {/* Name */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Full Name
+                </label>
+
+                <input
+                  type="text"
+                  value={newUser.name}
+                  onChange={(e) =>
+                    setNewUser({
+                      ...newUser,
+                      name: e.target.value
+                    })
+                  }
+                  placeholder="Enter user's name"
+                  className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20 transition-all outline-none text-gray-900 dark:text-white placeholder:text-gray-400"
+                  required
+                />
+              </div>
+
+              {/* Email */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Email Address
+                </label>
+
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+
+                  <input
+                    type="email"
+                    value={newUser.email}
+                    onChange={(e) =>
+                      setNewUser({
+                        ...newUser,
+                        email: e.target.value
+                      })
+                    }
+                    placeholder="Enter email address"
+                    className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 pl-10 focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20 transition-all outline-none text-gray-900 dark:text-white placeholder:text-gray-400"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Password */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Password
+                </label>
+
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={newUser.password}
+                    onChange={(e) =>
+                      setNewUser({
+                        ...newUser,
+                        password: e.target.value
+                      })
+                    }
+                    placeholder="Enter password"
+                    className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 pr-11 focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20 transition-all outline-none text-gray-900 dark:text-white placeholder:text-gray-400"
+                    required
+                    minLength={6}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-violet-500"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+
+                <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                  At least 6 characters, including a number and special character.
+                </p>
+              </div>
+
+              {/* Role */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Role
+                </label>
+
+                <div className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-gray-700 dark:text-gray-300">
+                  User
+                </div>
+
+                <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                  Admin-created accounts are regular users.
+                </p>
+              </div>
+
+              {/* Buttons */}
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddUserModal(false);
+                    setShowPassword(false);
+                  }}
+                  disabled={creatingUser}
+                  className="flex-1 px-4 py-3 rounded-xl border border-gray-300 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition font-medium disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={creatingUser}
+                  className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-medium transition shadow-lg shadow-violet-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {creatingUser ? 'Creating...' : 'Create User'}
+                </button>
+              </div>
+
+            </form>
           </div>
         </div>
       )}

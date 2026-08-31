@@ -1,6 +1,7 @@
 import User from '../models/User.js';
 import Analysis from '../models/Analysis.js';
 import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 
 // Get admin dashboard stats
 export const getAdminStats = async (req, res) => {
@@ -290,6 +291,90 @@ export const deleteUser = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to delete user',
+    });
+  }
+};
+
+// Create a new user by admin
+export const createUser = async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+
+    // Validate required fields
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, email and password are required",
+      });
+    }
+
+    // Validate password length
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters long.",
+      });
+    }
+
+    // Password must contain a number
+    if (!/\d/.test(password)) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must contain at least one number.",
+      });
+    }
+
+    // Password must contain a special character
+    if (!/[!@#$%^&*(),.?":{}|<>_\-[\]\\/~`;'+=]/.test(password)) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must contain at least one special character.",
+      });
+    }
+
+    // Check whether email already exists
+    const existingUser = await User.findOne({
+      email: email.toLowerCase().trim(),
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "A user with this email already exists.",
+      });
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create regular user
+    const user = await User.create({
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
+      password: hashedPassword,
+      role: "user",
+    });
+
+    // Don't send password back
+    res.status(201).json({
+      success: true,
+      message: "User created successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        createdAt: user.createdAt,
+      },
+    });
+  } catch (error) {
+    console.error("Create user error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
     });
   }
 };

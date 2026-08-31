@@ -1,9 +1,10 @@
 import express from "express";
-import { 
-  getAdminStats, 
+import {
+  getAdminStats,
   getAIUsageStats,
-  getAllUsers,    // ✅ NEW - Import user management functions
-  deleteUser      // ✅ NEW
+  getAllUsers,
+  deleteUser,
+  createUser
 } from "../controllers/adminController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 import { adminOnly } from "../middleware/adminMiddleware.js";
@@ -18,8 +19,9 @@ router.use(adminOnly);
 router.get("/stats", getAdminStats);
 router.get("/ai/usage-stats", getAIUsageStats);
 
-// ✅ User Management Routes
+// User Management Routes
 router.get("/users", getAllUsers);
+router.post("/users", createUser);
 router.delete("/users/:id", deleteUser);
 
 export default router;
