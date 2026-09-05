@@ -153,7 +153,6 @@ export default function Analysis() {
     <>
       <Navbar />
       
-      {/* ✅ FIX 1: Removed overflow-hidden */}
       <div className="min-h-screen bg-gray-50 dark:bg-[#070714] text-gray-900 dark:text-white relative transition-colors duration-300">
         
         {/* Background Glows - Light/Dark mode aware */}
@@ -198,7 +197,7 @@ export default function Analysis() {
             </div>
           </div>
 
-          {/* ✅ FIX 2: Analysis Form with z-20 */}
+          {/* Analysis Form */}
           <div className="relative z-20 bg-white dark:bg-[#0a0a1a]/80 backdrop-blur-xl border border-violet-200 dark:border-violet-500/20 rounded-2xl p-6 mb-8 shadow-lg shadow-gray-200/50 dark:shadow-xl dark:shadow-black/20 hover:border-violet-300 dark:hover:border-violet-400/30 transition-all duration-300">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
               <Search className="w-5 h-5 text-violet-600 dark:text-violet-400" />
@@ -350,7 +349,7 @@ export default function Analysis() {
             </div>
           </div>
 
-          {/* ✅ FIX 3: Results Section with z-10 */}
+          {/* Results Section */}
           <div className="relative z-10 bg-white dark:bg-[#0a0a1a]/80 backdrop-blur-xl border border-violet-200 dark:border-violet-500/20 rounded-2xl p-6 shadow-lg shadow-gray-200/50 dark:shadow-xl dark:shadow-black/20 hover:border-violet-300 dark:hover:border-violet-400/30 transition-all duration-300">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-violet-600 dark:text-violet-400" />
@@ -400,7 +399,30 @@ export default function Analysis() {
                           </td>
                           <td className="p-3 text-gray-500 dark:text-gray-400">{item.page}</td>
                           <td className="p-3">
-                            {item.found ? (
+                            {item.relevant === false ? (
+                              <div className="flex flex-col gap-1">
+                                <span className="text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1">
+                                  <XCircle className="w-4 h-4" />
+                                  Unrelated
+                                </span>
+                                {item.relevanceReason && (
+                                  <span className="text-xs text-gray-500 dark:text-gray-400 max-w-xs">
+                                    {item.relevanceReason}
+                                  </span>
+                                )}
+                              </div>
+                            ) : item.relevant === null ? (
+                              <div className="flex flex-col gap-1">
+                                <span className="text-yellow-600 dark:text-yellow-400 font-medium flex items-center gap-1">
+                                  ⚠️ Unable to determine
+                                </span>
+                                {item.relevanceReason && (
+                                  <span className="text-xs text-gray-500 dark:text-gray-400 max-w-xs">
+                                    {item.relevanceReason}
+                                  </span>
+                                )}
+                              </div>
+                            ) : item.found ? (
                               <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
                                 <CheckCircle className="w-4 h-4" />
                                 Found
@@ -420,29 +442,41 @@ export default function Analysis() {
 
                 {/* AI Suggestions */}
                 <div className="mt-8">
-                  <button
-                    onClick={() => setShowSuggestions(!showSuggestions)}
-                    className="bg-gradient-to-r from-violet-600 to-violet-700 hover:from-violet-500 hover:to-violet-600 text-white px-4 py-2.5 rounded-xl transition shadow-lg shadow-violet-600/30 hover:shadow-violet-600/50 flex items-center gap-2"
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    {showSuggestions
-                      ? 'Hide AI Optimization Suggestions'
-                      : 'View AI Optimization Suggestions'}
-                  </button>
-                  {showSuggestions && aiSuggestions && (
-                    <div className="mt-4 p-4 bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20 rounded-xl transition-colors">
-                      <h3 className="text-lg font-semibold text-violet-700 dark:text-violet-400 mb-2 flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-violet-600 dark:text-violet-400" />
-                        AI SEO Suggestions
-                      </h3>
-                      <pre className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300 font-sans">
-                        {aiSuggestions}
-                      </pre>
+                  {result.results?.some(item => item.relevant === true) ? (
+                    <>
+                      <button
+                        onClick={() => setShowSuggestions(!showSuggestions)}
+                        className="bg-gradient-to-r from-violet-600 to-violet-700 hover:from-violet-500 hover:to-violet-600 text-white px-4 py-2.5 rounded-xl transition shadow-lg shadow-violet-600/30 hover:shadow-violet-600/50 flex items-center gap-2"
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        {showSuggestions
+                          ? 'Hide AI Optimization Suggestions'
+                          : 'View AI Optimization Suggestions'}
+                      </button>
+
+                      {showSuggestions && aiSuggestions && (
+                        <div className="mt-4 p-4 bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20 rounded-xl transition-colors">
+                          <h3 className="text-lg font-semibold text-violet-700 dark:text-violet-400 mb-2 flex items-center gap-2">
+                            <Sparkles className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+                            AI SEO Suggestions
+                          </h3>
+                          <pre className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300 font-sans">
+                            {aiSuggestions}
+                          </pre>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="p-4 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl">
+                      <p className="text-amber-700 dark:text-amber-400">
+                        ⚠️ No optimization suggestions were generated because the
+                        entered keywords are not relevant to this website.
+                      </p>
                     </div>
                   )}
                 </div>
 
-                {/* 🚀 PERFORMANCE ANALYSIS SECTION */}
+                {/* 🚀 PERFORMANCE ANALYSIS SECTION - Updated with FCP and 5 columns */}
                 <div className="mt-10 border-t border-gray-200 dark:border-violet-500/20 pt-8">
                   <div className="flex items-center gap-2 mb-6">
                     <div className="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-500/10 flex items-center justify-center">
@@ -458,8 +492,9 @@ export default function Analysis() {
                     </div>
                   </div>
 
-                  {/* Performance Cards */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Performance Cards - Updated to 5 columns with FCP */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                    {/* Performance Score */}
                     <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-4 border border-gray-200 dark:border-white/5 hover:border-violet-200 dark:hover:border-violet-500/20 transition-colors">
                       <p className="text-sm text-gray-500 dark:text-gray-500">Performance</p>
                       <p className={`text-3xl font-bold mt-2 ${
@@ -476,22 +511,52 @@ export default function Analysis() {
                       <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Overall speed score</p>
                     </div>
 
+                    {/* FCP - First Contentful Paint */}
+                    <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-4 border border-gray-200 dark:border-white/5 hover:border-blue-200 dark:hover:border-blue-500/20 transition-colors">
+                      <p className="text-sm text-gray-500 dark:text-gray-500">FCP</p>
+                      <p className={`text-3xl font-bold mt-2 ${
+                        hasValue(result.fcp)
+                          ? parseFloat(result.fcp) < 1.8 ? 'text-emerald-600 dark:text-emerald-400'
+                            : parseFloat(result.fcp) < 3.0 ? 'text-amber-600 dark:text-amber-400'
+                            : 'text-rose-600 dark:text-rose-400'
+                          : 'text-gray-400 dark:text-gray-500'
+                      }`}>
+                        {hasValue(result.fcp) ? result.fcp : 'N/A'}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">First Contentful Paint</p>
+                    </div>
+
+                    {/* LCP - Largest Contentful Paint */}
                     <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-4 border border-gray-200 dark:border-white/5 hover:border-cyan-200 dark:hover:border-cyan-500/20 transition-colors">
                       <p className="text-sm text-gray-500 dark:text-gray-500">LCP</p>
-                      <p className="text-3xl font-bold text-cyan-600 dark:text-cyan-400 mt-2">
+                      <p className={`text-3xl font-bold mt-2 ${
+                        hasValue(result.lcp)
+                          ? parseFloat(result.lcp) < 2.5 ? 'text-emerald-600 dark:text-emerald-400'
+                            : parseFloat(result.lcp) < 4.0 ? 'text-amber-600 dark:text-amber-400'
+                            : 'text-rose-600 dark:text-rose-400'
+                          : 'text-gray-400 dark:text-gray-500'
+                      }`}>
                         {hasValue(result.lcp) ? result.lcp : 'N/A'}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Largest Contentful Paint</p>
                     </div>
 
+                    {/* CLS - Cumulative Layout Shift */}
                     <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-4 border border-gray-200 dark:border-white/5 hover:border-violet-200 dark:hover:border-violet-500/20 transition-colors">
                       <p className="text-sm text-gray-500 dark:text-gray-500">CLS</p>
-                      <p className="text-3xl font-bold text-violet-600 dark:text-violet-400 mt-2">
+                      <p className={`text-3xl font-bold mt-2 ${
+                        hasValue(result.cls)
+                          ? parseFloat(result.cls) < 0.1 ? 'text-emerald-600 dark:text-emerald-400'
+                            : parseFloat(result.cls) < 0.25 ? 'text-amber-600 dark:text-amber-400'
+                            : 'text-rose-600 dark:text-rose-400'
+                          : 'text-gray-400 dark:text-gray-500'
+                      }`}>
                         {hasValue(result.cls) ? result.cls : 'N/A'}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Cumulative Layout Shift</p>
                     </div>
 
+                    {/* TBT - Total Blocking Time */}
                     <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-4 border border-gray-200 dark:border-white/5 hover:border-rose-200 dark:hover:border-rose-500/20 transition-colors">
                       <p className="text-sm text-gray-500 dark:text-gray-500">TBT</p>
                       <p className={`text-3xl font-bold mt-2 ${
@@ -509,6 +574,7 @@ export default function Analysis() {
 
                   {/* Show message when no performance data is available */}
                   {!hasValue(result.performance) && 
+                   !hasValue(result.fcp) &&
                    !hasValue(result.lcp) && 
                    !hasValue(result.cls) && 
                    !hasValue(result.tbt) && (
