@@ -7,6 +7,7 @@ import {
   BarChart3,
   LineChart,
   History,
+  Gauge,
   Users,
   Shield,
   LogOut,
@@ -163,6 +164,16 @@ export default function Navbar() {
                   >
                     <BarChart3 className="w-4 h-4" />
                     SEO Analysis
+                  </Link>
+
+                  <Link
+                    to="/performance"
+                    className={`flex items-center gap-1.5 ${activeLink(
+                      "/performance"
+                    )}`}
+                  >
+                    <Gauge className="w-4 h-4" />
+                    Performance
                   </Link>
 
                   <Link
@@ -563,6 +574,20 @@ export default function Navbar() {
                   >
                     <BarChart3 className="w-5 h-5" />
                     SEO Analysis
+                  </Link>
+
+                  <Link
+                    to="/performance"
+                    onClick={handleNavigation}
+                    className={`
+                      flex items-center gap-3
+                      px-4 py-3 rounded-xl
+                      ${activeLink("/performance")}
+                      hover:bg-gray-100 dark:hover:bg-purple-500/10
+                    `}
+                  >
+                    <Gauge className="w-5 h-5" />
+                    Performance
                   </Link>
 
                   <Link

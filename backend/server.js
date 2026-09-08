@@ -4,8 +4,9 @@ import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import analysisRoutes from "./routes/analysisRoutes.js";
+import performanceRoutes from "./routes/performanceRoutes.js";
 import historyRoutes from "./routes/historyRoutes.js";
-import adminRoutes from "./routes/adminRoutes.js"; // ✅ ADD THIS
+import adminRoutes from "./routes/adminRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -18,11 +19,12 @@ app.use(express.json());
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/analysis", analysisRoutes);
+app.use("/api/performance", performanceRoutes); // ✅ Performance API
 app.use("/api/history", historyRoutes);
-app.use("/api/admin", adminRoutes); // ✅ ADD THIS
+app.use("/api/admin", adminRoutes);
 
 app.get("/", (req, res) => {
-  res.send("AI SEO Rank Tracker Backend Running 🚀");
+  res.send("AI SEO Rank Tracker Backend Running ");
 });
 
 const PORT = process.env.PORT || 5000;

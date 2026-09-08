@@ -1,16 +1,18 @@
 import { Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar"; // ✅ Import Navbar
 
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Analysis from "./pages/Analysis";
+import Performance from "./pages/Performance";
 import Rankings from "./pages/Rankings";
 import History from "./pages/History";
 import Profile from "./pages/Profile";
 import ChangePassword from "./pages/ChangePassword";
 import AdminDashboard from "./pages/AdminDashboard";
-import ManageUsers from "./pages/ManageUsers"; // ✅ NEW
+import ManageUsers from "./pages/ManageUsers";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
@@ -19,6 +21,9 @@ import AdminRoute from "./components/AdminRoute";
 function App() {
   return (
     <div className="min-h-screen bg-white dark:bg-[#1e293b] transition-colors duration-300">
+      {/* ✅ Navbar is rendered globally */}
+      <Navbar />
+      
       <Routes>
         {/* Public Pages */}
         <Route path="/" element={<Home />} />
@@ -60,6 +65,16 @@ function App() {
           }
         />
 
+        {/* ✅ Performance Route - Protected */}
+        <Route
+          path="/performance"
+          element={
+            <ProtectedRoute>
+              <Performance />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/rankings"
           element={
@@ -96,7 +111,7 @@ function App() {
           }
         />
 
-        {/* ✅ Admin Routes */}
+        {/* Admin Routes */}
         <Route
           path="/admin"
           element={
@@ -106,7 +121,7 @@ function App() {
           }
         />
 
-        {/* ✅ Manage Users Route - Admin Only */}
+        {/* Manage Users Route - Admin Only */}
         <Route
           path="/admin/users"
           element={
