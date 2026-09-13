@@ -244,97 +244,12 @@ export const analyzeWebsite = async (req, res) => {
       JSON.stringify(results, null, 2)
     );
 
-    // 🚀 FETCH PAGESPEED INSIGHTS DATA
-    let pageSpeedData = {
-      performance: null,
-      lcp: null,
-      cls: null,
-      tbt: null,
-      fcp: null,
-    };
-
-    try {
-      console.log('🚀 Fetching PageSpeed data for:', normalizedUrl);
-      
-      const pageSpeedResponse = await axios.get(
-        'https://www.googleapis.com/pagespeedonline/v5/runPagespeed',
-        {
-          params: {
-            url: normalizedUrl,
-            key: process.env.GOOGLE_PAGESPEED_API_KEY,
-            strategy: 'desktop',
-          },
-          paramsSerializer: (params) => {
-            return [
-              `url=${encodeURIComponent(params.url)}`,
-              `key=${params.key}`,
-              `strategy=${params.strategy}`,
-              'category=performance',
-            ].join('&');
-          },
-        }
-      );
-
-      const lighthouseResult = pageSpeedResponse.data.lighthouseResult;
-      
-      if (lighthouseResult) {
-        const categories = lighthouseResult.categories;
-        
-        console.log('📊 Lighthouse categories:', Object.keys(categories));
-
-        pageSpeedData.performance = categories.performance?.score != null
-          ? Math.round(categories.performance.score * 100)
-          : null;
-
-        const audits = lighthouseResult.audits;
-        
-        if (audits['largest-contentful-paint']) {
-          pageSpeedData.lcp = audits['largest-contentful-paint'].displayValue || 
-                             `${(audits['largest-contentful-paint'].numericValue / 1000).toFixed(1)}s`;
-        }
-
-        if (audits['cumulative-layout-shift']) {
-          pageSpeedData.cls = audits['cumulative-layout-shift'].displayValue || 
-                             audits['cumulative-layout-shift'].numericValue?.toFixed(2) || '0.00';
-        }
-
-        if (audits['total-blocking-time']) {
-          pageSpeedData.tbt = audits['total-blocking-time'].displayValue || 
-                             `${Math.round(audits['total-blocking-time'].numericValue || 0)}ms`;
-        }
-
-        if (audits['first-contentful-paint']) {
-          pageSpeedData.fcp = audits['first-contentful-paint'].displayValue || 
-                             `${(audits['first-contentful-paint'].numericValue / 1000).toFixed(1)}s`;
-        }
-      }
-
-      console.log('✅ PageSpeed Data fetched successfully:', pageSpeedData);
-
-    } catch (pageSpeedError) {
-      console.error(
-        '⚠️ PageSpeed API Error:',
-        pageSpeedError.response?.data || pageSpeedError.message
-      );
-
-      pageSpeedData = {
-        performance: null,
-        lcp: null,
-        cls: null,
-        tbt: null,
-        fcp: null,
-      };
-    }
-
     // GENERATE AI SEO SUGGESTIONS
     console.log('🤖 Generating AI suggestions...');
     const aiSuggestions = await generateSeoSuggestions(
       normalizedUrl,
-      results,
-      pageSpeedData
+      results
     );
-
-    console.log('🔥 FINAL pageSpeedData BEFORE SAVE:', JSON.stringify(pageSpeedData, null, 2));
 
     // ✅ SAVE TO MONGODB
     const savedAnalysis = await Analysis.create({
@@ -344,7 +259,6 @@ export const analyzeWebsite = async (req, res) => {
       rankingData: {
         results,
       },
-      pageSpeedData: pageSpeedData,
       websiteContext: {
         title: websiteContext.title,
         description: websiteContext.description,
@@ -358,23 +272,17 @@ export const analyzeWebsite = async (req, res) => {
     });
 
     console.log('✅ Analysis saved with ID:', savedAnalysis._id);
-    console.log('✅ Saved pageSpeedData:', savedAnalysis.pageSpeedData);
     console.log('✅ Saved with country:', savedAnalysis.country);
     console.log('✅ Saved with searchDepth:', savedAnalysis.searchDepth);
 
     // 🚀 RETURN ALL DATA
     res.status(200).json({
       success: true,
-      message: 'Real Google rank tracking completed with PageSpeed data',
+      message: 'Real Google rank tracking completed',
       data: {
         url: normalizedUrl,
         results,
         aiSuggestions,
-        performance: pageSpeedData.performance,
-        lcp: pageSpeedData.lcp,
-        cls: pageSpeedData.cls,
-        tbt: pageSpeedData.tbt,
-        fcp: pageSpeedData.fcp,
         selectedCountry: selectedCountry,
         selectedSearchDepth: selectedSearchDepth,
         websiteContext: {

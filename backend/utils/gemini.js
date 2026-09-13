@@ -226,8 +226,7 @@ Do not include code fences.
 
 export const generateSeoSuggestions = async (
   url,
-  results,
-  pageSpeedData
+  results
 ) => {
   try {
     console.log('🤖 Generating SEO suggestions...');
@@ -255,9 +254,6 @@ ${url}
 Relevant keyword ranking results:
 ${JSON.stringify(relevantResults, null, 2)}
 
-PageSpeed Performance Data:
-${JSON.stringify(pageSpeedData, null, 2)}
-
 Generate useful SEO optimization suggestions ONLY for the
 keywords that have been confirmed as relevant.
 
@@ -271,7 +267,6 @@ IMPORTANT:
 - Consider the current Google ranking.
 - A keyword that is already ranking highly may need refinement
   rather than basic keyword insertion.
-- Consider PageSpeed performance when useful.
 - Focus on realistic, actionable SEO improvements.
 
 For each relevant keyword, provide up to 4 suggestions.
