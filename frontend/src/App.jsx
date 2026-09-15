@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Analysis from "./pages/Analysis";
+import SEOAudit from "./pages/SEOAudit";
 import Performance from "./pages/Performance";
 import Rankings from "./pages/Rankings";
 import History from "./pages/History";
@@ -61,6 +62,16 @@ function App() {
           element={
             <ProtectedRoute>
               <Analysis />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ✅ SEO Audit Route - Protected */}
+        <Route
+          path="/seo-audit"
+          element={
+            <ProtectedRoute>
+              <SEOAudit />
             </ProtectedRoute>
           }
         />

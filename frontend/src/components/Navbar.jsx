@@ -15,6 +15,7 @@ import {
   Key,
   Menu,
   X,
+  SearchCheck,
 } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 
@@ -164,6 +165,16 @@ export default function Navbar() {
                   >
                     <BarChart3 className="w-4 h-4" />
                     SEO Analysis
+                  </Link>
+
+                  <Link
+                    to="/seo-audit"
+                    className={`flex items-center gap-1.5 ${activeLink(
+                      "/seo-audit"
+                    )}`}
+                  >
+                    <SearchCheck className="w-4 h-4" />
+                    SEO Audit
                   </Link>
 
                   <Link
@@ -574,6 +585,20 @@ export default function Navbar() {
                   >
                     <BarChart3 className="w-5 h-5" />
                     SEO Analysis
+                  </Link>
+
+                  <Link
+                    to="/seo-audit"
+                    onClick={handleNavigation}
+                    className={`
+                      flex items-center gap-3
+                      px-4 py-3 rounded-xl
+                      ${activeLink("/seo-audit")}
+                      hover:bg-gray-100 dark:hover:bg-purple-500/10
+                    `}
+                  >
+                    <SearchCheck className="w-5 h-5" />
+                    SEO Audit
                   </Link>
 
                   <Link
