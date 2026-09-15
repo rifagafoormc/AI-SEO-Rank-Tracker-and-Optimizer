@@ -166,7 +166,7 @@ const SEOAudit = () => {
                     handleAudit();
                   }
                 }}
-                placeholder="https://example.com"
+                placeholder="example.com or https://example.com"
                 className="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -189,6 +189,10 @@ const SEOAudit = () => {
               )}
             </button>
           </div>
+
+          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+            Enter a URL with or without <span className="font-mono">https://</span> — we'll add it automatically.
+          </p>
 
           {error && (
             <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-center gap-3">
