@@ -12,6 +12,8 @@ import {
   Link as LinkIcon,
   Heading,
   RefreshCw,
+  Sparkles,
+  Wand2,
 } from "lucide-react";
 
 const SEOAudit = () => {
@@ -19,6 +21,11 @@ const SEOAudit = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
+
+  // AI suggestions state
+  const [suggestions, setSuggestions] = useState(null);
+  const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false);
+  const [suggestionsError, setSuggestionsError] = useState("");
 
   const handleAudit = async () => {
     if (!url.trim()) {
@@ -36,6 +43,8 @@ const SEOAudit = () => {
     setIsAnalyzing(true);
     setError("");
     setResult(null);
+    setSuggestions(null);
+    setSuggestionsError("");
 
     try {
       const token = localStorage.getItem("token");
@@ -62,6 +71,48 @@ const SEOAudit = () => {
       );
     } finally {
       setIsAnalyzing(false);
+    }
+  };
+
+  const handleGenerateSuggestions = async () => {
+    if (!result) return;
+
+    setIsGeneratingSuggestions(true);
+    setSuggestionsError("");
+    setSuggestions(null);
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await axios.post(
+        "http://localhost:5000/api/seo-audit/suggestions",
+        {
+          auditData: result,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (
+        response.data?.success &&
+        Array.isArray(response.data.suggestions)
+      ) {
+        setSuggestions(response.data.suggestions);
+      } else {
+        throw new Error("Invalid suggestions response.");
+      }
+    } catch (err) {
+      console.error("SEO Suggestions Error:", err);
+
+      setSuggestionsError(
+        err.response?.data?.message ||
+          "Unable to generate AI suggestions. Please try again."
+      );
+    } finally {
+      setIsGeneratingSuggestions(false);
     }
   };
 
@@ -501,6 +552,95 @@ const SEOAudit = () => {
                     No major SEO issues were detected.
                   </p>
                 </div>
+              )}
+            </div>
+
+            {/* AI Optimization Suggestions */}
+            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-6">
+
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 rounded-lg bg-purple-50 dark:bg-purple-900/20">
+                  <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                </div>
+
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  AI Optimization Suggestions
+                </h2>
+              </div>
+
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
+                Generate evidence-based recommendations from the audit findings above.
+              </p>
+
+              <button
+                onClick={handleGenerateSuggestions}
+                disabled={isGeneratingSuggestions}
+                className="px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition"
+              >
+                {isGeneratingSuggestions ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Wand2 className="w-5 h-5" />
+                    {suggestions
+                      ? "Regenerate Suggestions"
+                      : "Generate AI Suggestions"}
+                  </>
+                )}
+              </button>
+
+              {suggestionsError && (
+                <div className="mt-5 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-center gap-3">
+                  <XCircle className="w-5 h-5 text-red-500 shrink-0" />
+
+                  <p className="text-sm text-red-700 dark:text-red-300">
+                    {suggestionsError}
+                  </p>
+                </div>
+              )}
+
+              {suggestions && suggestions.length > 0 && (
+                <div className="mt-6 space-y-4">
+                  {suggestions.map((s, i) => (
+                    <div
+                      key={i}
+                      className="p-5 rounded-xl bg-purple-50/50 dark:bg-purple-900/10 border border-purple-200 dark:border-purple-900/30"
+                    >
+                      <div className="flex items-start gap-3">
+                        <Sparkles className="w-5 h-5 text-purple-500 shrink-0 mt-0.5" />
+
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-900 dark:text-white">
+                            {s.issue}
+                          </h3>
+
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                            <span className="font-medium text-gray-700 dark:text-gray-300">
+                              Evidence:
+                            </span>{" "}
+                            {s.evidence}
+                          </p>
+
+                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
+                            <span className="font-medium text-gray-800 dark:text-gray-200">
+                              Recommendation:
+                            </span>{" "}
+                            {s.recommendation}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {suggestions && suggestions.length === 0 && (
+                <p className="mt-5 text-sm text-gray-500 dark:text-gray-400">
+                  No optimization suggestions were returned.
+                </p>
               )}
             </div>
 

@@ -1,5 +1,6 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
+import { generateAuditOptimizationSuggestions } from "../utils/gemini.js";
 
 /**
  * SEO Audit Controller
@@ -58,34 +59,100 @@ export const auditWebsite = async (req, res) => {
 
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/140 Safari/537.36",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+
         Accept:
-          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+
+        "Accept-Language": "en-US,en;q=0.9",
+
+        "Cache-Control": "no-cache",
+
+        Pragma: "no-cache",
       },
 
       maxContentLength: 5 * 1024 * 1024,
       maxBodyLength: 5 * 1024 * 1024,
+
+      // Do not automatically throw for 4xx/5xx responses.
+      // This allows us to inspect the response and provide
+      // a meaningful message to the user.
+      validateStatus: () => true,
     });
 
     const loadTime = Date.now() - startTime;
 
     const html = response.data;
 
+    // -----------------------------------------
+    // 3. Validate HTML response
+    // -----------------------------------------
+
     if (!html || typeof html !== "string") {
       return res.status(400).json({
         success: false,
-        message: "Unable to retrieve HTML content from this website",
+        message: "Unable to retrieve HTML content from this website.",
       });
     }
 
     // -----------------------------------------
-    // 3. Parse HTML
+    // 4. Detect security / WAF challenge pages
+    // -----------------------------------------
+
+    const lowerHtml = html.toLowerCase();
+
+    const isAwsWafChallenge =
+      lowerHtml.includes("awswafcookiedomainlist") ||
+      lowerHtml.includes("gokuprops") ||
+      lowerHtml.includes("aws waf") ||
+      lowerHtml.includes("awswaf") ||
+      (response.status === 202 &&
+        lowerHtml.includes("<title></title>"));
+
+    if (isAwsWafChallenge) {
+      console.warn(
+        `SEO Audit blocked by AWS WAF/security challenge: ${url}`
+      );
+
+      return res.status(422).json({
+        success: false,
+        message:
+          "This website returned a security verification page instead of its actual webpage. Automated SEO auditing is not available for this website.",
+        reason: "SECURITY_CHALLENGE",
+        data: {
+          url,
+          statusCode: response.status,
+          contentType: response.headers["content-type"] || "",
+          loadTime,
+        },
+      });
+    }
+
+    // -----------------------------------------
+    // 5. Handle unsuccessful HTTP responses
+    // -----------------------------------------
+
+    if (response.status < 200 || response.status >= 400) {
+      return res.status(422).json({
+        success: false,
+        message: `Website returned HTTP ${response.status}. Unable to perform SEO audit.`,
+        data: {
+          url,
+          statusCode: response.status,
+          contentType: response.headers["content-type"] || "",
+          loadTime,
+        },
+      });
+    }
+
+    // -----------------------------------------
+    // 6. Parse HTML
     // -----------------------------------------
 
     const $ = cheerio.load(html);
 
     // -----------------------------------------
-    // 4. Page Title
+    // 7. Page Title
     // -----------------------------------------
 
     const title = $("title").first().text().trim();
@@ -93,7 +160,7 @@ export const auditWebsite = async (req, res) => {
     const titleLength = title.length;
 
     // -----------------------------------------
-    // 5. Meta Description
+    // 8. Meta Description
     // -----------------------------------------
 
     const metaDescription =
@@ -102,13 +169,11 @@ export const auditWebsite = async (req, res) => {
     const metaDescriptionLength = metaDescription.length;
 
     // -----------------------------------------
-    // 6. Headings
+    // 9. Headings
     // -----------------------------------------
 
     const h1 = $("h1");
-
     const h2 = $("h2");
-
     const h3 = $("h3");
 
     const headings = {
@@ -129,7 +194,7 @@ export const auditWebsite = async (req, res) => {
     });
 
     // -----------------------------------------
-    // 7. Images / ALT text
+    // 10. Images / ALT text
     // -----------------------------------------
 
     const images = $("img");
@@ -151,7 +216,7 @@ export const auditWebsite = async (req, res) => {
     };
 
     // -----------------------------------------
-    // 8. Links
+    // 11. Links
     // -----------------------------------------
 
     const links = $("a[href]");
@@ -164,7 +229,6 @@ export const auditWebsite = async (req, res) => {
 
       if (!href) return;
 
-      // Ignore anchors, javascript and mailto links
       if (
         href.startsWith("#") ||
         href.startsWith("javascript:") ||
@@ -193,11 +257,9 @@ export const auditWebsite = async (req, res) => {
     };
 
     // -----------------------------------------
-    // 9. Word Count
+    // 12. Word Count
     // -----------------------------------------
 
-    // Remove elements that should not contribute
-    // to visible textual content.
     $("script, style, noscript, svg").remove();
 
     const bodyText = $("body").text().replace(/\s+/g, " ").trim();
@@ -209,43 +271,44 @@ export const auditWebsite = async (req, res) => {
     const wordCount = words.length;
 
     // -----------------------------------------
-    // 10. Canonical URL
+    // 13. Canonical URL
     // -----------------------------------------
 
     const canonical =
       $('link[rel="canonical"]').attr("href")?.trim() || "";
 
     // -----------------------------------------
-    // 11. Robots Meta
+    // 14. Robots Meta
     // -----------------------------------------
 
     const robots =
       $('meta[name="robots"]').attr("content")?.trim() || "";
 
     // -----------------------------------------
-    // 12. Open Graph
+    // 15. Open Graph
     // -----------------------------------------
 
     const ogTitle = $('meta[property="og:title"]').attr("content");
 
-    const ogDescription = $('meta[property="og:description"]').attr(
-      "content"
-    );
+    const ogDescription = $(
+      'meta[property="og:description"]'
+    ).attr("content");
 
     const ogImage = $('meta[property="og:image"]').attr("content");
 
     const openGraph = !!(ogTitle || ogDescription || ogImage);
 
     // -----------------------------------------
-    // 13. Viewport
+    // 16. Viewport
     // -----------------------------------------
 
-    const viewport = $('meta[name="viewport"]').attr("content") || "";
+    const viewport =
+      $('meta[name="viewport"]').attr("content") || "";
 
     const hasViewport = viewport.length > 0;
 
     // -----------------------------------------
-    // 14. HTML Language
+    // 17. HTML Language
     // -----------------------------------------
 
     const language = $("html").attr("lang") || "";
@@ -253,21 +316,21 @@ export const auditWebsite = async (req, res) => {
     const hasLanguage = language.length > 0;
 
     // -----------------------------------------
-    // 15. Structured Data
+    // 18. Structured Data
     // -----------------------------------------
 
-    const structuredDataCount = $('script[type="application/ld+json"]').length;
+    const structuredDataCount = $(
+      'script[type="application/ld+json"]'
+    ).length;
 
     const hasStructuredData = structuredDataCount > 0;
 
     // -----------------------------------------
-    // 16. SEO Rules
+    // 19. SEO Rules
     // -----------------------------------------
 
     const checks = {
-      title:
-        titleLength >= 30 &&
-        titleLength <= 60,
+      title: titleLength >= 30 && titleLength <= 60,
 
       metaDescription:
         metaDescriptionLength >= 120 &&
@@ -275,15 +338,13 @@ export const auditWebsite = async (req, res) => {
 
       h1: h1.length === 1,
 
-      images:
-        images.length === 0 ||
-        missingAlt === 0,
+      images: images.length === 0 || missingAlt === 0,
 
       canonical: canonical.length > 0,
 
       robots: !robots.toLowerCase().includes("noindex"),
 
-      openGraph: openGraph,
+      openGraph,
 
       viewport: hasViewport,
 
@@ -297,12 +358,12 @@ export const auditWebsite = async (req, res) => {
     };
 
     // -----------------------------------------
-    // 17. Calculate Score
+    // 20. Calculate SEO Score
     // -----------------------------------------
 
     let score = 0;
 
-    // Title - 15 points
+    // Page title
     if (title) {
       if (titleLength >= 30 && titleLength <= 60) {
         score += 15;
@@ -311,7 +372,7 @@ export const auditWebsite = async (req, res) => {
       }
     }
 
-    // Meta description - 15 points
+    // Meta description
     if (metaDescription) {
       if (
         metaDescriptionLength >= 120 &&
@@ -323,14 +384,14 @@ export const auditWebsite = async (req, res) => {
       }
     }
 
-    // H1 - 10 points
+    // H1
     if (h1.length === 1) {
       score += 10;
     } else if (h1.length > 0) {
       score += 5;
     }
 
-    // Images ALT - 10 points
+    // Images
     if (images.length === 0) {
       score += 10;
     } else if (missingAlt === 0) {
@@ -339,12 +400,12 @@ export const auditWebsite = async (req, res) => {
       score += 5;
     }
 
-    // Canonical - 10 points
+    // Canonical
     if (canonical) {
       score += 10;
     }
 
-    // Content - 10 points
+    // Content
     if (wordCount >= 1000) {
       score += 10;
     } else if (wordCount >= 300) {
@@ -353,7 +414,7 @@ export const auditWebsite = async (req, res) => {
       score += 3;
     }
 
-    // Internal links - 10 points
+    // Internal links
     if (internalLinks >= 5) {
       score += 10;
     } else if (internalLinks >= 3) {
@@ -362,40 +423,40 @@ export const auditWebsite = async (req, res) => {
       score += 3;
     }
 
-    // Open Graph - 5 points
+    // Open Graph
     if (openGraph) {
       score += 5;
     }
 
-    // Robots - 5 points
+    // Robots
     if (!robots.toLowerCase().includes("noindex")) {
       score += 5;
     }
 
-    // Viewport - 5 points
+    // Viewport
     if (hasViewport) {
       score += 5;
     }
 
-    // Structured data - 5 points
+    // Structured data
     if (hasStructuredData) {
       score += 5;
     }
 
-    // Language - 5 points
+    // Language
     if (hasLanguage) {
       score += 5;
     }
 
-    // Make sure score never exceeds 100
     score = Math.min(score, 100);
 
     // -----------------------------------------
-    // 18. Generate Issues
+    // 21. Generate SEO Issues
     // -----------------------------------------
 
     const issues = [];
 
+    // Title issues
     if (!title) {
       issues.push({
         title: "Missing page title",
@@ -405,17 +466,16 @@ export const auditWebsite = async (req, res) => {
     } else if (titleLength < 30) {
       issues.push({
         title: "Page title is too short",
-        description:
-          `The title contains ${titleLength} characters. Aim for approximately 30–60 characters.`,
+        description: `The title contains ${titleLength} characters. Aim for approximately 30–60 characters.`,
       });
     } else if (titleLength > 60) {
       issues.push({
         title: "Page title is too long",
-        description:
-          `The title contains ${titleLength} characters. Keep it around 30–60 characters.`,
+        description: `The title contains ${titleLength} characters. Keep it around 30–60 characters.`,
       });
     }
 
+    // Meta description issues
     if (!metaDescription) {
       issues.push({
         title: "Missing meta description",
@@ -425,17 +485,16 @@ export const auditWebsite = async (req, res) => {
     } else if (metaDescriptionLength < 120) {
       issues.push({
         title: "Meta description is too short",
-        description:
-          `The meta description contains ${metaDescriptionLength} characters.`,
+        description: `The meta description contains ${metaDescriptionLength} characters.`,
       });
     } else if (metaDescriptionLength > 160) {
       issues.push({
         title: "Meta description is too long",
-        description:
-          `The meta description contains ${metaDescriptionLength} characters.`,
+        description: `The meta description contains ${metaDescriptionLength} characters.`,
       });
     }
 
+    // H1 issues
     if (h1.length === 0) {
       issues.push({
         title: "Missing H1 heading",
@@ -445,11 +504,11 @@ export const auditWebsite = async (req, res) => {
     } else if (h1.length > 1) {
       issues.push({
         title: "Multiple H1 headings found",
-        description:
-          `The page contains ${h1.length} H1 headings. A single clear primary H1 is recommended.`,
+        description: `The page contains ${h1.length} H1 headings. A single clear primary H1 is recommended.`,
       });
     }
 
+    // ALT issues
     if (missingAlt > 0) {
       issues.push({
         title: `${missingAlt} image(s) missing ALT text`,
@@ -458,6 +517,7 @@ export const auditWebsite = async (req, res) => {
       });
     }
 
+    // Canonical
     if (!canonical) {
       issues.push({
         title: "Canonical URL is missing",
@@ -466,14 +526,15 @@ export const auditWebsite = async (req, res) => {
       });
     }
 
+    // Content
     if (wordCount < 300) {
       issues.push({
         title: "Low content volume",
-        description:
-          `Only ${wordCount} words were detected in the page body.`,
+        description: `Only ${wordCount} words were detected in the page body.`,
       });
     }
 
+    // Internal links
     if (internalLinks < 3) {
       issues.push({
         title: "Few internal links",
@@ -482,6 +543,7 @@ export const auditWebsite = async (req, res) => {
       });
     }
 
+    // Open Graph
     if (!openGraph) {
       issues.push({
         title: "Open Graph metadata is missing",
@@ -490,6 +552,7 @@ export const auditWebsite = async (req, res) => {
       });
     }
 
+    // Viewport
     if (!hasViewport) {
       issues.push({
         title: "Viewport meta tag is missing",
@@ -498,14 +561,16 @@ export const auditWebsite = async (req, res) => {
       });
     }
 
+    // Language
     if (!hasLanguage) {
       issues.push({
         title: "HTML language attribute is missing",
         description:
-          "Add a language attribute such as lang=\"en\" to the HTML element.",
+          'Add a language attribute such as lang="en" to the HTML element.',
       });
     }
 
+    // Structured data
     if (!hasStructuredData) {
       issues.push({
         title: "Structured data not detected",
@@ -515,7 +580,7 @@ export const auditWebsite = async (req, res) => {
     }
 
     // -----------------------------------------
-    // 19. Return Result
+    // 22. Return Audit Result
     // -----------------------------------------
 
     return res.status(200).json({
@@ -561,7 +626,9 @@ export const auditWebsite = async (req, res) => {
         issues,
 
         statusCode: response.status,
-        contentType: response.headers["content-type"] || "",
+
+        contentType:
+          response.headers["content-type"] || "",
       },
     });
   } catch (error) {
@@ -580,6 +647,54 @@ export const auditWebsite = async (req, res) => {
     return res.status(500).json({
       success: false,
       message,
+    });
+  }
+};
+
+/*
+====================================================
+getAuditSuggestions
+POST /api/seo-audit/suggestions
+
+Body:
+{
+  auditData: <the `data` object returned by auditWebsite>
+}
+====================================================
+*/
+
+export const getAuditSuggestions = async (req, res) => {
+  try {
+    const { auditData } = req.body;
+
+    if (!auditData || typeof auditData !== "object") {
+      return res.status(400).json({
+        success: false,
+        message: "auditData is required.",
+      });
+    }
+
+    if (!auditData.url) {
+      return res.status(400).json({
+        success: false,
+        message: "auditData.url is required.",
+      });
+    }
+
+    const suggestions =
+      await generateAuditOptimizationSuggestions(auditData);
+
+    return res.status(200).json({
+      success: true,
+      suggestions,
+    });
+  } catch (error) {
+    console.error("❌ getAuditSuggestions error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message:
+        "AI optimization suggestions could not be generated at the moment.",
     });
   }
 };

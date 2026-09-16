@@ -1,12 +1,19 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+/*
+====================================================
+GEMINI MODEL
+====================================================
+*/
 
 const getGeminiModel = () => {
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
   return genAI.getGenerativeModel({
-    model: 'gemini-3.6-flash',
+    model: "gemini-3.6-flash",
   });
 };
+
 
 /*
 ====================================================
@@ -21,199 +28,107 @@ export const checkKeywordRelevance = async (
   rankingResults
 ) => {
   try {
-    console.log('🤖 Checking keyword relevance...');
+    console.log("🤖 Checking keyword relevance...");
 
     const model = getGeminiModel();
 
-    /*
-     * Build additional evidence from SERP results.
-     *
-     * If the website itself blocks our request (403),
-     * SERP results can still provide useful information
-     * about what the website is ranking for.
-     */
     const serpEvidence = rankingResults.map((item) => ({
       keyword: item.keyword,
       rank: item.rank,
-      found: item.found,
-      searchEvidence: item.serpTitle || '',
-      searchSnippet: item.serpSnippet || '',
+      serpTitle: item.serpTitle || "",
+      serpSnippet: item.serpSnippet || "",
     }));
-
-    const hasWebsiteContext =
-      Boolean(websiteContext.title) ||
-      Boolean(websiteContext.description) ||
-      websiteContext.headings?.length > 0 ||
-      Boolean(websiteContext.content);
 
     const prompt = `
 You are an SEO keyword relevance analyzer.
 
 Your task is to determine whether each target keyword is genuinely
-relevant to the website.
+relevant to the website based on the website content and Google SERP
+evidence provided.
 
-IMPORTANT:
+Do NOT assume a keyword is relevant simply because the website ranks
+for it.
 
-1. A keyword is RELEVANT if it naturally matches the website's
-   primary topic, products, services, audience, or search intent.
+A keyword should be considered relevant when it is reasonably connected
+to the website's actual topic, products, services, or content.
 
-2. A keyword is UNRELATED if targeting it would require the website
-   to change its primary business/topic.
+Return ONLY valid JSON as an array.
 
-3. Do NOT consider a keyword relevant merely because it could
-   technically be added to the website.
+For each keyword return:
 
-4. Do NOT recommend keyword stuffing.
+{
+  "keyword": "keyword",
+  "relevant": true,
+  "confidence": 85,
+  "reason": "Short explanation"
+}
 
-5. A website should NOT target unrelated keywords simply to obtain
-   search traffic.
+The "relevant" value must be:
+- true
+- false
+- null
 
-6. When website content is available, use it as the strongest evidence.
-
-7. When website content is unavailable because the website blocks
-   automated access, you MAY use:
-   - the website domain
-   - SERP ranking evidence
-   - SERP title
-   - SERP snippet
-   - the apparent business/topic of the website
-
-8. If there is genuinely not enough evidence to determine relevance,
-   return "relevant": null.
-
-9. NEVER return relevant=false merely because website content is
-   unavailable.
-
-10. Confidence must represent confidence in the classification.
-    If relevance cannot be determined, confidence should be 0-30.
+Use null when there is insufficient evidence.
 
 WEBSITE DOMAIN:
 ${domain}
 
-WEBSITE CONTENT AVAILABLE:
-${hasWebsiteContext ? 'YES' : 'NO'}
+WEBSITE TITLE:
+${websiteContext.title || "Not available"}
 
-WEBSITE INFORMATION:
+META DESCRIPTION:
+${websiteContext.description || "Not available"}
 
-Title:
-${websiteContext.title || 'Not available'}
+HEADINGS:
+${JSON.stringify(websiteContext.headings || [], null, 2)}
 
-Meta Description:
-${websiteContext.description || 'Not available'}
+WEBSITE CONTENT:
+${websiteContext.content || "Not available"}
 
-Headings:
-${websiteContext.headings?.join(' | ') || 'Not available'}
-
-Website Content:
-${websiteContext.content || 'Not available'}
-
-
-SERP EVIDENCE:
-
+GOOGLE SERP EVIDENCE:
 ${JSON.stringify(serpEvidence, null, 2)}
 
-
 TARGET KEYWORDS:
-
 ${JSON.stringify(keywords, null, 2)}
-
-
-Return ONLY valid JSON.
-
-Return exactly one object for every keyword.
-
-Format:
-
-[
-  {
-    "keyword": "example keyword",
-    "relevant": true,
-    "confidence": 95,
-    "reason": "Short explanation"
-  }
-]
-
-The "relevant" value MUST be one of:
-
-true
-false
-null
-
-Use true when clearly relevant.
-Use false when clearly unrelated.
-Use null when there is insufficient evidence.
-
-Do not include markdown.
-Do not include code fences.
 `;
 
     const result = await model.generateContent(prompt);
 
     const text = result.response.text().trim();
 
-    console.log('🤖 Gemini relevance response:', text);
-
     const cleanedText = text
-      .replace(/^```json\s*/i, '')
-      .replace(/^```\s*/i, '')
-      .replace(/\s*```$/i, '')
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/\s*```$/i, "")
       .trim();
 
     const parsed = JSON.parse(cleanedText);
 
-    /*
-     * Validate Gemini's response before returning it.
-     */
-    return keywords.map((keyword) => {
-      const item = parsed.find(
-        (result) =>
-          result.keyword?.toLowerCase().trim() ===
-          keyword.toLowerCase().trim()
-      );
+    if (!Array.isArray(parsed)) {
+      throw new Error("Gemini returned an invalid relevance format.");
+    }
 
-      if (!item) {
-        return {
-          keyword,
-          relevant: null,
-          confidence: 0,
-          reason: 'Relevance could not be determined.',
-        };
-      }
-
-      return {
-        keyword,
-        relevant:
-          item.relevant === true
-            ? true
-            : item.relevant === false
-            ? false
-            : null,
-        confidence: Math.max(
-          0,
-          Math.min(100, Number(item.confidence) || 0)
-        ),
-        reason:
-          item.reason ||
-          'Relevance could not be determined.',
-      };
-    });
+    return parsed.map((item) => ({
+      keyword: item.keyword || "",
+      relevant:
+        item.relevant === true
+          ? true
+          : item.relevant === false
+          ? false
+          : null,
+      confidence: Number(item.confidence) || 0,
+      reason:
+        item.reason ||
+        "Gemini could not determine keyword relevance.",
+    }));
 
   } catch (error) {
-    console.error('❌ Gemini relevance check error:', error);
+    console.error(
+      "❌ Gemini keyword relevance error:",
+      error.message
+    );
 
-    /*
-     * IMPORTANT:
-     * If Gemini itself fails, use null rather than false.
-     *
-     * null = unknown
-     * false = definitely unrelated
-     */
-    return keywords.map((keyword) => ({
-      keyword,
-      relevant: null,
-      confidence: 0,
-      reason: 'Relevance could not be determined because the AI analysis failed.',
-    }));
+    throw error;
   }
 };
 
@@ -229,65 +144,261 @@ export const generateSeoSuggestions = async (
   results
 ) => {
   try {
-    console.log('🤖 Generating SEO suggestions...');
+    console.log("🤖 Generating SEO optimization suggestions...");
 
     const model = getGeminiModel();
 
-    /*
-     * ONLY clearly relevant keywords are allowed
-     * to reach the optimization stage.
-     */
     const relevantResults = results.filter(
       (item) => item.relevant === true
     );
 
     if (relevantResults.length === 0) {
-      return 'No SEO optimization suggestions were generated because no keywords were confirmed as relevant to this website.';
+      return "No optimization suggestions were generated because no relevant keywords were identified.";
     }
 
     const prompt = `
-You are an SEO optimization expert.
+You are an SEO optimization assistant.
 
-Website:
+Generate practical SEO optimization suggestions for the website below.
+
+IMPORTANT RULES:
+
+1. Only consider keywords where "relevant" is true.
+
+2. Do NOT recommend unrelated keywords.
+
+3. Do NOT recommend keyword stuffing.
+
+4. Do NOT change the website's primary business or topic.
+
+5. Suggestions should focus on improving the website's ability to
+   target the relevant keywords.
+
+6. Consider the Google ranking information provided.
+
+7. Do not claim that a specific SEO change will guarantee a ranking
+   improvement.
+
+8. Keep the recommendations practical and understandable.
+
+WEBSITE:
 ${url}
 
-Relevant keyword ranking results:
+RELEVANT KEYWORD RESULTS:
 ${JSON.stringify(relevantResults, null, 2)}
 
-Generate useful SEO optimization suggestions ONLY for the
-keywords that have been confirmed as relevant.
-
-IMPORTANT:
-
-- Do NOT recommend unrelated keywords.
-- Do NOT recommend keyword stuffing.
-- Do NOT suggest changing the website's primary business/topic.
-- Do NOT recommend artificially inserting keywords.
-- Suggestions must naturally fit the website.
-- Consider the current Google ranking.
-- A keyword that is already ranking highly may need refinement
-  rather than basic keyword insertion.
-- Focus on realistic, actionable SEO improvements.
-
-For each relevant keyword, provide up to 4 suggestions.
-
-Use this structure:
-
-Keyword: [keyword]
-
-• Suggestion
-• Suggestion
-• Suggestion
-• Suggestion
+Provide clear SEO recommendations for the relevant keywords.
 `;
 
     const result = await model.generateContent(prompt);
 
-    return result.response.text();
+    return result.response.text().trim();
 
   } catch (error) {
-    console.error('❌ Gemini SEO suggestion error:', error);
+    console.error(
+      "❌ Gemini SEO suggestion error:",
+      error.message
+    );
 
-    return 'AI suggestions could not be generated at the moment.';
+    throw error;
   }
 };
+
+
+/*
+====================================================
+3. GENERATE AUDIT OPTIMIZATION SUGGESTIONS
+====================================================
+*/
+
+export const generateAuditOptimizationSuggestions = async (
+  auditData
+) => {
+  try {
+    console.log(
+      "🤖 Generating SEO audit optimization suggestions..."
+    );
+
+    const model = getGeminiModel();
+
+    const {
+      url,
+      score,
+      title,
+      titleLength,
+      metaDescription,
+      metaDescriptionLength,
+      canonical,
+      robots,
+      openGraph,
+      viewport,
+      language,
+      structuredData,
+      structuredDataCount,
+      headings,
+      images,
+      links,
+      wordCount,
+      loadTime,
+      checks,
+      issues,
+    } = auditData;
+
+    const prompt = `
+You are an SEO optimization assistant.
+
+You are given the results of an automated SEO audit for a website.
+
+Your task is to generate practical SEO optimization recommendations
+based ONLY on the audit information provided.
+
+IMPORTANT RULES:
+
+1. Do NOT invent problems that are not present in the audit data.
+
+2. Do NOT recommend fixing something that has already passed the
+corresponding audit check unless the recommendation is clearly
+an improvement supported by the available data.
+
+3. Prioritize actual failed checks and the detected issues list.
+
+4. Every recommendation must be connected to evidence from the audit.
+
+5. Do NOT recommend keyword stuffing.
+
+6. Do NOT recommend unrelated keywords.
+
+7. Do NOT recommend changing the website's primary business or topic.
+
+8. Do NOT make recommendations about Core Web Vitals, backlinks,
+keyword rankings, or other metrics that are not included in this
+audit data.
+
+9. Keep recommendations practical and understandable.
+
+10. If an issue is already satisfactory, do not present it as a problem.
+
+11. Do not create recommendations for issues that are not present
+in the "DETECTED SEO ISSUES" section.
+
+12. Return a maximum of 8 recommendations.
+
+For every recommendation return:
+
+- issue: the detected SEO issue
+- evidence: the specific audit evidence supporting the recommendation
+- recommendation: what the website owner should do
+
+Return ONLY valid JSON as an array.
+
+Format:
+
+[
+  {
+    "issue": "Missing meta description",
+    "evidence": "No meta description was detected.",
+    "recommendation": "Add a concise meta description that accurately summarizes the page content and encourages relevant users to click."
+  }
+]
+
+WEBSITE:
+${url}
+
+SEO SCORE:
+${score}
+
+PAGE TITLE:
+${title || "Not available"}
+
+TITLE LENGTH:
+${titleLength}
+
+META DESCRIPTION:
+${metaDescription || "Not available"}
+
+META DESCRIPTION LENGTH:
+${metaDescriptionLength}
+
+CANONICAL:
+${canonical || "Not available"}
+
+ROBOTS:
+${robots || "Not available"}
+
+OPEN GRAPH:
+${openGraph ? "Detected" : "Not detected"}
+
+VIEWPORT:
+${viewport ? "Detected" : "Not detected"}
+
+HTML LANGUAGE:
+${language || "Not available"}
+
+STRUCTURED DATA:
+${structuredData ? "Detected" : "Not detected"}
+
+STRUCTURED DATA COUNT:
+${structuredDataCount}
+
+HEADINGS:
+${JSON.stringify(headings || {}, null, 2)}
+
+IMAGES:
+${JSON.stringify(images || {}, null, 2)}
+
+LINKS:
+${JSON.stringify(links || {}, null, 2)}
+
+WORD COUNT:
+${wordCount}
+
+PAGE LOAD TIME:
+${loadTime} ms
+
+SEO CHECKS:
+${JSON.stringify(checks || {}, null, 2)}
+
+DETECTED SEO ISSUES:
+${JSON.stringify(issues || [], null, 2)}
+`;
+
+    const result = await model.generateContent(prompt);
+
+    const text = result.response.text().trim();
+
+    const cleanedText = text
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/\s*```$/i, "")
+      .trim();
+
+    const parsed = JSON.parse(cleanedText);
+
+    if (!Array.isArray(parsed)) {
+      throw new Error(
+        "Gemini returned an invalid suggestion format."
+      );
+    }
+
+    return parsed.map((item) => ({
+      issue: item.issue || "SEO issue",
+
+      evidence:
+        item.evidence ||
+        "Based on the audit results.",
+
+      recommendation:
+        item.recommendation ||
+        "Review this issue and make the appropriate SEO improvement.",
+    }));
+
+  } catch (error) {
+    console.error(
+      "❌ Gemini SEO audit suggestion error:",
+      error.message
+    );
+
+    throw error;
+  }
+};
+
