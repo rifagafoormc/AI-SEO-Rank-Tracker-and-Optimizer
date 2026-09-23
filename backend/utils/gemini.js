@@ -1,3 +1,5 @@
+// gemini.js
+
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 /*
@@ -13,7 +15,6 @@ const getGeminiModel = () => {
     model: "gemini-3.6-flash",
   });
 };
-
 
 /*
 ====================================================
@@ -132,10 +133,10 @@ ${JSON.stringify(keywords, null, 2)}
   }
 };
 
-
 /*
 ====================================================
-2. GENERATE SEO SUGGESTIONS
+2. GENERATE SEO SUGGESTIONS (legacy — no longer used
+   by analysisController.js, kept for compatibility)
 ====================================================
 */
 
@@ -204,10 +205,10 @@ Provide clear SEO recommendations for the relevant keywords.
   }
 };
 
-
 /*
 ====================================================
 3. GENERATE AUDIT OPTIMIZATION SUGGESTIONS
+   (unchanged — used by the SEO Audit module)
 ====================================================
 */
 
@@ -382,11 +383,9 @@ ${JSON.stringify(issues || [], null, 2)}
 
     return parsed.map((item) => ({
       issue: item.issue || "SEO issue",
-
       evidence:
         item.evidence ||
         "Based on the audit results.",
-
       recommendation:
         item.recommendation ||
         "Review this issue and make the appropriate SEO improvement.",
@@ -402,3 +401,207 @@ ${JSON.stringify(issues || [], null, 2)}
   }
 };
 
+/*
+====================================================
+4. GENERATE KEYWORD-SPECIFIC OPTIMIZATION
+====================================================
+*/
+
+export const generateKeywordOptimization = async (payload) => {
+  try {
+    console.log("🤖 Generating keyword-specific optimization...");
+
+    const model = getGeminiModel();
+
+    const {
+      keyword,
+      currentRank,
+      targetPage,
+      title,
+      metaDescription,
+      h1,
+      headings,
+      content,
+      wordCount,
+      images,
+      internalLinks,
+      externalLinks,
+      keywordOccurrences,
+      serpTitle,
+      serpSnippet,
+      canonical,
+      robots,
+      viewport,
+      language,
+    } = payload;
+
+    const prompt = `
+You are an SEO optimization assistant.
+
+You are given one target keyword and the actual on-page SEO elements
+of the page that currently ranks (or should rank) for it.
+
+Your task is to produce concrete, page-specific optimization
+recommendations for THIS keyword on THIS page.
+
+IMPORTANT RULES:
+
+1. Only produce recommendations that are directly supported by the
+provided page data. Do NOT invent elements that were not provided.
+
+2. Do NOT recommend keyword stuffing.
+
+3. Do NOT recommend unrelated keywords.
+
+4. Do NOT change the website's primary business or topic.
+
+5. Do NOT guarantee ranking improvements. Use cautious language.
+
+6. Every recommendation must include:
+   - element: which on-page element it refers to
+   - status: one of
+     "Modification recommended" | "No major change required" | "Improvement possible"
+   - current: the current value (or a short description if it is long)
+   - suggested: the suggested improved value (or "" if no change)
+   - reason: short explanation
+   - impact: short, cautious description of the potential benefit
+
+7. If an element is already well-optimized for this keyword, use
+   status "No major change required", suggested "", and explain why.
+
+8. Return a maximum of 8 recommendations, prioritized by impact.
+
+9. Also return a "generalNotes" array of short, cautious, high-level
+   reminders (max 5).
+
+10. Return ONLY valid JSON in the following exact format:
+
+{
+  "keyword": "${keyword}",
+  "currentRank": ${typeof currentRank === 'number' ? currentRank : JSON.stringify(currentRank)},
+  "targetPage": "${targetPage}",
+  "recommendations": [
+    {
+      "element": "Title",
+      "status": "Modification recommended",
+      "current": "...",
+      "suggested": "...",
+      "reason": "...",
+      "impact": "..."
+    }
+  ],
+  "generalNotes": [
+    "..."
+  ]
+}
+
+TARGET KEYWORD:
+${keyword}
+
+CURRENT GOOGLE RANK:
+${currentRank}
+
+TARGET PAGE:
+${targetPage}
+
+PAGE TITLE:
+${title || "Not available"}
+
+META DESCRIPTION:
+${metaDescription || "Not available"}
+
+H1:
+${h1 || "Not available"}
+
+H2 / H3 HEADINGS:
+${JSON.stringify(headings || {}, null, 2)}
+
+WORD COUNT:
+${wordCount}
+
+KEYWORD OCCURRENCES ON PAGE:
+${keywordOccurrences}
+
+CANONICAL:
+${canonical || "Not available"}
+
+ROBOTS:
+${robots || "Not available"}
+
+VIEWPORT:
+${viewport || "Not available"}
+
+HTML LANGUAGE:
+${language || "Not available"}
+
+IMAGES:
+${JSON.stringify(images || {}, null, 2)}
+
+INTERNAL LINKS: ${internalLinks}
+EXTERNAL LINKS: ${externalLinks}
+
+PAGE CONTENT (truncated):
+${content || "Not available"}
+
+GOOGLE SERP TITLE FOR THIS KEYWORD:
+${serpTitle || "Not available"}
+
+GOOGLE SERP SNIPPET FOR THIS KEYWORD:
+${serpSnippet || "Not available"}
+`;
+
+    const result = await model.generateContent(prompt);
+
+    const text = result.response.text().trim();
+
+    const cleanedText = text
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/\s*```$/i, "")
+      .trim();
+
+    let parsed;
+    try {
+      parsed = JSON.parse(cleanedText);
+    } catch (err) {
+      console.error("❌ Failed to parse Gemini optimization JSON:", cleanedText);
+      throw new Error("Gemini returned an invalid optimization format.");
+    }
+
+    if (
+      !parsed ||
+      typeof parsed !== "object" ||
+      !Array.isArray(parsed.recommendations)
+    ) {
+      throw new Error("Gemini returned an invalid optimization structure.");
+    }
+
+    const normalized = {
+      keyword: parsed.keyword || keyword,
+      currentRank:
+        parsed.currentRank !== undefined ? parsed.currentRank : currentRank,
+      targetPage: parsed.targetPage || targetPage,
+      recommendations: parsed.recommendations.map((r) => ({
+        element: r.element || "Element",
+        status: r.status || "Improvement possible",
+        current: r.current || "",
+        suggested: r.suggested || "",
+        reason: r.reason || "",
+        impact: r.impact || "",
+      })),
+      generalNotes: Array.isArray(parsed.generalNotes)
+        ? parsed.generalNotes.map((n) => String(n)).slice(0, 5)
+        : [],
+    };
+
+    return normalized;
+
+  } catch (error) {
+    console.error(
+      "❌ Gemini keyword optimization error:",
+      error.message
+    );
+
+    throw error;
+  }
+};
