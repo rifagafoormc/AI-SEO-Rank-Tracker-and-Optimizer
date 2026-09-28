@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import axios from "axios";
 import {
   ArrowLeft, Search, Sparkles, BarChart3,
-  CheckCircle, XCircle, ChevronDown
+  CheckCircle, XCircle, ChevronDown, ShieldCheck
 } from 'lucide-react';
 
 export default function Analysis() {
@@ -17,10 +17,10 @@ export default function Analysis() {
   const [result, setResult] = useState(null);
   const [analysisId, setAnalysisId] = useState(null);
 
-  // ✅ Relevance check state
+  // Relevance check state
   const [checkingRelevance, setCheckingRelevance] = useState(false);
 
-  // ✅ Per-keyword optimization state
+  // Per-keyword optimization state
   const [optimizingKeyword, setOptimizingKeyword] = useState(null);
   const [keywordOptimizations, setKeywordOptimizations] = useState({});
   const [optimizationErrors, setOptimizationErrors] = useState({});
@@ -230,14 +230,19 @@ export default function Analysis() {
   ];
 
   const getCountryLabel = (code) => {
-    const country = countries.find(c => c.code === code);
-    return country ? `${country.flag} ${country.name}` : code;
+    const c = countries.find(c => c.code === code);
+    return c ? `${c.flag} ${c.name}` : code;
   };
 
   const getDepthLabel = (value) => {
     const option = depthOptions.find(d => d.value === value);
     return option ? option.label : `${value} Results`;
   };
+
+  // Relevance table is shown only once relevance has been checked
+  const hasRelevanceResults = result?.results?.some(
+    (item) => item.relevant !== undefined
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#070714] text-gray-900 dark:text-white relative transition-colors duration-300">
@@ -457,26 +462,7 @@ export default function Analysis() {
                 )}
               </div>
 
-              {/* Check Relevance Button */}
-              <div className="mb-6">
-                <button
-                  onClick={handleCheckRelevance}
-                  disabled={!analysisId || checkingRelevance}
-                  className="px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-700 text-white font-medium hover:from-cyan-500 hover:to-cyan-600 disabled:opacity-50 transition flex items-center gap-2"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  {checkingRelevance
-                    ? "Checking Relevance..."
-                    : "Check Keyword Relevance"}
-                </button>
-
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                  Uses AI to determine whether each target keyword is relevant
-                  to the website.
-                </p>
-              </div>
-
-              {/* Keyword Rankings Table */}
+              {/* ===================== TABLE 1: Keyword Rankings ===================== */}
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
@@ -485,13 +471,17 @@ export default function Analysis() {
                       <th className="text-left p-3 text-gray-700 dark:text-violet-300 font-medium">Google Rank</th>
                       <th className="text-left p-3 text-gray-700 dark:text-violet-300 font-medium">Ranking Page</th>
                       <th className="text-left p-3 text-gray-700 dark:text-violet-300 font-medium">Status</th>
-                      <th className="text-left p-3 text-gray-700 dark:text-violet-300 font-medium">Optimization</th>
                     </tr>
                   </thead>
                   <tbody>
                     {result.results?.map((item, index) => (
-                      <tr key={index} className="border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
-                        <td className="p-3 font-medium text-gray-900 dark:text-white">{item.keyword}</td>
+                      <tr
+                        key={index}
+                        className="border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                      >
+                        <td className="p-3 font-medium text-gray-900 dark:text-white">
+                          {item.keyword}
+                        </td>
                         <td className="p-3 text-violet-600 dark:text-violet-400 font-bold">
                           {item.rank !== 'Not Found' ? `#${item.rank}` : '—'}
                         </td>
@@ -509,72 +499,16 @@ export default function Analysis() {
                             '—'
                           )}
                         </td>
-
-                        {/* Status column — handles 3 states:
-                            undefined → relevance not yet checked
-                            false     → unrelated
-                            null      → unable to determine
-                            true      → relevant */}
                         <td className="p-3">
-                          {item.relevant === undefined ? (
-                            item.found ? (
-                              <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
-                                <CheckCircle className="w-4 h-4" />
-                                Found
-                              </span>
-                            ) : (
-                              <span className="text-rose-600 dark:text-rose-400 font-medium flex items-center gap-1">
-                                <XCircle className="w-4 h-4" />
-                                Not Found
-                              </span>
-                            )
-                          ) : item.relevant === false ? (
-                            <div className="flex flex-col gap-1">
-                              <span className="text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1">
-                                <XCircle className="w-4 h-4" />
-                                Unrelated
-                              </span>
-                              {item.relevanceReason && (
-                                <span className="text-xs text-gray-500 dark:text-gray-400 max-w-xs">
-                                  {item.relevanceReason}
-                                </span>
-                              )}
-                            </div>
-                          ) : item.relevant === null ? (
-                            <span className="text-yellow-600 dark:text-yellow-400 font-medium">
-                              ⚠️ Unable to determine
+                          {item.found ? (
+                            <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+                              <CheckCircle className="w-4 h-4" />
+                              Found
                             </span>
                           ) : (
-                            <div className="flex flex-col gap-1">
-                              <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
-                                <CheckCircle className="w-4 h-4" />
-                                Relevant
-                              </span>
-                              <span className="text-xs text-gray-500 dark:text-gray-400">
-                                Confidence: {item.relevanceConfidence}%
-                              </span>
-                            </div>
-                          )}
-                        </td>
-
-                        {/* Optimization column — only when relevance === true */}
-                        <td className="p-3">
-                          {item.relevant === true ? (
-                            <button
-                              onClick={() => handleOptimizeKeyword(item)}
-                              disabled={optimizingKeyword === item.keyword}
-                              className="px-3 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-violet-700 text-white text-sm font-medium hover:from-violet-500 hover:to-violet-600 disabled:opacity-50 transition flex items-center gap-2"
-                            >
-                              <Sparkles className="w-4 h-4" />
-                              {optimizingKeyword === item.keyword
-                                ? "Optimizing..."
-                                : item.found
-                                ? "Optimize"
-                                : "Find & Optimize"}
-                            </button>
-                          ) : (
-                            <span className="text-xs text-gray-400">
-                              Not available
+                            <span className="text-rose-600 dark:text-rose-400 font-medium flex items-center gap-1">
+                              <XCircle className="w-4 h-4" />
+                              Not Found
                             </span>
                           )}
                         </td>
@@ -583,6 +517,114 @@ export default function Analysis() {
                   </tbody>
                 </table>
               </div>
+
+              {/* ===================== Check Relevance Button (beneath table) ===================== */}
+              <div className="mt-6">
+                <button
+                  onClick={handleCheckRelevance}
+                  disabled={!analysisId || checkingRelevance}
+                  className="px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-700 text-white font-medium hover:from-cyan-500 hover:to-cyan-600 disabled:opacity-50 transition flex items-center gap-2"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  {checkingRelevance
+                    ? "Checking Relevance..."
+                    : hasRelevanceResults
+                    ? "Re-check Keyword Relevance"
+                    : "Check Keyword Relevance"}
+                </button>
+
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                  Uses AI to determine whether each target keyword is relevant
+                  to the website.
+                </p>
+              </div>
+
+              {/* ===================== TABLE 2: Keyword Relevance ===================== */}
+              {hasRelevanceResults && (
+                <div className="mt-8">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
+                    Keyword Relevance Result
+                  </h3>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="border-b border-violet-200 dark:border-violet-500/20 bg-gray-50 dark:bg-white/5">
+                          <th className="text-left p-3 text-gray-700 dark:text-violet-300 font-medium">Keyword</th>
+                          <th className="text-left p-3 text-gray-700 dark:text-violet-300 font-medium">Relevance</th>
+                          <th className="text-left p-3 text-gray-700 dark:text-violet-300 font-medium">Confidence</th>
+                          <th className="text-left p-3 text-gray-700 dark:text-violet-300 font-medium">Reason</th>
+                          <th className="text-left p-3 text-gray-700 dark:text-violet-300 font-medium">Optimization</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {result.results?.map((item, index) => (
+                          <tr
+                            key={index}
+                            className="border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                          >
+                            <td className="p-3 font-medium text-gray-900 dark:text-white">
+                              {item.keyword}
+                            </td>
+
+                            {/* Relevance: true / false / null */}
+                            <td className="p-3">
+                              {item.relevant === true ? (
+                                <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+                                  <CheckCircle className="w-4 h-4" />
+                                  Relevant
+                                </span>
+                              ) : item.relevant === false ? (
+                                <span className="text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1">
+                                  <XCircle className="w-4 h-4" />
+                                  Unrelated
+                                </span>
+                              ) : (
+                                <span className="text-yellow-600 dark:text-yellow-400 font-medium">
+                                  ⚠️ Unable to determine
+                                </span>
+                              )}
+                            </td>
+
+                            <td className="p-3 text-sm text-gray-700 dark:text-gray-300">
+                              {item.relevant === null || item.relevant === undefined
+                                ? '—'
+                                : `${item.relevanceConfidence ?? 0}%`}
+                            </td>
+
+                            <td className="p-3 text-xs text-gray-500 dark:text-gray-400 max-w-xs">
+                              {item.relevanceReason || '—'}
+                            </td>
+
+                            {/* Optimization only when relevant === true */}
+                            <td className="p-3">
+                              {item.relevant === true ? (
+                                <button
+                                  onClick={() => handleOptimizeKeyword(item)}
+                                  disabled={optimizingKeyword === item.keyword}
+                                  className="px-3 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-violet-700 text-white text-sm font-medium hover:from-violet-500 hover:to-violet-600 disabled:opacity-50 transition flex items-center gap-2"
+                                >
+                                  <Sparkles className="w-4 h-4" />
+                                  {optimizingKeyword === item.keyword
+                                    ? "Optimizing..."
+                                    : item.found
+                                    ? "Optimize"
+                                    : "Find & Optimize"}
+                                </button>
+                              ) : (
+                                <span className="text-xs text-gray-400">
+                                  Not available
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
 
               {/* Per-keyword optimization results */}
               {Object.keys(keywordOptimizations).length > 0 && (
