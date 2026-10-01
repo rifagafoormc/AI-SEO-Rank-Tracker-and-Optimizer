@@ -1,3 +1,4 @@
+
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 /* ============================================================
@@ -9,9 +10,7 @@ const getGeminiModel = () => {
     throw new Error("GEMINI_API_KEY is not configured.");
   }
 
-  const genAI = new GoogleGenerativeAI(
-    process.env.GEMINI_API_KEY
-  );
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
   return genAI.getGenerativeModel({
     model: "gemini-3.6-flash",
@@ -32,9 +31,9 @@ const parseGeminiJSON = (text) => {
   try {
     return JSON.parse(cleaned);
   } catch {
-    // Handle occasional explanatory text surrounding JSON.
     const firstObject = cleaned.indexOf("{");
     const firstArray = cleaned.indexOf("[");
+
     const starts = [firstObject, firstArray].filter(
       (index) => index >= 0
     );
@@ -44,6 +43,7 @@ const parseGeminiJSON = (text) => {
     }
 
     const start = Math.min(...starts);
+
     const last = Math.max(
       cleaned.lastIndexOf("}"),
       cleaned.lastIndexOf("]")
@@ -59,9 +59,6 @@ const parseGeminiJSON = (text) => {
 
 /* ============================================================
    1. CHECK KEYWORD RELEVANCE
-
-   Accepts ONE object per keyword.
-   Does not require scraping the website.
 ============================================================ */
 
 export const checkKeywordRelevance = async ({
@@ -72,9 +69,7 @@ export const checkKeywordRelevance = async ({
 } = {}) => {
   try {
     if (!keyword || !websiteUrl) {
-      throw new Error(
-        "Keyword and website URL are required."
-      );
+      throw new Error("Keyword and website URL are required.");
     }
 
     console.log(
@@ -95,7 +90,7 @@ export const checkKeywordRelevance = async ({
         ""
       );
     } catch {
-      // Keep the supplied URL as fallback evidence.
+      // Keep supplied URL as fallback.
     }
 
     const serpEvidence = {
@@ -113,10 +108,8 @@ Determine whether the keyword is genuinely related to the
 website's business, products, services, or content.
 
 Use only the supplied evidence. Do not invent website content.
-A website ranking for a keyword does not automatically mean
-the keyword is relevant.
 
-Return ONLY one valid JSON object in this format:
+Return ONLY one valid JSON object:
 
 {
   "keyword": "example keyword",
@@ -148,7 +141,9 @@ HEADINGS:
 ${JSON.stringify(websiteContext.headings || [])}
 
 AVAILABLE WEBSITE CONTENT:
-${websiteContext.content || websiteContext.bodyText || "Not available"}
+${websiteContext.content ||
+  websiteContext.bodyText ||
+  "Not available"}
 
 GOOGLE SEARCH EVIDENCE:
 ${JSON.stringify(serpEvidence, null, 2)}
@@ -157,10 +152,17 @@ TARGET KEYWORD:
 ${keyword}
 `;
 
+    console.log("🤖 Sending relevance request to Gemini...");
+
     const result = await model.generateContent(prompt);
-    const parsed = parseGeminiJSON(
-      result.response.text()
+
+    const responseText = result?.response?.text?.();
+
+    console.log(
+      "🤖 Gemini relevance response received."
     );
+
+    const parsed = parseGeminiJSON(responseText);
 
     if (
       !parsed ||
@@ -196,7 +198,7 @@ ${keyword}
   } catch (error) {
     console.error(
       "❌ Gemini keyword relevance error:",
-      error.message
+      error
     );
 
     throw error;
@@ -257,7 +259,7 @@ Provide clear, practical SEO recommendations.
   } catch (error) {
     console.error(
       "❌ Gemini SEO suggestion error:",
-      error.message
+      error
     );
 
     throw error;
@@ -389,6 +391,7 @@ ${JSON.stringify(issues || [], null, 2)}
 `;
 
     const result = await model.generateContent(prompt);
+
     const parsed = parseGeminiJSON(
       result.response.text()
     );
@@ -410,7 +413,7 @@ ${JSON.stringify(issues || [], null, 2)}
   } catch (error) {
     console.error(
       "❌ Gemini SEO audit suggestion error:",
-      error.message
+      error
     );
 
     throw error;
@@ -419,8 +422,6 @@ ${JSON.stringify(issues || [], null, 2)}
 
 /* ============================================================
    4. GENERATE KEYWORD-SPECIFIC OPTIMIZATION
-
-   Accepts either flat page fields or a nested pageData object.
 ============================================================ */
 
 export const generateKeywordOptimization = async (
@@ -461,19 +462,24 @@ export const generateKeywordOptimization = async (
       };
 
     const content =
-      payload.content ?? pageData.content ??
-      pageData.bodyText ?? "";
+      payload.content ??
+      pageData.content ??
+      pageData.bodyText ??
+      "";
 
     const wordCount =
       payload.wordCount ??
       pageData.wordCount ??
-      (content ? content.trim().split(/\s+/).length : 0);
+      (content
+        ? content.trim().split(/\s+/).length
+        : 0);
 
     const images =
       payload.images ?? {
         total: pageData.totalImages ?? 0,
         withAlt: pageData.imagesWithAlt ?? 0,
-        missingAltSamples: pageData.missingAltSamples || [],
+        missingAltSamples:
+          pageData.missingAltSamples || [],
       };
 
     const internalLinks =
@@ -492,16 +498,24 @@ export const generateKeywordOptimization = async (
       0;
 
     const canonical =
-      payload.canonical ?? pageData.canonical ?? "";
+      payload.canonical ??
+      pageData.canonical ??
+      "";
 
     const robots =
-      payload.robots ?? pageData.robots ?? "";
+      payload.robots ??
+      pageData.robots ??
+      "";
 
     const viewport =
-      payload.viewport ?? pageData.viewport ?? "";
+      payload.viewport ??
+      pageData.viewport ??
+      "";
 
     const language =
-      payload.language ?? pageData.language ?? "";
+      payload.language ??
+      pageData.language ??
+      "";
 
     if (!keyword || !targetPage) {
       throw new Error(
@@ -517,28 +531,28 @@ specified page, using the actual page data below.
 
 IMPORTANT RULES:
 
-1. Use only the supplied evidence. Never claim that missing
-   data was inspected or verified.
-2. Do not recommend keyword stuffing.
-3. Do not change the website's primary business or topic.
-4. Never guarantee ranking improvements.
-5. Focus on relevant on-page elements.
-6. Return no more than 8 recommendations.
-7. Prioritize meaningful improvements over unnecessary changes.
-8. If an element is already satisfactory, use
+1. Use only the supplied evidence.
+2. Never claim that missing data was inspected or verified.
+3. Do not recommend keyword stuffing.
+4. Do not change the website's primary business or topic.
+5. Never guarantee ranking improvements.
+6. Focus on relevant on-page elements.
+7. Return no more than 8 recommendations.
+8. Prioritize meaningful improvements.
+9. If an element is already satisfactory, use
    "No major change required" and an empty suggested value.
-9. If the page could benefit from a modest improvement, use
+10. If a modest improvement is possible, use
    "Improvement possible".
-10. Never invent a current title, description, heading, or
-    paragraph if it is unavailable.
-11. Use a concise replacement for title and meta description
-    when a change is genuinely recommended.
-12. Do not suggest replacing the entire page content.
-13. Do not treat missing crawl data as proof that an element
+11. Never invent a current title, description, heading,
+    or paragraph if unavailable.
+12. Use a concise replacement for title and meta description
+    only when genuinely recommended.
+13. Do not suggest replacing the entire page content.
+14. Do not treat missing crawl data as proof that an element
     is missing from the real page.
-14. Return ONLY a valid JSON object in the specified format.
+15. Return ONLY a valid JSON object.
 
-Each recommendation must have:
+Each recommendation must contain:
 - element
 - status
 - current
@@ -629,7 +643,12 @@ GOOGLE SERP SNIPPET:
 ${serpSnippet || "Not available"}
 `;
 
+    console.log(
+      `🤖 Sending keyword optimization request for "${keyword}"...`
+    );
+
     const result = await model.generateContent(prompt);
+
     const parsed = parseGeminiJSON(
       result.response.text()
     );
@@ -685,9 +704,10 @@ ${serpSnippet || "Not available"}
   } catch (error) {
     console.error(
       "❌ Gemini keyword optimization error:",
-      error.message
+      error
     );
 
     throw error;
   }
 };
+
