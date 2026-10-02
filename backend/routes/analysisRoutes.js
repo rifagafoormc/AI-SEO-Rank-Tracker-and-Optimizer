@@ -1,12 +1,13 @@
-import express from "express";
+import express from 'express';
 
 import {
   analyzeWebsite,
   checkRelevance,
+  collectEvidence,
   optimizeKeyword
-} from "../controllers/analysisController.js";
+} from '../controllers/analysisController.js';
 
-import authMiddleware from "../middleware/authMiddleware.js";
+import authMiddleware from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -24,7 +25,14 @@ router.post(
   checkRelevance
 );
 
-// Step 3: AI keyword optimization
+// Step 3: Collect ranking page evidence (no AI)
+router.post(
+  '/collect-evidence',
+  authMiddleware,
+  collectEvidence
+);
+
+// Step 4: AI keyword optimization (uses stored evidence)
 router.post(
   '/optimize-keyword',
   authMiddleware,

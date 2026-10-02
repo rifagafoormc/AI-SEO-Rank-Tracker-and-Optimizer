@@ -9,7 +9,6 @@ import {
   AlertCircle,
   CheckCircle,
   Loader2,
-  ArrowRight,
   Monitor,
   Smartphone,
   ArrowLeft,
@@ -17,6 +16,9 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function Performance() {
   const navigate = useNavigate();
@@ -27,18 +29,53 @@ export default function Performance() {
   const [error, setError] = useState("");
   const [history, setHistory] = useState([]);
 
+  /* ------------------------------------------------------------
+     Normalize a user-supplied URL.
+     - Trims whitespace
+     - Adds https:// if no protocol present
+     - Returns null if not a valid http(s) URL
+  ------------------------------------------------------------ */
+  const normalizeUrl = (value) => {
+    if (!value || typeof value !== "string") return null;
+
+    let normalized = value.trim();
+
+    if (!normalized) return null;
+
+    if (
+      !normalized.startsWith("http://") &&
+      !normalized.startsWith("https://")
+    ) {
+      normalized = `https://${normalized}`;
+    }
+
+    try {
+      const parsed = new URL(normalized);
+
+      if (!["http:", "https:"].includes(parsed.protocol)) {
+        return null;
+      }
+
+      return parsed.href;
+    } catch {
+      return null;
+    }
+  };
+
   const handleAnalyze = async () => {
-    // Validate URL
+    // Validate input presence
     if (!url.trim()) {
       setError("Please enter a website URL.");
       return;
     }
 
-    // Validate URL format
-    try {
-      new URL(url.trim());
-    } catch (error) {
-      setError("Please enter a valid URL (e.g., https://example.com)");
+    // Normalize and validate URL
+    const normalizedUrl = normalizeUrl(url);
+
+    if (!normalizedUrl) {
+      setError(
+        "Please enter a valid website URL, such as https://example.com."
+      );
       return;
     }
 
@@ -50,15 +87,16 @@ export default function Performance() {
       const token = localStorage.getItem("token");
 
       if (!token) {
-        setError("Please login to analyze performance.");
+        setError("Your login session has expired. Please log in again.");
         setIsAnalyzing(false);
+        navigate("/login");
         return;
       }
 
       const response = await axios.post(
-        "http://localhost:5000/api/performance",
+        `${API_BASE_URL}/api/performance`,
         {
-          websiteUrl: url.trim(),
+          websiteUrl: normalizedUrl,
           strategy: strategy,
         },
         {
@@ -66,11 +104,13 @@ export default function Performance() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
+          timeout: 90000,
         }
       );
 
       if (response.data.success) {
         setResult(response.data.data);
+
         // Add to history
         setHistory((prev) => [
           {
@@ -83,7 +123,9 @@ export default function Performance() {
           ...prev,
         ]);
       } else {
-        setError(response.data.message || "Analysis failed");
+        setError(
+          response.data.message || "Analysis failed. Please try again."
+        );
       }
     } catch (error) {
       console.error("Performance analysis error:", error);
@@ -96,7 +138,7 @@ export default function Performance() {
         );
       } else if (error.request) {
         setError(
-          "Cannot connect to server. Please check your internet connection."
+          "Cannot connect to the server. Please check your internet connection."
         );
       } else {
         setError(error.message || "An unexpected error occurred.");
@@ -120,9 +162,12 @@ export default function Performance() {
   };
 
   const getPerformanceBadgeColor = (score) => {
-    if (score >= 90) return "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20";
-    if (score >= 70) return "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/20";
-    if (score >= 50) return "bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-500/20";
+    if (score >= 90)
+      return "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20";
+    if (score >= 70)
+      return "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/20";
+    if (score >= 50)
+      return "bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-500/20";
     return "bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/20";
   };
 
@@ -134,10 +179,10 @@ export default function Performance() {
   };
 
   const getCircleColor = (score) => {
-    if (score >= 90) return "#10b981"; // emerald-500
-    if (score >= 70) return "#eab308"; // amber-500
-    if (score >= 50) return "#f97316"; // orange-500
-    return "#ef4444"; // rose-500
+    if (score >= 90) return "#10b981";
+    if (score >= 70) return "#eab308";
+    if (score >= 50) return "#f97316";
+    return "#ef4444";
   };
 
   const formatTime = (ms) => {
@@ -146,27 +191,24 @@ export default function Performance() {
     return `${(ms / 1000).toFixed(2)}s`;
   };
 
-  // Calculate circle progress
   const calculateCircleProgress = (score) => {
     if (!score) return 0;
     const clampedScore = Math.min(Math.max(score, 0), 100);
     return clampedScore;
   };
 
-  // Helper to check if value exists
   const hasValue = (value) => {
     return value !== null && value !== undefined;
   };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#070714] text-gray-900 dark:text-white relative transition-colors duration-300">
-      {/* Background Glows - Light/Dark mode aware */}
+      {/* Background Glows */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-violet-300/20 dark:bg-violet-600/15 rounded-full blur-3xl" />
         <div className="absolute top-1/2 -left-40 w-96 h-96 bg-cyan-200/20 dark:bg-cyan-500/8 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-200/20 dark:bg-indigo-500/5 rounded-full blur-3xl" />
-        
-        {/* Grid Pattern - Dark mode only */}
+
         <div
           className="absolute inset-0 opacity-[0.04] dark:opacity-[0.08]"
           style={{
@@ -181,8 +223,8 @@ export default function Performance() {
 
       <div className="relative z-10 max-w-6xl mx-auto px-6 py-8">
         {/* Back to Dashboard */}
-        <button 
-          onClick={() => navigate('/dashboard')}
+        <button
+          onClick={() => navigate("/dashboard")}
           className="mb-6 text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-300 flex items-center gap-2 transition"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -197,7 +239,8 @@ export default function Performance() {
               Performance Analysis
             </h1>
             <p className="text-gray-600 dark:text-violet-300/60 mt-1">
-              Analyze your website's performance using Google PageSpeed Insights
+              Analyze your website's performance using Google PageSpeed
+              Insights
             </p>
           </div>
         </div>
@@ -208,6 +251,7 @@ export default function Performance() {
             <Search className="w-5 h-5 text-violet-600 dark:text-violet-400" />
             Website Details
           </h2>
+
           <div className="space-y-5">
             {/* Website URL */}
             <div>
@@ -215,14 +259,18 @@ export default function Performance() {
                 Website URL *
               </label>
               <input
-                type="url"
+                type="text"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="https://example.com"
+                onKeyDown={handleKeyPress}
+                placeholder="example.com or https://example.com"
                 className="w-full bg-gray-100 dark:bg-white/5 border border-violet-200 dark:border-violet-500/20 rounded-xl px-4 py-3 focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none"
                 disabled={isAnalyzing}
               />
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-500">
+                You don't need to type https:// — it will be added
+                automatically.
+              </p>
             </div>
 
             {/* Strategy Selection */}
@@ -259,13 +307,14 @@ export default function Performance() {
             </div>
 
             {/* Analyze Button */}
-            <button 
+            <button
               onClick={handleAnalyze}
-              disabled={!url || isAnalyzing}
+              disabled={!url.trim() || isAnalyzing}
               className={`w-full px-8 py-3.5 rounded-xl font-medium text-white transition-all duration-200
-                ${!url || isAnalyzing 
-                  ? 'bg-gray-200 dark:bg-white/5 cursor-not-allowed text-gray-400 dark:text-gray-500' 
-                  : 'bg-gradient-to-r from-violet-600 to-violet-700 hover:from-violet-500 hover:to-violet-600 shadow-lg shadow-violet-600/30 hover:shadow-violet-600/50 active:scale-95'
+                ${
+                  !url.trim() || isAnalyzing
+                    ? "bg-gray-200 dark:bg-white/5 cursor-not-allowed text-gray-400 dark:text-gray-500"
+                    : "bg-gradient-to-r from-violet-600 to-violet-700 hover:from-violet-500 hover:to-violet-600 shadow-lg shadow-violet-600/30 hover:shadow-violet-600/50 active:scale-95"
                 }`}
             >
               {isAnalyzing ? (
@@ -274,7 +323,7 @@ export default function Performance() {
                   Analyzing...
                 </div>
               ) : (
-                'Analyze Performance'
+                "Analyze Performance"
               )}
             </button>
 
@@ -282,7 +331,9 @@ export default function Performance() {
             {error && (
               <div className="mt-4 p-4 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-xl flex items-start gap-3">
                 <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 flex-shrink-0 mt-0.5" />
-                <p className="text-rose-600 dark:text-rose-400 text-sm">{error}</p>
+                <p className="text-rose-600 dark:text-rose-400 text-sm">
+                  {error}
+                </p>
               </div>
             )}
           </div>
@@ -303,19 +354,23 @@ export default function Performance() {
             <>
               {/* Website Info */}
               <div className="mb-6 p-4 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/5">
-                <p className="font-medium text-gray-700 dark:text-violet-300">Website</p>
-                <p className="text-gray-900 dark:text-white break-all">{result.websiteUrl}</p>
+                <p className="font-medium text-gray-700 dark:text-violet-300">
+                  Website
+                </p>
+                <p className="text-gray-900 dark:text-white break-all">
+                  {result.websiteUrl}
+                </p>
                 <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-                  📊 Strategy: {result.strategy.charAt(0).toUpperCase() + result.strategy.slice(1)}
+                  📊 Strategy:{" "}
+                  {result.strategy.charAt(0).toUpperCase() +
+                    result.strategy.slice(1)}
                 </p>
               </div>
 
               {/* Score Circle with Badge */}
               <div className="flex flex-col md:flex-row items-center gap-8 mb-8">
                 <div className="relative flex-shrink-0">
-                  {/* Circular Progress */}
                   <div className="relative w-40 h-40">
-                    {/* Background circle */}
                     <svg className="w-40 h-40 transform -rotate-90">
                       <circle
                         cx="80"
@@ -326,7 +381,6 @@ export default function Performance() {
                         strokeWidth="12"
                         className="dark:stroke-gray-700"
                       />
-                      {/* Progress circle */}
                       <circle
                         cx="80"
                         cy="80"
@@ -335,23 +389,32 @@ export default function Performance() {
                         stroke={getCircleColor(result.performance)}
                         strokeWidth="12"
                         strokeDasharray={`${
-                          2 * Math.PI * 72 * (calculateCircleProgress(result.performance) / 100)
+                          2 *
+                          Math.PI *
+                          72 *
+                          (calculateCircleProgress(result.performance) / 100)
                         } ${2 * Math.PI * 72}`}
                         strokeLinecap="round"
                         className="transition-all duration-1000 ease-out"
                       />
                     </svg>
-                    
-                    {/* Center content */}
+
                     <div className="absolute inset-0 flex items-center justify-center flex-col">
-                      <div className={`text-4xl font-bold ${getPerformanceColor(result.performance)}`}>
-                        {result.performance ? Math.round(result.performance) : "N/A"}
+                      <div
+                        className={`text-4xl font-bold ${getPerformanceColor(
+                          result.performance
+                        )}`}
+                      >
+                        {result.performance
+                          ? Math.round(result.performance)
+                          : "N/A"}
                       </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-500">Score</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-500">
+                        Score
+                      </div>
                     </div>
                   </div>
 
-                  {/* Badge - positioned outside the circle */}
                   <div className="absolute -top-2 -right-2">
                     <span
                       className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold border ${getPerformanceBadgeColor(
@@ -371,13 +434,17 @@ export default function Performance() {
                       <Activity className="w-4 h-4" />
                       FCP
                     </div>
-                    <div className={`text-2xl font-bold mt-2 ${
-                      hasValue(result.fcp)
-                        ? parseFloat(result.fcp) < 1.8 ? 'text-emerald-600 dark:text-emerald-400'
-                          : parseFloat(result.fcp) < 3.0 ? 'text-amber-600 dark:text-amber-400'
-                          : 'text-rose-600 dark:text-rose-400'
-                        : 'text-gray-400 dark:text-gray-500'
-                    }`}>
+                    <div
+                      className={`text-2xl font-bold mt-2 ${
+                        hasValue(result.fcp)
+                          ? parseFloat(result.fcp) < 1.8
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : parseFloat(result.fcp) < 3.0
+                            ? "text-amber-600 dark:text-amber-400"
+                            : "text-rose-600 dark:text-rose-400"
+                          : "text-gray-400 dark:text-gray-500"
+                      }`}
+                    >
                       {formatTime(result.fcp)}
                     </div>
                   </div>
@@ -387,13 +454,17 @@ export default function Performance() {
                       <Clock className="w-4 h-4" />
                       LCP
                     </div>
-                    <div className={`text-2xl font-bold mt-2 ${
-                      hasValue(result.lcp)
-                        ? parseFloat(result.lcp) < 2.5 ? 'text-emerald-600 dark:text-emerald-400'
-                          : parseFloat(result.lcp) < 4.0 ? 'text-amber-600 dark:text-amber-400'
-                          : 'text-rose-600 dark:text-rose-400'
-                        : 'text-gray-400 dark:text-gray-500'
-                    }`}>
+                    <div
+                      className={`text-2xl font-bold mt-2 ${
+                        hasValue(result.lcp)
+                          ? parseFloat(result.lcp) < 2.5
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : parseFloat(result.lcp) < 4.0
+                            ? "text-amber-600 dark:text-amber-400"
+                            : "text-rose-600 dark:text-rose-400"
+                          : "text-gray-400 dark:text-gray-500"
+                      }`}
+                    >
                       {formatTime(result.lcp)}
                     </div>
                   </div>
@@ -403,13 +474,17 @@ export default function Performance() {
                       <Maximize className="w-4 h-4" />
                       CLS
                     </div>
-                    <div className={`text-2xl font-bold mt-2 ${
-                      hasValue(result.cls)
-                        ? parseFloat(result.cls) < 0.1 ? 'text-emerald-600 dark:text-emerald-400'
-                          : parseFloat(result.cls) < 0.25 ? 'text-amber-600 dark:text-amber-400'
-                          : 'text-rose-600 dark:text-rose-400'
-                        : 'text-gray-400 dark:text-gray-500'
-                    }`}>
+                    <div
+                      className={`text-2xl font-bold mt-2 ${
+                        hasValue(result.cls)
+                          ? parseFloat(result.cls) < 0.1
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : parseFloat(result.cls) < 0.25
+                            ? "text-amber-600 dark:text-amber-400"
+                            : "text-rose-600 dark:text-rose-400"
+                          : "text-gray-400 dark:text-gray-500"
+                      }`}
+                    >
                       {result.cls !== null ? result.cls.toFixed(3) : "N/A"}
                     </div>
                   </div>
@@ -419,13 +494,17 @@ export default function Performance() {
                       <Zap className="w-4 h-4" />
                       TBT
                     </div>
-                    <div className={`text-2xl font-bold mt-2 ${
-                      hasValue(result.tbt)
-                        ? parseInt(result.tbt) < 200 ? 'text-emerald-600 dark:text-emerald-400'
-                          : parseInt(result.tbt) < 500 ? 'text-amber-600 dark:text-amber-400'
-                          : 'text-rose-600 dark:text-rose-400'
-                        : 'text-gray-400 dark:text-gray-500'
-                    }`}>
+                    <div
+                      className={`text-2xl font-bold mt-2 ${
+                        hasValue(result.tbt)
+                          ? parseInt(result.tbt) < 200
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : parseInt(result.tbt) < 500
+                            ? "text-amber-600 dark:text-amber-400"
+                            : "text-rose-600 dark:text-rose-400"
+                          : "text-gray-400 dark:text-gray-500"
+                      }`}
+                    >
                       {formatTime(result.tbt)}
                     </div>
                   </div>
@@ -440,18 +519,20 @@ export default function Performance() {
                 </p>
               </div>
 
-              {/* Show message when no performance data is available */}
-              {!hasValue(result.performance) && 
-               !hasValue(result.fcp) &&
-               !hasValue(result.lcp) && 
-               !hasValue(result.cls) && 
-               !hasValue(result.tbt) && (
-                <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl">
-                  <p className="text-amber-700 dark:text-amber-400 text-center">
-                    ⚠️ PageSpeed data unavailable. Unable to fetch performance metrics right now. Please try again later.
-                  </p>
-                </div>
-              )}
+              {/* No data message */}
+              {!hasValue(result.performance) &&
+                !hasValue(result.fcp) &&
+                !hasValue(result.lcp) &&
+                !hasValue(result.cls) &&
+                !hasValue(result.tbt) && (
+                  <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl">
+                    <p className="text-amber-700 dark:text-amber-400 text-center">
+                      ⚠️ PageSpeed data unavailable. Unable to fetch
+                      performance metrics right now. Please try again
+                      later.
+                    </p>
+                  </div>
+                )}
             </>
           )}
         </div>
@@ -467,21 +548,38 @@ export default function Performance() {
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="border-b border-violet-200 dark:border-violet-500/20 bg-gray-50 dark:bg-white/5">
-                    <th className="text-left p-3 text-gray-700 dark:text-violet-300 font-medium">URL</th>
-                    <th className="text-left p-3 text-gray-700 dark:text-violet-300 font-medium">Score</th>
-                    <th className="text-left p-3 text-gray-700 dark:text-violet-300 font-medium">Strategy</th>
-                    <th className="text-left p-3 text-gray-700 dark:text-violet-300 font-medium">Date</th>
+                    <th className="text-left p-3 text-gray-700 dark:text-violet-300 font-medium">
+                      URL
+                    </th>
+                    <th className="text-left p-3 text-gray-700 dark:text-violet-300 font-medium">
+                      Score
+                    </th>
+                    <th className="text-left p-3 text-gray-700 dark:text-violet-300 font-medium">
+                      Strategy
+                    </th>
+                    <th className="text-left p-3 text-gray-700 dark:text-violet-300 font-medium">
+                      Date
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {history.map((item) => (
-                    <tr key={item.id} className="border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                    <tr
+                      key={item.id}
+                      className="border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                    >
                       <td className="p-3 text-gray-900 dark:text-white truncate max-w-xs">
                         {item.websiteUrl}
                       </td>
                       <td className="p-3">
-                        <span className={`font-semibold ${getPerformanceColor(item.performance)}`}>
-                          {item.performance ? Math.round(item.performance) : "N/A"}
+                        <span
+                          className={`font-semibold ${getPerformanceColor(
+                            item.performance
+                          )}`}
+                        >
+                          {item.performance
+                            ? Math.round(item.performance)
+                            : "N/A"}
                         </span>
                       </td>
                       <td className="p-3 text-gray-600 dark:text-gray-400 capitalize">
