@@ -12,6 +12,9 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export default function History() {
   const navigate = useNavigate();
 
@@ -38,7 +41,7 @@ export default function History() {
       }
 
       const response = await fetch(
-        'http://localhost:5000/api/history',
+        `${API_BASE_URL}/api/history`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -92,7 +95,7 @@ export default function History() {
         label: 'SEO Analysis',
         icon: BarChart3,
         className:
-          'bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400 border-violet-200 dark:border-violet-500/20',
+          'bg-[#7A5236]/10 dark:bg-[#A47551]/15 text-[#7A5236] dark:text-[#D4B59E] border-[#7A5236]/25 dark:border-[#A47551]/30',
       };
     }
 
@@ -101,7 +104,7 @@ export default function History() {
         label: 'SEO Audit',
         icon: Shield,
         className:
-          'bg-cyan-50 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border-cyan-200 dark:border-cyan-500/20',
+          'bg-[#A47551]/10 dark:bg-[#A47551]/15 text-[#A47551] dark:text-[#D4B59E] border-[#A47551]/25 dark:border-[#A47551]/30',
       };
     }
 
@@ -194,7 +197,7 @@ export default function History() {
       const token = localStorage.getItem('token');
 
       const response = await fetch(
-        `http://localhost:5000/api/history/${itemToDelete.type}/${itemToDelete._id}`,
+        `${API_BASE_URL}/api/history/${itemToDelete.type}/${itemToDelete._id}`,
         {
           method: 'DELETE',
           headers: {
@@ -233,22 +236,22 @@ export default function History() {
 
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#070714] text-gray-900 dark:text-white relative overflow-hidden transition-colors duration-300">
+    <div className="min-h-screen bg-[#F5EBDD] dark:bg-[#1A0F0A] text-[#1A0F0A] dark:text-white relative overflow-hidden transition-colors duration-300">
 
       {/* Background */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-violet-300/20 dark:bg-violet-600/15 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-[#7A5236]/15 dark:bg-[#A47551]/20 rounded-full blur-3xl" />
 
-        <div className="absolute top-1/2 -left-40 w-96 h-96 bg-cyan-200/20 dark:bg-cyan-500/8 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 -left-40 w-96 h-96 bg-[#A47551]/15 dark:bg-[#7A5236]/15 rounded-full blur-3xl" />
 
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-200/20 dark:bg-indigo-500/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#D4B59E]/20 dark:bg-[#3E2723]/40 rounded-full blur-3xl" />
 
         <div
-          className="absolute inset-0 opacity-[0.04] dark:opacity-[0.08]"
+          className="absolute inset-0 opacity-[0.04] dark:opacity-[0.06]"
           style={{
             backgroundImage: `
-              linear-gradient(rgba(139,92,246,0.15) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(139,92,246,0.15) 1px, transparent 1px)
+              linear-gradient(rgba(122,82,54,0.4) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(122,82,54,0.4) 1px, transparent 1px)
             `,
             backgroundSize: '48px 48px',
           }}
@@ -262,23 +265,23 @@ export default function History() {
         <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-3xl font-bold text-[#1A0F0A] dark:text-white">
                 Analysis History
               </h1>
 
-              <span className="bg-violet-100 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400 text-xs px-3 py-1 rounded-full border border-violet-200 dark:border-violet-500/20">
+              <span className="bg-[#7A5236]/10 dark:bg-[#A47551]/15 text-[#7A5236] dark:text-[#D4B59E] text-xs px-3 py-1 rounded-full border border-[#7A5236]/25 dark:border-[#A47551]/30">
                 {historyData.length} records
               </span>
             </div>
 
-            <p className="text-gray-600 dark:text-violet-300/60 mt-1">
+            <p className="text-[#5E3E28] dark:text-[#D4B59E]/70 mt-1">
               View your previous SEO analyses, audits, and performance checks
             </p>
           </div>
 
           <button
             onClick={() => navigate('/analysis')}
-            className="bg-gradient-to-r from-violet-600 to-violet-700 hover:from-violet-500 hover:to-violet-600 text-white px-6 py-2 rounded-xl transition shadow-lg shadow-violet-600/30 hover:shadow-violet-600/50 flex items-center gap-2"
+            className="bg-[#7A5236] hover:bg-[#5E3E28] text-white px-6 py-2 rounded-xl transition shadow-lg shadow-[#7A5236]/40 hover:shadow-[#7A5236]/60 flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
             New Analysis
@@ -290,24 +293,24 @@ export default function History() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
 
           {/* Total */}
-          <div className="bg-white dark:bg-[#0a0a1a]/80 backdrop-blur-xl border border-violet-200 dark:border-violet-500/20 rounded-2xl p-4 shadow-lg shadow-gray-200/50 dark:shadow-xl dark:shadow-black/20">
-            <p className="text-sm text-gray-500 dark:text-gray-500">
+          <div className="bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-[#7A5236]/15 dark:border-[#A47551]/25 rounded-2xl p-4 shadow-lg shadow-[#7A5236]/5 dark:shadow-xl dark:shadow-black/40">
+            <p className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
               Total Records
             </p>
 
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+            <p className="text-2xl font-bold text-[#1A0F0A] dark:text-white">
               {historyData.length}
             </p>
           </div>
 
 
           {/* Analyses */}
-          <div className="bg-white dark:bg-[#0a0a1a]/80 backdrop-blur-xl border border-violet-200 dark:border-violet-500/20 rounded-2xl p-4 shadow-lg shadow-gray-200/50 dark:shadow-xl dark:shadow-black/20">
-            <p className="text-sm text-gray-500 dark:text-gray-500">
+          <div className="bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-[#7A5236]/15 dark:border-[#A47551]/25 rounded-2xl p-4 shadow-lg shadow-[#7A5236]/5 dark:shadow-xl dark:shadow-black/40">
+            <p className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
               SEO Analyses
             </p>
 
-            <p className="text-2xl font-bold text-violet-600 dark:text-violet-400">
+            <p className="text-2xl font-bold text-[#7A5236] dark:text-[#D4B59E]">
               {
                 historyData.filter(
                   (item) => item.type === 'analysis'
@@ -318,12 +321,12 @@ export default function History() {
 
 
           {/* Audits */}
-          <div className="bg-white dark:bg-[#0a0a1a]/80 backdrop-blur-xl border border-cyan-200 dark:border-cyan-500/20 rounded-2xl p-4 shadow-lg shadow-gray-200/50 dark:shadow-xl dark:shadow-black/20">
-            <p className="text-sm text-gray-500 dark:text-gray-500">
+          <div className="bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-[#A47551]/25 dark:border-[#A47551]/25 rounded-2xl p-4 shadow-lg shadow-[#7A5236]/5 dark:shadow-xl dark:shadow-black/40">
+            <p className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
               SEO Audits
             </p>
 
-            <p className="text-2xl font-bold text-cyan-600 dark:text-cyan-400">
+            <p className="text-2xl font-bold text-[#A47551] dark:text-[#D4B59E]">
               {
                 historyData.filter(
                   (item) => item.type === 'audit'
@@ -334,8 +337,8 @@ export default function History() {
 
 
           {/* Performance */}
-          <div className="bg-white dark:bg-[#0a0a1a]/80 backdrop-blur-xl border border-emerald-200 dark:border-emerald-500/20 rounded-2xl p-4 shadow-lg shadow-gray-200/50 dark:shadow-xl dark:shadow-black/20">
-            <p className="text-sm text-gray-500 dark:text-gray-500">
+          <div className="bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-emerald-200 dark:border-emerald-500/25 rounded-2xl p-4 shadow-lg shadow-[#7A5236]/5 dark:shadow-xl dark:shadow-black/40">
+            <p className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
               Performance Checks
             </p>
 
@@ -352,12 +355,12 @@ export default function History() {
 
 
         {/* Search & Filter */}
-        <div className="bg-white dark:bg-[#0a0a1a]/80 backdrop-blur-xl border border-violet-200 dark:border-violet-500/20 rounded-2xl shadow-lg shadow-gray-200/50 dark:shadow-xl dark:shadow-black/20 p-4 mb-6">
+        <div className="bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-[#7A5236]/15 dark:border-[#A47551]/25 rounded-2xl shadow-lg shadow-[#7A5236]/5 dark:shadow-xl dark:shadow-black/40 p-4 mb-6">
 
           <div className="flex flex-col md:flex-row gap-4">
 
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#7A5236]/60 dark:text-[#D4B59E]/50" />
 
               <input
                 type="text"
@@ -366,7 +369,7 @@ export default function History() {
                   setSearchTerm(e.target.value)
                 }
                 placeholder="Search websites..."
-                className="w-full bg-gray-100 dark:bg-white/5 border border-violet-200 dark:border-violet-500/20 rounded-xl px-4 py-2 pl-10 focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none"
+                className="w-full bg-[#F5EBDD] dark:bg-[#1A0F0A]/70 border border-[#7A5236]/20 dark:border-[#A47551]/25 rounded-xl px-4 py-2 pl-10 focus:border-[#7A5236] focus:ring-2 focus:ring-[#7A5236]/25 dark:focus:border-[#A47551] dark:focus:ring-[#A47551]/25 transition-all duration-200 text-[#1A0F0A] dark:text-white placeholder:text-[#5E3E28]/50 dark:placeholder:text-[#D4B59E]/40 outline-none"
               />
             </div>
 
@@ -386,8 +389,8 @@ export default function History() {
                   }
                   className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
                     filterType === filter.value
-                      ? 'bg-gradient-to-r from-violet-600 to-violet-700 text-white'
-                      : 'bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white'
+                      ? 'bg-[#7A5236] text-white shadow-lg shadow-[#7A5236]/40'
+                      : 'bg-[#F5EBDD] dark:bg-[#1A0F0A]/70 text-[#5E3E28] dark:text-[#D4B59E]/80 hover:bg-[#7A5236]/10 dark:hover:bg-[#A47551]/15 hover:text-[#7A5236] dark:hover:text-[#D4B59E]'
                   }`}
                 >
                   {filter.label}
@@ -401,36 +404,36 @@ export default function History() {
 
 
         {/* History Table */}
-        <div className="bg-white dark:bg-[#0a0a1a]/80 backdrop-blur-xl border border-violet-200 dark:border-violet-500/20 rounded-2xl shadow-lg shadow-gray-200/50 dark:shadow-xl dark:shadow-black/20 overflow-hidden">
+        <div className="bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-[#7A5236]/15 dark:border-[#A47551]/25 rounded-2xl shadow-lg shadow-[#7A5236]/5 dark:shadow-xl dark:shadow-black/40 overflow-hidden">
 
           <div className="overflow-x-auto">
 
             <table className="w-full">
 
-              <thead className="bg-gray-50 dark:bg-white/5 border-b border-violet-200 dark:border-violet-500/20">
+              <thead className="bg-[#F5EBDD] dark:bg-[#1A0F0A]/50 border-b border-[#7A5236]/20 dark:border-[#A47551]/25">
 
                 <tr>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700 dark:text-violet-300">
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-[#5E3E28] dark:text-[#D4B59E]/80">
                     #
                   </th>
 
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700 dark:text-violet-300">
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-[#5E3E28] dark:text-[#D4B59E]/80">
                     Type
                   </th>
 
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700 dark:text-violet-300">
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-[#5E3E28] dark:text-[#D4B59E]/80">
                     Website
                   </th>
 
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700 dark:text-violet-300">
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-[#5E3E28] dark:text-[#D4B59E]/80">
                     Details
                   </th>
 
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700 dark:text-violet-300">
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-[#5E3E28] dark:text-[#D4B59E]/80">
                     Date
                   </th>
 
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700 dark:text-violet-300">
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-[#5E3E28] dark:text-[#D4B59E]/80">
                     Actions
                   </th>
                 </tr>
@@ -445,13 +448,13 @@ export default function History() {
                   <tr>
                     <td
                       colSpan="6"
-                      className="text-center py-12 text-gray-500 dark:text-gray-500"
+                      className="text-center py-12 text-[#5E3E28]/70 dark:text-[#D4B59E]/60"
                     >
                       <div className="text-6xl mb-4">
                         📋
                       </div>
 
-                      <p className="text-lg font-medium text-gray-900 dark:text-white">
+                      <p className="text-lg font-medium text-[#1A0F0A] dark:text-white">
                         No history found
                       </p>
 
@@ -474,11 +477,11 @@ export default function History() {
                     return (
                       <tr
                         key={`${item.type}-${item._id}`}
-                        className="border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors duration-200"
+                        className="border-b border-[#7A5236]/10 dark:border-white/5 hover:bg-[#7A5236]/5 dark:hover:bg-[#A47551]/10 transition-colors duration-200"
                       >
 
                         {/* Number */}
-                        <td className="py-4 px-6 text-sm text-gray-500 dark:text-gray-500">
+                        <td className="py-4 px-6 text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                           {index + 1}
                         </td>
 
@@ -498,11 +501,11 @@ export default function History() {
 
 
                         {/* Website */}
-                        <td className="py-4 px-6 font-medium text-gray-900 dark:text-white">
+                        <td className="py-4 px-6 font-medium text-[#1A0F0A] dark:text-white">
 
                           <div className="flex items-center gap-2">
 
-                            <div className="w-8 h-8 bg-violet-100 dark:bg-violet-500/10 rounded-xl flex items-center justify-center text-xs font-bold text-violet-700 dark:text-violet-400">
+                            <div className="w-8 h-8 bg-[#7A5236]/10 dark:bg-[#A47551]/15 rounded-xl flex items-center justify-center text-xs font-bold text-[#7A5236] dark:text-[#D4B59E]">
                               {getWebsiteName(
                                 item.websiteUrl
                               )
@@ -520,13 +523,13 @@ export default function History() {
 
 
                         {/* Details */}
-                        <td className="py-4 px-6 text-gray-600 dark:text-gray-400">
+                        <td className="py-4 px-6 text-[#5E3E28]/80 dark:text-[#D4B59E]/70">
                           {getDetails(item)}
                         </td>
 
 
                         {/* Date */}
-                        <td className="py-4 px-6 text-sm text-gray-500 dark:text-gray-500">
+                        <td className="py-4 px-6 text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
 
                           <div className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
@@ -591,7 +594,7 @@ export default function History() {
             onClick={handleCancelDelete}
           />
 
-          <div className="relative bg-white dark:bg-[#0a0a1a] rounded-2xl shadow-2xl max-w-md w-full p-6 border border-rose-200 dark:border-rose-500/20">
+          <div className="relative bg-white/95 dark:bg-[#251710]/95 backdrop-blur-xl rounded-2xl shadow-2xl max-w-md w-full p-6 border border-rose-200 dark:border-rose-500/25">
 
             <div className="flex justify-center mb-4">
 
@@ -604,16 +607,16 @@ export default function History() {
             </div>
 
 
-            <h3 className="text-xl font-bold text-center text-gray-900 dark:text-white mb-2">
+            <h3 className="text-xl font-bold text-center text-[#1A0F0A] dark:text-white mb-2">
               Delete History Item
             </h3>
 
 
-            <p className="text-center text-gray-600 dark:text-gray-400 mb-6">
+            <p className="text-center text-[#5E3E28]/80 dark:text-[#D4B59E]/70 mb-6">
 
               Are you sure you want to permanently delete the{' '}
 
-              <span className="font-semibold text-gray-900 dark:text-white">
+              <span className="font-semibold text-[#1A0F0A] dark:text-white">
                 {getTypeInfo(
                   itemToDelete?.type
                 ).label}
@@ -621,7 +624,7 @@ export default function History() {
 
               for{' '}
 
-              <span className="font-semibold text-gray-900 dark:text-white">
+              <span className="font-semibold text-[#1A0F0A] dark:text-white">
                 "{getWebsiteName(
                   itemToDelete?.websiteUrl
                 )}"
@@ -640,7 +643,7 @@ export default function History() {
 
               <button
                 onClick={handleCancelDelete}
-                className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition font-medium"
+                className="flex-1 px-4 py-2.5 rounded-xl border border-[#7A5236]/25 dark:border-white/10 text-[#7A5236] dark:text-[#D4B59E] hover:bg-[#7A5236]/10 dark:hover:bg-white/5 transition font-medium"
               >
                 Cancel
               </button>
@@ -649,7 +652,7 @@ export default function History() {
               <button
                 onClick={handleConfirmDelete}
                 disabled={deletingId === itemToDelete?._id}
-                className="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white font-medium transition shadow-lg shadow-rose-600/30 disabled:opacity-50"
+                className="flex-1 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-medium transition shadow-lg shadow-rose-600/30 disabled:opacity-50"
               >
                 {deletingId === itemToDelete?._id
                   ? 'Deleting...'

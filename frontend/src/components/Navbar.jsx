@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Sun,
   Moon,
@@ -28,7 +28,6 @@ export default function Navbar() {
 
   const { theme, toggleTheme } = useTheme();
 
-  // User Auth State
   const [token, setToken] = useState(localStorage.getItem("token"));
 
   const [user, setUser] = useState(() => {
@@ -36,22 +35,41 @@ export default function Navbar() {
     return storedUser ? JSON.parse(storedUser) : null;
   });
 
+  /* ------------------------------------------------------------
+     Re-sync auth state on every route change.
+
+     Fixes: after logging in, the Navbar would still show the
+     public "Login / Get Started" state on /dashboard or /history
+     because the component stayed mounted and never re-read
+     localStorage.
+  ------------------------------------------------------------ */
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
+
+    setToken(storedToken);
+    setUser(storedUser ? JSON.parse(storedUser) : null);
+
+    // Close any open menus on route change
+    setShowProfile(false);
+    setShowMobileMenu(false);
+  }, [location.pathname]);
+
   const isLoggedIn = !!token;
   const isAdmin = user?.role === "admin";
 
   const publicRoutes = ["/", "/login", "/register"];
   const isPublicPage = publicRoutes.includes(location.pathname);
 
-  // Close mobile menu whenever route changes
-  // This prevents the menu from staying open after navigation.
   const closeMobileMenu = () => {
     setShowMobileMenu(false);
   };
 
+  // Active link — darker caramel in dark mode, so it reads on the warm bg
   const activeLink = (path) =>
     location.pathname === path
-      ? "text-cyan-600 dark:text-purple-400 font-semibold"
-      : "text-gray-600 dark:text-gray-300 hover:text-cyan-600 dark:hover:text-purple-400 transition";
+      ? "text-[#7A5236] dark:text-[#D4B59E] font-semibold"
+      : "text-gray-600 dark:text-gray-300 hover:text-[#7A5236] dark:hover:text-[#D4B59E] transition";
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -75,9 +93,9 @@ export default function Navbar() {
     <nav
       className="
         sticky top-0 z-50
-        bg-white/90 dark:bg-[#070714]/90
+        bg-white/90 dark:bg-[#1A0F0A]/90
         backdrop-blur-xl
-        border-b border-gray-200/70 dark:border-purple-500/20
+        border-b border-gray-200/70 dark:border-[#7A5236]/20
         transition-colors duration-300
       "
     >
@@ -89,9 +107,7 @@ export default function Navbar() {
           flex items-center justify-between
         "
       >
-        {/* =====================================================
-            LOGO
-        ===================================================== */}
+        {/* LOGO */}
         <Link
           to={
             isLoggedIn && !isPublicPage
@@ -106,8 +122,7 @@ export default function Navbar() {
             font-bold
             whitespace-nowrap
             bg-gradient-to-r
-            from-cyan-600 to-blue-600
-            dark:from-purple-400 dark:to-purple-600
+            from-[#7A5236] via-[#A47551] to-[#D4B59E]
             bg-clip-text text-transparent
             hover:opacity-80
             transition
@@ -116,20 +131,15 @@ export default function Navbar() {
           AI SEO Rank Tracker
         </Link>
 
-        {/* =====================================================
-            DESKTOP NAVIGATION
-        ===================================================== */}
+        {/* DESKTOP NAVIGATION */}
         {isLoggedIn && !isPublicPage ? (
           <>
-            {/* Desktop Links */}
             <div className="hidden lg:flex items-center gap-5 xl:gap-7">
               {isAdmin ? (
                 <>
                   <Link
                     to="/admin"
-                    className={`flex items-center gap-1.5 ${activeLink(
-                      "/admin"
-                    )}`}
+                    className={`flex items-center gap-1.5 ${activeLink("/admin")}`}
                   >
                     <LayoutDashboard className="w-4 h-4" />
                     Admin Dashboard
@@ -137,9 +147,7 @@ export default function Navbar() {
 
                   <Link
                     to="/admin/users"
-                    className={`flex items-center gap-1.5 ${activeLink(
-                      "/admin/users"
-                    )}`}
+                    className={`flex items-center gap-1.5 ${activeLink("/admin/users")}`}
                   >
                     <Users className="w-4 h-4" />
                     Users
@@ -149,9 +157,7 @@ export default function Navbar() {
                 <>
                   <Link
                     to="/dashboard"
-                    className={`flex items-center gap-1.5 ${activeLink(
-                      "/dashboard"
-                    )}`}
+                    className={`flex items-center gap-1.5 ${activeLink("/dashboard")}`}
                   >
                     <LayoutDashboard className="w-4 h-4" />
                     Dashboard
@@ -159,9 +165,7 @@ export default function Navbar() {
 
                   <Link
                     to="/analysis"
-                    className={`flex items-center gap-1.5 ${activeLink(
-                      "/analysis"
-                    )}`}
+                    className={`flex items-center gap-1.5 ${activeLink("/analysis")}`}
                   >
                     <BarChart3 className="w-4 h-4" />
                     SEO Analysis
@@ -169,9 +173,7 @@ export default function Navbar() {
 
                   <Link
                     to="/seo-audit"
-                    className={`flex items-center gap-1.5 ${activeLink(
-                      "/seo-audit"
-                    )}`}
+                    className={`flex items-center gap-1.5 ${activeLink("/seo-audit")}`}
                   >
                     <SearchCheck className="w-4 h-4" />
                     SEO Audit
@@ -179,9 +181,7 @@ export default function Navbar() {
 
                   <Link
                     to="/performance"
-                    className={`flex items-center gap-1.5 ${activeLink(
-                      "/performance"
-                    )}`}
+                    className={`flex items-center gap-1.5 ${activeLink("/performance")}`}
                   >
                     <Gauge className="w-4 h-4" />
                     Performance
@@ -189,9 +189,7 @@ export default function Navbar() {
 
                   <Link
                     to="/rankings"
-                    className={`flex items-center gap-1.5 ${activeLink(
-                      "/rankings"
-                    )}`}
+                    className={`flex items-center gap-1.5 ${activeLink("/rankings")}`}
                   >
                     <LineChart className="w-4 h-4" />
                     Rankings
@@ -199,9 +197,7 @@ export default function Navbar() {
 
                   <Link
                     to="/history"
-                    className={`flex items-center gap-1.5 ${activeLink(
-                      "/history"
-                    )}`}
+                    className={`flex items-center gap-1.5 ${activeLink("/history")}`}
                   >
                     <History className="w-4 h-4" />
                     History
@@ -210,9 +206,7 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* =================================================
-                RIGHT SIDE
-            ================================================= */}
+            {/* RIGHT SIDE */}
             <div className="flex items-center gap-2 sm:gap-3">
               {/* Theme Toggle */}
               <button
@@ -221,15 +215,15 @@ export default function Navbar() {
                 className="
                   p-2 sm:p-2.5
                   rounded-xl
-                  bg-gray-100/70 dark:bg-gray-800/60
-                  hover:bg-gray-200/70 dark:hover:bg-gray-700/70
-                  border border-gray-200/70 dark:border-gray-700/40
+                  bg-gray-100/70 dark:bg-white/[0.04]
+                  hover:bg-gray-200/70 dark:hover:bg-white/[0.08]
+                  border border-gray-200/70 dark:border-white/10
                   hover:scale-105
                   transition
                 "
               >
                 {theme === "dark" ? (
-                  <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
+                  <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-[#D4B59E]" />
                 ) : (
                   <Moon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
                 )}
@@ -244,8 +238,7 @@ export default function Navbar() {
                     w-9 h-9 sm:w-10 sm:h-10
                     rounded-full
                     bg-gradient-to-r
-                    from-cyan-500 to-blue-600
-                    dark:from-purple-600 dark:to-purple-800
+                    from-[#7A5236] to-[#A47551]
                     text-white
                     text-sm sm:text-base
                     font-semibold
@@ -253,14 +246,12 @@ export default function Navbar() {
                     hover:scale-105
                     transition
                     shadow-lg
-                    shadow-cyan-500/20
-                    dark:shadow-purple-600/30
+                    shadow-[#7A5236]/40
                   "
                 >
                   {user?.name?.charAt(0)?.toUpperCase() || "👤"}
                 </button>
 
-                {/* Profile Dropdown */}
                 {showProfile && (
                   <>
                     <div
@@ -273,31 +264,30 @@ export default function Navbar() {
                         absolute right-0 mt-3
                         w-64
                         max-w-[calc(100vw-2rem)]
-                        bg-white/95 dark:bg-[#11111f]/95
+                        bg-white/95 dark:bg-[#251710]/95
                         backdrop-blur-xl
                         rounded-2xl
                         shadow-2xl
                         border
                         border-gray-200/70
-                        dark:border-purple-500/20
+                        dark:border-[#7A5236]/25
                         z-50
                         overflow-hidden
                       "
                     >
-                      {/* User Info */}
                       <div
                         className="
                           px-4 py-4
                           border-b
                           border-gray-200/70
-                          dark:border-purple-500/20
+                          dark:border-[#7A5236]/25
                         "
                       >
                         <p className="font-semibold text-gray-900 dark:text-white truncate">
                           {user?.name || "User"}
                         </p>
 
-                        <p className="text-sm text-gray-500 dark:text-purple-300/50 truncate">
+                        <p className="text-sm text-gray-500 dark:text-[#D4B59E]/60 truncate">
                           {user?.email || ""}
                         </p>
 
@@ -307,13 +297,12 @@ export default function Navbar() {
                               inline-flex items-center gap-1
                               mt-2
                               text-xs
-                              bg-violet-100 dark:bg-violet-500/10
-                              text-violet-700 dark:text-violet-400
+                              bg-[#7A5236]/15
+                              text-[#D4B59E]
                               px-2 py-1
                               rounded-full
                               border
-                              border-violet-200
-                              dark:border-violet-500/20
+                              border-[#7A5236]/30
                             "
                           >
                             <Shield className="w-3 h-3" />
@@ -322,7 +311,6 @@ export default function Navbar() {
                         )}
                       </div>
 
-                      {/* Admin Links */}
                       {isAdmin && (
                         <>
                           <Link
@@ -332,11 +320,11 @@ export default function Navbar() {
                               flex items-center gap-3
                               px-4 py-3
                               text-gray-700 dark:text-gray-300
-                              hover:bg-cyan-50 dark:hover:bg-purple-500/10
+                              hover:bg-[#7A5236]/15
                               transition
                             "
                           >
-                            <LayoutDashboard className="w-4 h-4 text-cyan-600 dark:text-purple-400" />
+                            <LayoutDashboard className="w-4 h-4 text-[#A47551]" />
                             Admin Dashboard
                           </Link>
 
@@ -347,17 +335,16 @@ export default function Navbar() {
                               flex items-center gap-3
                               px-4 py-3
                               text-gray-700 dark:text-gray-300
-                              hover:bg-cyan-50 dark:hover:bg-purple-500/10
+                              hover:bg-[#7A5236]/15
                               transition
                             "
                           >
-                            <Users className="w-4 h-4 text-cyan-600 dark:text-purple-400" />
+                            <Users className="w-4 h-4 text-[#A47551]" />
                             Manage Users
                           </Link>
                         </>
                       )}
 
-                      {/* Profile */}
                       <Link
                         to="/profile"
                         onClick={handleNavigation}
@@ -365,15 +352,14 @@ export default function Navbar() {
                           flex items-center gap-3
                           px-4 py-3
                           text-gray-700 dark:text-gray-300
-                          hover:bg-cyan-50 dark:hover:bg-purple-500/10
+                          hover:bg-[#7A5236]/15
                           transition
                         "
                       >
-                        <User className="w-4 h-4 text-cyan-600 dark:text-purple-400" />
+                        <User className="w-4 h-4 text-[#A47551]" />
                         My Profile
                       </Link>
 
-                      {/* Change Password */}
                       <Link
                         to="/change-password"
                         onClick={handleNavigation}
@@ -381,15 +367,14 @@ export default function Navbar() {
                           flex items-center gap-3
                           px-4 py-3
                           text-gray-700 dark:text-gray-300
-                          hover:bg-cyan-50 dark:hover:bg-purple-500/10
+                          hover:bg-[#7A5236]/15
                           transition
                         "
                       >
-                        <Key className="w-4 h-4 text-cyan-600 dark:text-purple-400" />
+                        <Key className="w-4 h-4 text-[#A47551]" />
                         Change Password
                       </Link>
 
-                      {/* Logout */}
                       <button
                         onClick={handleLogout}
                         className="
@@ -401,7 +386,7 @@ export default function Navbar() {
                           hover:bg-rose-50 dark:hover:bg-rose-900/20
                           border-t
                           border-gray-200/70
-                          dark:border-purple-500/20
+                          dark:border-[#7A5236]/25
                           transition
                         "
                       >
@@ -413,9 +398,7 @@ export default function Navbar() {
                 )}
               </div>
 
-              {/* =================================================
-                  MOBILE MENU BUTTON
-              ================================================= */}
+              {/* Mobile Menu Button */}
               <button
                 onClick={() => setShowMobileMenu(!showMobileMenu)}
                 aria-label="Toggle navigation menu"
@@ -424,12 +407,12 @@ export default function Navbar() {
                   p-2
                   rounded-xl
                   bg-gray-100/70
-                  dark:bg-gray-800/60
+                  dark:bg-white/[0.04]
                   hover:bg-gray-200
-                  dark:hover:bg-gray-700
+                  dark:hover:bg-white/[0.08]
                   border
                   border-gray-200/70
-                  dark:border-gray-700/40
+                  dark:border-white/10
                   transition
                 "
               >
@@ -442,25 +425,22 @@ export default function Navbar() {
             </div>
           </>
         ) : (
-          /* =====================================================
-             PUBLIC PAGE DESKTOP ACTIONS
-          ===================================================== */
+          /* PUBLIC PAGE DESKTOP ACTIONS */
           <div className="hidden sm:flex items-center gap-3 md:gap-5">
-            {/* Theme */}
             <button
               onClick={toggleTheme}
               aria-label="Toggle theme"
               className="
                 p-2
                 rounded-xl
-                bg-gray-100/70 dark:bg-gray-800/60
-                hover:bg-gray-200/70 dark:hover:bg-gray-700/70
-                border border-gray-200/70 dark:border-gray-700/40
+                bg-gray-100/70 dark:bg-white/[0.04]
+                hover:bg-gray-200/70 dark:hover:bg-white/[0.08]
+                border border-gray-200/70 dark:border-white/10
                 transition
               "
             >
               {theme === "dark" ? (
-                <Sun className="w-4 h-4 text-yellow-400" />
+                <Sun className="w-4 h-4 text-[#D4B59E]" />
               ) : (
                 <Moon className="w-4 h-4 text-gray-700" />
               )}
@@ -470,7 +450,7 @@ export default function Navbar() {
               to="/login"
               className="
                 text-gray-600 dark:text-gray-300
-                hover:text-cyan-600 dark:hover:text-purple-400
+                hover:text-[#7A5236] dark:hover:text-[#D4B59E]
                 transition
                 font-medium
               "
@@ -481,19 +461,15 @@ export default function Navbar() {
             <Link
               to="/register"
               className="
-                bg-gradient-to-r
-                from-cyan-600 to-blue-600
-                dark:from-purple-600 dark:to-purple-800
-                hover:from-cyan-700 hover:to-blue-700
-                dark:hover:from-purple-700 dark:hover:to-purple-900
+                bg-[#7A5236]
+                hover:bg-[#5E3E28]
                 text-white
                 px-4 md:px-5
                 py-2
                 rounded-xl
                 transition
                 shadow-lg
-                shadow-cyan-600/20
-                dark:shadow-purple-600/30
+                shadow-[#7A5236]/40
                 font-medium
                 whitespace-nowrap
               "
@@ -503,9 +479,7 @@ export default function Navbar() {
           </div>
         )}
 
-        {/* =====================================================
-            MOBILE MENU - PROTECTED PAGES
-        ===================================================== */}
+        {/* MOBILE MENU - PROTECTED PAGES */}
         {isLoggedIn && !isPublicPage && showMobileMenu && (
           <div
             className="
@@ -514,11 +488,11 @@ export default function Navbar() {
               left-0
               right-0
               lg:hidden
-              bg-white/95 dark:bg-[#0a0a1a]/95
+              bg-white/95 dark:bg-[#251710]/95
               backdrop-blur-xl
               border-b
               border-gray-200
-              dark:border-purple-500/20
+              dark:border-[#7A5236]/25
               shadow-xl
               px-4
               py-4
@@ -535,7 +509,7 @@ export default function Navbar() {
                       px-4 py-3
                       rounded-xl
                       ${activeLink("/admin")}
-                      hover:bg-gray-100 dark:hover:bg-purple-500/10
+                      hover:bg-gray-100 dark:hover:bg-[#7A5236]/15
                     `}
                   >
                     <LayoutDashboard className="w-5 h-5" />
@@ -550,7 +524,7 @@ export default function Navbar() {
                       px-4 py-3
                       rounded-xl
                       ${activeLink("/admin/users")}
-                      hover:bg-gray-100 dark:hover:bg-purple-500/10
+                      hover:bg-gray-100 dark:hover:bg-[#7A5236]/15
                     `}
                   >
                     <Users className="w-5 h-5" />
@@ -566,7 +540,7 @@ export default function Navbar() {
                       flex items-center gap-3
                       px-4 py-3 rounded-xl
                       ${activeLink("/dashboard")}
-                      hover:bg-gray-100 dark:hover:bg-purple-500/10
+                      hover:bg-gray-100 dark:hover:bg-[#7A5236]/15
                     `}
                   >
                     <LayoutDashboard className="w-5 h-5" />
@@ -580,7 +554,7 @@ export default function Navbar() {
                       flex items-center gap-3
                       px-4 py-3 rounded-xl
                       ${activeLink("/analysis")}
-                      hover:bg-gray-100 dark:hover:bg-purple-500/10
+                      hover:bg-gray-100 dark:hover:bg-[#7A5236]/15
                     `}
                   >
                     <BarChart3 className="w-5 h-5" />
@@ -594,7 +568,7 @@ export default function Navbar() {
                       flex items-center gap-3
                       px-4 py-3 rounded-xl
                       ${activeLink("/seo-audit")}
-                      hover:bg-gray-100 dark:hover:bg-purple-500/10
+                      hover:bg-gray-100 dark:hover:bg-[#7A5236]/15
                     `}
                   >
                     <SearchCheck className="w-5 h-5" />
@@ -608,7 +582,7 @@ export default function Navbar() {
                       flex items-center gap-3
                       px-4 py-3 rounded-xl
                       ${activeLink("/performance")}
-                      hover:bg-gray-100 dark:hover:bg-purple-500/10
+                      hover:bg-gray-100 dark:hover:bg-[#7A5236]/15
                     `}
                   >
                     <Gauge className="w-5 h-5" />
@@ -622,7 +596,7 @@ export default function Navbar() {
                       flex items-center gap-3
                       px-4 py-3 rounded-xl
                       ${activeLink("/rankings")}
-                      hover:bg-gray-100 dark:hover:bg-purple-500/10
+                      hover:bg-gray-100 dark:hover:bg-[#7A5236]/15
                     `}
                   >
                     <LineChart className="w-5 h-5" />
@@ -636,7 +610,7 @@ export default function Navbar() {
                       flex items-center gap-3
                       px-4 py-3 rounded-xl
                       ${activeLink("/history")}
-                      hover:bg-gray-100 dark:hover:bg-purple-500/10
+                      hover:bg-gray-100 dark:hover:bg-[#7A5236]/15
                     `}
                   >
                     <History className="w-5 h-5" />
@@ -645,7 +619,6 @@ export default function Navbar() {
                 </>
               )}
 
-              {/* Mobile Profile */}
               <Link
                 to="/profile"
                 onClick={handleNavigation}
@@ -654,14 +627,13 @@ export default function Navbar() {
                   px-4 py-3
                   rounded-xl
                   text-gray-700 dark:text-gray-300
-                  hover:bg-gray-100 dark:hover:bg-purple-500/10
+                  hover:bg-gray-100 dark:hover:bg-[#7A5236]/15
                 "
               >
-                <User className="w-5 h-5 text-cyan-600 dark:text-purple-400" />
+                <User className="w-5 h-5 text-[#A47551]" />
                 My Profile
               </Link>
 
-              {/* Change Password */}
               <Link
                 to="/change-password"
                 onClick={handleNavigation}
@@ -670,14 +642,13 @@ export default function Navbar() {
                   px-4 py-3
                   rounded-xl
                   text-gray-700 dark:text-gray-300
-                  hover:bg-gray-100 dark:hover:bg-purple-500/10
+                  hover:bg-gray-100 dark:hover:bg-[#7A5236]/15
                 "
               >
-                <Key className="w-5 h-5 text-cyan-600 dark:text-purple-400" />
+                <Key className="w-5 h-5 text-[#A47551]" />
                 Change Password
               </Link>
 
-              {/* Mobile Logout */}
               <button
                 onClick={handleLogout}
                 className="
@@ -689,7 +660,7 @@ export default function Navbar() {
                   hover:bg-rose-50 dark:hover:bg-rose-900/20
                   border-t
                   border-gray-200
-                  dark:border-purple-500/20
+                  dark:border-[#7A5236]/25
                   mt-2
                 "
               >
@@ -700,9 +671,7 @@ export default function Navbar() {
           </div>
         )}
 
-        {/* =====================================================
-            MOBILE MENU - PUBLIC PAGES
-        ===================================================== */}
+        {/* MOBILE MENU - PUBLIC PAGES */}
         {!isLoggedIn && isPublicPage && showMobileMenu && (
           <div
             className="
@@ -711,11 +680,11 @@ export default function Navbar() {
               left-0
               right-0
               sm:hidden
-              bg-white/95 dark:bg-[#0a0a1a]/95
+              bg-white/95 dark:bg-[#251710]/95
               backdrop-blur-xl
               border-b
               border-gray-200
-              dark:border-purple-500/20
+              dark:border-[#7A5236]/25
               shadow-xl
               px-4
               py-4
@@ -729,7 +698,7 @@ export default function Navbar() {
                   px-4 py-3
                   rounded-xl
                   text-gray-700 dark:text-gray-300
-                  hover:bg-gray-100 dark:hover:bg-purple-500/10
+                  hover:bg-gray-100 dark:hover:bg-[#7A5236]/15
                   font-medium
                 "
               >
@@ -743,9 +712,7 @@ export default function Navbar() {
                   px-4 py-3
                   rounded-xl
                   text-center
-                  bg-gradient-to-r
-                  from-cyan-600 to-blue-600
-                  dark:from-purple-600 dark:to-purple-800
+                  bg-[#7A5236]
                   text-white
                   font-medium
                 "
@@ -766,10 +733,10 @@ export default function Navbar() {
               p-2
               rounded-xl
               bg-gray-100/70
-              dark:bg-gray-800/60
+              dark:bg-white/[0.04]
               border
               border-gray-200/70
-              dark:border-gray-700/40
+              dark:border-white/10
               transition
             "
           >

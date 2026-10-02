@@ -31,9 +31,6 @@ export default function Performance() {
 
   /* ------------------------------------------------------------
      Normalize a user-supplied URL.
-     - Trims whitespace
-     - Adds https:// if no protocol present
-     - Returns null if not a valid http(s) URL
   ------------------------------------------------------------ */
   const normalizeUrl = (value) => {
     if (!value || typeof value !== "string") return null;
@@ -63,13 +60,11 @@ export default function Performance() {
   };
 
   const handleAnalyze = async () => {
-    // Validate input presence
     if (!url.trim()) {
       setError("Please enter a website URL.");
       return;
     }
 
-    // Normalize and validate URL
     const normalizedUrl = normalizeUrl(url);
 
     if (!normalizedUrl) {
@@ -111,7 +106,6 @@ export default function Performance() {
       if (response.data.success) {
         setResult(response.data.data);
 
-        // Add to history
         setHistory((prev) => [
           {
             id: response.data.data.id,
@@ -202,19 +196,19 @@ export default function Performance() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#070714] text-gray-900 dark:text-white relative transition-colors duration-300">
+    <div className="min-h-screen bg-[#F5EBDD] dark:bg-[#1A0F0A] text-[#1A0F0A] dark:text-white relative transition-colors duration-300">
       {/* Background Glows */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-violet-300/20 dark:bg-violet-600/15 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 -left-40 w-96 h-96 bg-cyan-200/20 dark:bg-cyan-500/8 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-200/20 dark:bg-indigo-500/5 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-[#7A5236]/15 dark:bg-[#A47551]/20 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 -left-40 w-96 h-96 bg-[#A47551]/15 dark:bg-[#7A5236]/15 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#D4B59E]/20 dark:bg-[#3E2723]/40 rounded-full blur-3xl" />
 
         <div
-          className="absolute inset-0 opacity-[0.04] dark:opacity-[0.08]"
+          className="absolute inset-0 opacity-[0.04] dark:opacity-[0.06]"
           style={{
             backgroundImage: `
-              linear-gradient(rgba(139,92,246,0.15) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(139,92,246,0.15) 1px, transparent 1px)
+              linear-gradient(rgba(122,82,54,0.4) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(122,82,54,0.4) 1px, transparent 1px)
             `,
             backgroundSize: "48px 48px",
           }}
@@ -225,7 +219,7 @@ export default function Performance() {
         {/* Back to Dashboard */}
         <button
           onClick={() => navigate("/dashboard")}
-          className="mb-6 text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-300 flex items-center gap-2 transition"
+          className="mb-6 text-[#7A5236] dark:text-[#D4B59E] hover:text-[#5E3E28] dark:hover:text-[#A47551] flex items-center gap-2 transition"
         >
           <ArrowLeft className="w-5 h-5" />
           Back to Dashboard
@@ -234,11 +228,11 @@ export default function Performance() {
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-              <Gauge className="w-8 h-8 text-violet-600 dark:text-violet-400" />
+            <h1 className="text-3xl font-bold text-[#1A0F0A] dark:text-white flex items-center gap-3">
+              <Gauge className="w-8 h-8 text-[#7A5236] dark:text-[#D4B59E]" />
               Performance Analysis
             </h1>
-            <p className="text-gray-600 dark:text-violet-300/60 mt-1">
+            <p className="text-[#5E3E28] dark:text-[#D4B59E]/70 mt-1">
               Analyze your website's performance using Google PageSpeed
               Insights
             </p>
@@ -246,16 +240,16 @@ export default function Performance() {
         </div>
 
         {/* Analysis Form */}
-        <div className="relative z-20 bg-white dark:bg-[#0a0a1a]/80 backdrop-blur-xl border border-violet-200 dark:border-violet-500/20 rounded-2xl p-6 mb-8 shadow-lg shadow-gray-200/50 dark:shadow-xl dark:shadow-black/20 hover:border-violet-300 dark:hover:border-violet-400/30 transition-all duration-300">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-            <Search className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+        <div className="relative z-20 bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-[#7A5236]/15 dark:border-[#A47551]/25 rounded-2xl p-6 mb-8 shadow-lg shadow-[#7A5236]/5 dark:shadow-xl dark:shadow-black/40 hover:border-[#7A5236]/30 dark:hover:border-[#A47551]/40 transition-all duration-300">
+          <h2 className="text-xl font-semibold text-[#1A0F0A] dark:text-white mb-6 flex items-center gap-2">
+            <Search className="w-5 h-5 text-[#7A5236] dark:text-[#D4B59E]" />
             Website Details
           </h2>
 
           <div className="space-y-5">
             {/* Website URL */}
             <div>
-              <label className="block mb-2 font-medium text-gray-700 dark:text-violet-300">
+              <label className="block mb-2 font-medium text-[#7A5236] dark:text-[#D4B59E]">
                 Website URL *
               </label>
               <input
@@ -264,10 +258,10 @@ export default function Performance() {
                 onChange={(e) => setUrl(e.target.value)}
                 onKeyDown={handleKeyPress}
                 placeholder="example.com or https://example.com"
-                className="w-full bg-gray-100 dark:bg-white/5 border border-violet-200 dark:border-violet-500/20 rounded-xl px-4 py-3 focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none"
+                className="w-full bg-[#F5EBDD] dark:bg-[#1A0F0A]/70 border border-[#7A5236]/20 dark:border-[#A47551]/25 rounded-xl px-4 py-3 focus:border-[#7A5236] focus:ring-2 focus:ring-[#7A5236]/25 dark:focus:border-[#A47551] dark:focus:ring-[#A47551]/25 transition-all duration-200 text-[#1A0F0A] dark:text-white placeholder:text-[#5E3E28]/50 dark:placeholder:text-[#D4B59E]/40 outline-none"
                 disabled={isAnalyzing}
               />
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-500">
+              <p className="mt-1 text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                 You don't need to type https:// — it will be added
                 automatically.
               </p>
@@ -275,7 +269,7 @@ export default function Performance() {
 
             {/* Strategy Selection */}
             <div>
-              <label className="block mb-2 font-medium text-gray-700 dark:text-violet-300">
+              <label className="block mb-2 font-medium text-[#7A5236] dark:text-[#D4B59E]">
                 Strategy
               </label>
               <div className="flex gap-3">
@@ -283,8 +277,8 @@ export default function Performance() {
                   onClick={() => setStrategy("desktop")}
                   className={`flex-1 px-4 py-3 rounded-xl border transition-all duration-200 flex items-center justify-center gap-2 ${
                     strategy === "desktop"
-                      ? "bg-violet-600 dark:bg-violet-600 border-violet-600 dark:border-violet-600 text-white shadow-lg shadow-violet-600/30"
-                      : "bg-gray-100 dark:bg-white/5 border-violet-200 dark:border-violet-500/20 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10"
+                      ? "bg-[#7A5236] dark:bg-[#A47551] border-[#7A5236] dark:border-[#A47551] text-white shadow-lg shadow-[#7A5236]/40"
+                      : "bg-[#F5EBDD] dark:bg-[#1A0F0A]/70 border-[#7A5236]/20 dark:border-[#A47551]/25 text-[#5E3E28] dark:text-[#D4B59E]/80 hover:bg-[#7A5236]/10 dark:hover:bg-[#A47551]/15"
                   }`}
                   disabled={isAnalyzing}
                 >
@@ -295,8 +289,8 @@ export default function Performance() {
                   onClick={() => setStrategy("mobile")}
                   className={`flex-1 px-4 py-3 rounded-xl border transition-all duration-200 flex items-center justify-center gap-2 ${
                     strategy === "mobile"
-                      ? "bg-violet-600 dark:bg-violet-600 border-violet-600 dark:border-violet-600 text-white shadow-lg shadow-violet-600/30"
-                      : "bg-gray-100 dark:bg-white/5 border-violet-200 dark:border-violet-500/20 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10"
+                      ? "bg-[#7A5236] dark:bg-[#A47551] border-[#7A5236] dark:border-[#A47551] text-white shadow-lg shadow-[#7A5236]/40"
+                      : "bg-[#F5EBDD] dark:bg-[#1A0F0A]/70 border-[#7A5236]/20 dark:border-[#A47551]/25 text-[#5E3E28] dark:text-[#D4B59E]/80 hover:bg-[#7A5236]/10 dark:hover:bg-[#A47551]/15"
                   }`}
                   disabled={isAnalyzing}
                 >
@@ -313,8 +307,8 @@ export default function Performance() {
               className={`w-full px-8 py-3.5 rounded-xl font-medium text-white transition-all duration-200
                 ${
                   !url.trim() || isAnalyzing
-                    ? "bg-gray-200 dark:bg-white/5 cursor-not-allowed text-gray-400 dark:text-gray-500"
-                    : "bg-gradient-to-r from-violet-600 to-violet-700 hover:from-violet-500 hover:to-violet-600 shadow-lg shadow-violet-600/30 hover:shadow-violet-600/50 active:scale-95"
+                    ? "bg-[#7A5236]/40 dark:bg-white/5 cursor-not-allowed text-white/60"
+                    : "bg-[#7A5236] hover:bg-[#5E3E28] shadow-lg shadow-[#7A5236]/40 hover:shadow-[#7A5236]/60 active:scale-95"
                 }`}
             >
               {isAnalyzing ? (
@@ -340,27 +334,27 @@ export default function Performance() {
         </div>
 
         {/* Results Section */}
-        <div className="relative z-10 bg-white dark:bg-[#0a0a1a]/80 backdrop-blur-xl border border-violet-200 dark:border-violet-500/20 rounded-2xl p-6 shadow-lg shadow-gray-200/50 dark:shadow-xl dark:shadow-black/20 hover:border-violet-300 dark:hover:border-violet-400/30 transition-all duration-300">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-            <Gauge className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+        <div className="relative z-10 bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-[#7A5236]/15 dark:border-[#A47551]/25 rounded-2xl p-6 shadow-lg shadow-[#7A5236]/5 dark:shadow-xl dark:shadow-black/40 hover:border-[#7A5236]/30 dark:hover:border-[#A47551]/40 transition-all duration-300">
+          <h2 className="text-xl font-semibold text-[#1A0F0A] dark:text-white mb-6 flex items-center gap-2">
+            <Gauge className="w-5 h-5 text-[#7A5236] dark:text-[#D4B59E]" />
             Performance Results
           </h2>
 
           {!result ? (
-            <p className="text-gray-500 dark:text-gray-500">
+            <p className="text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
               No performance data yet. Enter a website URL and analyze.
             </p>
           ) : (
             <>
               {/* Website Info */}
-              <div className="mb-6 p-4 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/5">
-                <p className="font-medium text-gray-700 dark:text-violet-300">
+              <div className="mb-6 p-4 bg-[#F5EBDD] dark:bg-[#1A0F0A]/50 rounded-xl border border-[#7A5236]/15 dark:border-white/5">
+                <p className="font-medium text-[#7A5236] dark:text-[#D4B59E]">
                   Website
                 </p>
-                <p className="text-gray-900 dark:text-white break-all">
+                <p className="text-[#1A0F0A] dark:text-white break-all">
                   {result.websiteUrl}
                 </p>
-                <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                <p className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60 mt-1">
                   📊 Strategy:{" "}
                   {result.strategy.charAt(0).toUpperCase() +
                     result.strategy.slice(1)}
@@ -379,7 +373,7 @@ export default function Performance() {
                         fill="none"
                         stroke="#e5e7eb"
                         strokeWidth="12"
-                        className="dark:stroke-gray-700"
+                        className="dark:stroke-[#3E2723]"
                       />
                       <circle
                         cx="80"
@@ -409,7 +403,7 @@ export default function Performance() {
                           ? Math.round(result.performance)
                           : "N/A"}
                       </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-500">
+                      <div className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                         Score
                       </div>
                     </div>
@@ -429,8 +423,8 @@ export default function Performance() {
 
                 {/* Metrics Grid */}
                 <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-4 border border-gray-200 dark:border-white/5 hover:border-blue-200 dark:hover:border-blue-500/20 transition-colors">
-                    <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-500">
+                  <div className="bg-[#F5EBDD] dark:bg-[#1A0F0A]/50 rounded-xl p-4 border border-[#7A5236]/15 dark:border-white/5 hover:border-[#7A5236]/30 dark:hover:border-[#A47551]/25 transition-colors">
+                    <div className="flex items-center gap-2 text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                       <Activity className="w-4 h-4" />
                       FCP
                     </div>
@@ -442,15 +436,15 @@ export default function Performance() {
                             : parseFloat(result.fcp) < 3.0
                             ? "text-amber-600 dark:text-amber-400"
                             : "text-rose-600 dark:text-rose-400"
-                          : "text-gray-400 dark:text-gray-500"
+                          : "text-[#5E3E28]/40 dark:text-[#D4B59E]/30"
                       }`}
                     >
                       {formatTime(result.fcp)}
                     </div>
                   </div>
 
-                  <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-4 border border-gray-200 dark:border-white/5 hover:border-cyan-200 dark:hover:border-cyan-500/20 transition-colors">
-                    <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-500">
+                  <div className="bg-[#F5EBDD] dark:bg-[#1A0F0A]/50 rounded-xl p-4 border border-[#7A5236]/15 dark:border-white/5 hover:border-[#7A5236]/30 dark:hover:border-[#A47551]/25 transition-colors">
+                    <div className="flex items-center gap-2 text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                       <Clock className="w-4 h-4" />
                       LCP
                     </div>
@@ -462,15 +456,15 @@ export default function Performance() {
                             : parseFloat(result.lcp) < 4.0
                             ? "text-amber-600 dark:text-amber-400"
                             : "text-rose-600 dark:text-rose-400"
-                          : "text-gray-400 dark:text-gray-500"
+                          : "text-[#5E3E28]/40 dark:text-[#D4B59E]/30"
                       }`}
                     >
                       {formatTime(result.lcp)}
                     </div>
                   </div>
 
-                  <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-4 border border-gray-200 dark:border-white/5 hover:border-violet-200 dark:hover:border-violet-500/20 transition-colors">
-                    <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-500">
+                  <div className="bg-[#F5EBDD] dark:bg-[#1A0F0A]/50 rounded-xl p-4 border border-[#7A5236]/15 dark:border-white/5 hover:border-[#7A5236]/30 dark:hover:border-[#A47551]/25 transition-colors">
+                    <div className="flex items-center gap-2 text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                       <Maximize className="w-4 h-4" />
                       CLS
                     </div>
@@ -482,15 +476,15 @@ export default function Performance() {
                             : parseFloat(result.cls) < 0.25
                             ? "text-amber-600 dark:text-amber-400"
                             : "text-rose-600 dark:text-rose-400"
-                          : "text-gray-400 dark:text-gray-500"
+                          : "text-[#5E3E28]/40 dark:text-[#D4B59E]/30"
                       }`}
                     >
                       {result.cls !== null ? result.cls.toFixed(3) : "N/A"}
                     </div>
                   </div>
 
-                  <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-4 border border-gray-200 dark:border-white/5 hover:border-rose-200 dark:hover:border-rose-500/20 transition-colors">
-                    <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-500">
+                  <div className="bg-[#F5EBDD] dark:bg-[#1A0F0A]/50 rounded-xl p-4 border border-[#7A5236]/15 dark:border-white/5 hover:border-[#7A5236]/30 dark:hover:border-[#A47551]/25 transition-colors">
+                    <div className="flex items-center gap-2 text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                       <Zap className="w-4 h-4" />
                       TBT
                     </div>
@@ -502,7 +496,7 @@ export default function Performance() {
                             : parseInt(result.tbt) < 500
                             ? "text-amber-600 dark:text-amber-400"
                             : "text-rose-600 dark:text-rose-400"
-                          : "text-gray-400 dark:text-gray-500"
+                          : "text-[#5E3E28]/40 dark:text-[#D4B59E]/30"
                       }`}
                     >
                       {formatTime(result.tbt)}
@@ -539,25 +533,25 @@ export default function Performance() {
 
         {/* History Section */}
         {history.length > 0 && (
-          <div className="relative z-10 mt-8 bg-white dark:bg-[#0a0a1a]/80 backdrop-blur-xl border border-violet-200 dark:border-violet-500/20 rounded-2xl p-6 shadow-lg shadow-gray-200/50 dark:shadow-xl dark:shadow-black/20 hover:border-violet-300 dark:hover:border-violet-400/30 transition-all duration-300">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+          <div className="relative z-10 mt-8 bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-[#7A5236]/15 dark:border-[#A47551]/25 rounded-2xl p-6 shadow-lg shadow-[#7A5236]/5 dark:shadow-xl dark:shadow-black/40 hover:border-[#7A5236]/30 dark:hover:border-[#A47551]/40 transition-all duration-300">
+            <h3 className="text-lg font-semibold text-[#1A0F0A] dark:text-white mb-4 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-[#7A5236] dark:text-[#D4B59E]" />
               Recent Analysis
             </h3>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="border-b border-violet-200 dark:border-violet-500/20 bg-gray-50 dark:bg-white/5">
-                    <th className="text-left p-3 text-gray-700 dark:text-violet-300 font-medium">
+                  <tr className="border-b border-[#7A5236]/20 dark:border-[#A47551]/25 bg-[#F5EBDD] dark:bg-[#1A0F0A]/50">
+                    <th className="text-left p-3 text-[#5E3E28] dark:text-[#D4B59E]/80 font-medium">
                       URL
                     </th>
-                    <th className="text-left p-3 text-gray-700 dark:text-violet-300 font-medium">
+                    <th className="text-left p-3 text-[#5E3E28] dark:text-[#D4B59E]/80 font-medium">
                       Score
                     </th>
-                    <th className="text-left p-3 text-gray-700 dark:text-violet-300 font-medium">
+                    <th className="text-left p-3 text-[#5E3E28] dark:text-[#D4B59E]/80 font-medium">
                       Strategy
                     </th>
-                    <th className="text-left p-3 text-gray-700 dark:text-violet-300 font-medium">
+                    <th className="text-left p-3 text-[#5E3E28] dark:text-[#D4B59E]/80 font-medium">
                       Date
                     </th>
                   </tr>
@@ -566,9 +560,9 @@ export default function Performance() {
                   {history.map((item) => (
                     <tr
                       key={item.id}
-                      className="border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                      className="border-b border-[#7A5236]/10 dark:border-white/5 hover:bg-[#7A5236]/5 dark:hover:bg-[#A47551]/10 transition-colors"
                     >
-                      <td className="p-3 text-gray-900 dark:text-white truncate max-w-xs">
+                      <td className="p-3 text-[#1A0F0A] dark:text-white truncate max-w-xs">
                         {item.websiteUrl}
                       </td>
                       <td className="p-3">
@@ -582,10 +576,10 @@ export default function Performance() {
                             : "N/A"}
                         </span>
                       </td>
-                      <td className="p-3 text-gray-600 dark:text-gray-400 capitalize">
+                      <td className="p-3 text-[#5E3E28]/70 dark:text-[#D4B59E]/60 capitalize">
                         {item.strategy}
                       </td>
-                      <td className="p-3 text-sm text-gray-500 dark:text-gray-500">
+                      <td className="p-3 text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/50">
                         {item.date}
                       </td>
                     </tr>

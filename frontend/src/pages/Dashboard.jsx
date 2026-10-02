@@ -59,18 +59,12 @@ export default function Dashboard() {
 
       const history = data.history;
 
-      // -----------------------------------------
-      // Separate the three types
-      // -----------------------------------------
       const analyses = history.filter((item) => item.type === 'analysis');
       const audits = history.filter((item) => item.type === 'audit');
       const performances = history.filter(
         (item) => item.type === 'performance'
       );
 
-      // -----------------------------------------
-      // Unique websites
-      // -----------------------------------------
       const uniqueWebsites = new Set();
 
       history.forEach((item) => {
@@ -89,9 +83,6 @@ export default function Dashboard() {
         }
       });
 
-      // -----------------------------------------
-      // Average SEO Audit Score
-      // -----------------------------------------
       const auditScores = audits
         .map((item) => Number(item.seoScore))
         .filter((score) => !Number.isNaN(score));
@@ -104,9 +95,6 @@ export default function Dashboard() {
             )
           : 0;
 
-      // -----------------------------------------
-      // Average Performance Score
-      // -----------------------------------------
       const performanceScores = performances
         .map((item) => Number(item.performance))
         .filter((score) => !Number.isNaN(score));
@@ -119,9 +107,6 @@ export default function Dashboard() {
             )
           : 0;
 
-      // -----------------------------------------
-      // AI Insights count
-      // -----------------------------------------
       let aiInsights = 0;
 
       analyses.forEach((item) => {
@@ -154,9 +139,6 @@ export default function Dashboard() {
         }
       });
 
-      // -----------------------------------------
-      // Recent Activity (all three types)
-      // -----------------------------------------
       const recentActivity = history
         .slice()
         .sort(
@@ -191,7 +173,6 @@ export default function Dashboard() {
             year: 'numeric',
           });
 
-          // SEO Analysis
           if (item.type === 'analysis') {
             const keywordCount = Array.isArray(item.keywords)
               ? item.keywords.length
@@ -210,7 +191,6 @@ export default function Dashboard() {
             };
           }
 
-          // SEO Audit
           if (item.type === 'audit') {
             return {
               id: item._id,
@@ -227,7 +207,6 @@ export default function Dashboard() {
             };
           }
 
-          // Performance
           return {
             id: item._id,
             type: 'performance',
@@ -268,7 +247,6 @@ export default function Dashboard() {
   const handleAnalyze = () => {
     if (!url) return;
 
-    // Normalize URL (add https:// if needed)
     let normalizedUrl = url.trim();
 
     if (
@@ -296,7 +274,7 @@ export default function Dashboard() {
   ============================================================ */
   const getScoreColor = (score) => {
     if (score >= 90) return 'text-emerald-600 dark:text-emerald-400';
-    if (score >= 70) return 'text-cyan-600 dark:text-cyan-400';
+    if (score >= 70) return 'text-[#A47551] dark:text-[#D4B59E]';
     if (score >= 50) return 'text-amber-600 dark:text-amber-400';
     return 'text-rose-600 dark:text-rose-400';
   };
@@ -305,16 +283,16 @@ export default function Dashboard() {
     if (type === 'analysis') {
       return {
         Icon: Search,
-        wrapperClass: 'bg-violet-100 dark:bg-violet-500/10',
-        iconClass: 'text-violet-600 dark:text-violet-400',
+        wrapperClass: 'bg-[#7A5236]/10 dark:bg-[#A47551]/15',
+        iconClass: 'text-[#7A5236] dark:text-[#D4B59E]',
       };
     }
 
     if (type === 'audit') {
       return {
         Icon: FileText,
-        wrapperClass: 'bg-cyan-100 dark:bg-cyan-500/10',
-        iconClass: 'text-cyan-600 dark:text-cyan-400',
+        wrapperClass: 'bg-[#A47551]/10 dark:bg-[#A47551]/15',
+        iconClass: 'text-[#A47551] dark:text-[#D4B59E]',
       };
     }
 
@@ -330,10 +308,10 @@ export default function Dashboard() {
   ============================================================ */
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#070714] flex items-center justify-center transition-colors duration-300">
+      <div className="min-h-screen bg-[#F5EBDD] dark:bg-[#1A0F0A] flex items-center justify-center transition-colors duration-300">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-violet-600 dark:border-violet-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">
+          <div className="w-16 h-16 border-4 border-[#7A5236] dark:border-[#A47551] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-[#5E3E28] dark:text-[#D4B59E]/70">
             Loading dashboard...
           </p>
         </div>
@@ -345,20 +323,20 @@ export default function Dashboard() {
      RENDER
   ============================================================ */
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#070714] text-gray-900 dark:text-white relative overflow-hidden transition-colors duration-300">
+    <div className="min-h-screen bg-[#F5EBDD] dark:bg-[#1A0F0A] text-[#1A0F0A] dark:text-white relative overflow-hidden transition-colors duration-300">
 
       {/* Background Glows */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-violet-300/20 dark:bg-violet-600/15 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 -left-40 w-96 h-96 bg-cyan-200/20 dark:bg-cyan-500/8 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-200/20 dark:bg-indigo-500/5 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-[#7A5236]/15 dark:bg-[#A47551]/20 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 -left-40 w-96 h-96 bg-[#A47551]/15 dark:bg-[#7A5236]/15 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#D4B59E]/20 dark:bg-[#3E2723]/40 rounded-full blur-3xl" />
 
         <div
-          className="absolute inset-0 opacity-[0.04] dark:opacity-[0.08]"
+          className="absolute inset-0 opacity-[0.04] dark:opacity-[0.06]"
           style={{
             backgroundImage: `
-              linear-gradient(rgba(139,92,246,0.15) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(139,92,246,0.15) 1px, transparent 1px)
+              linear-gradient(rgba(122,82,54,0.4) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(122,82,54,0.4) 1px, transparent 1px)
             `,
             backgroundSize: '48px 48px',
           }}
@@ -371,18 +349,18 @@ export default function Dashboard() {
         <div className="mb-8">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-3xl font-bold text-[#1A0F0A] dark:text-white">
                 Welcome back
               </h1>
-              <p className="text-gray-600 dark:text-violet-300/60 mt-1 text-lg">
+              <p className="text-[#5E3E28] dark:text-[#D4B59E]/70 mt-1 text-lg">
                 Track your website's SEO performance and receive AI-powered
                 optimization suggestions.
               </p>
             </div>
 
-            <div className="hidden md:flex items-center gap-2 bg-violet-100 dark:bg-violet-500/10 px-4 py-2 rounded-full border border-violet-200 dark:border-violet-500/20">
-              <Sparkles className="w-4 h-4 text-violet-600 dark:text-violet-400" />
-              <span className="text-sm font-medium text-violet-700 dark:text-violet-300">
+            <div className="hidden md:flex items-center gap-2 bg-[#7A5236]/10 dark:bg-[#A47551]/15 px-4 py-2 rounded-full border border-[#7A5236]/25 dark:border-[#A47551]/30">
+              <Sparkles className="w-4 h-4 text-[#7A5236] dark:text-[#D4B59E]" />
+              <span className="text-sm font-medium text-[#7A5236] dark:text-[#D4B59E]">
                 AI Ready
               </span>
             </div>
@@ -390,20 +368,20 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Analysis */}
-        <div className="bg-white dark:bg-[#0a0a1a]/80 backdrop-blur-xl border border-violet-200 dark:border-violet-500/20 rounded-2xl p-6 mb-8 shadow-lg shadow-gray-200/50 dark:shadow-xl dark:shadow-black/20 hover:border-violet-300 dark:hover:border-violet-400/30 transition-all duration-300">
+        <div className="bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-[#7A5236]/15 dark:border-[#A47551]/25 rounded-2xl p-6 mb-8 shadow-lg shadow-[#7A5236]/5 dark:shadow-xl dark:shadow-black/40 hover:border-[#7A5236]/30 dark:hover:border-[#A47551]/40 transition-all duration-300">
           <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
             <div className="flex items-center gap-2">
-              <div className="p-2 bg-violet-100 dark:bg-violet-500/10 rounded-lg">
-                <Search className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+              <div className="p-2 bg-[#7A5236]/10 dark:bg-[#A47551]/15 rounded-lg">
+                <Search className="w-5 h-5 text-[#7A5236] dark:text-[#D4B59E]" />
               </div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              <h2 className="text-xl font-semibold text-[#1A0F0A] dark:text-white">
                 Quick Website Analysis
               </h2>
             </div>
 
             <button
               onClick={() => navigate('/analysis')}
-              className="text-sm text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-300 font-medium flex items-center gap-1 transition"
+              className="text-sm text-[#7A5236] dark:text-[#D4B59E] hover:text-[#5E3E28] dark:hover:text-[#A47551] font-medium flex items-center gap-1 transition"
             >
               Full Analysis <ChevronRight className="w-4 h-4" />
             </button>
@@ -416,13 +394,14 @@ export default function Dashboard() {
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="example.com"
-                className="w-full bg-gray-100 dark:bg-white/5 border border-violet-200 dark:border-violet-500/20 rounded-xl px-4 py-3.5 pl-12
-                  focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20
-                  transition-all duration-200 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none"
+                className="w-full bg-[#F5EBDD] dark:bg-[#1A0F0A]/70 border border-[#7A5236]/20 dark:border-[#A47551]/25 rounded-xl px-4 py-3.5 pl-12
+                  focus:border-[#7A5236] focus:ring-2 focus:ring-[#7A5236]/25
+                  dark:focus:border-[#A47551] dark:focus:ring-[#A47551]/25
+                  transition-all duration-200 text-[#1A0F0A] dark:text-white placeholder:text-[#5E3E28]/50 dark:placeholder:text-[#D4B59E]/40 outline-none"
                 onKeyPress={(e) => e.key === 'Enter' && handleAnalyze()}
               />
               <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                <Search className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                <Search className="w-5 h-5 text-[#7A5236]/60 dark:text-[#D4B59E]/50" />
               </div>
             </div>
 
@@ -432,8 +411,8 @@ export default function Dashboard() {
               className={`px-8 py-3.5 rounded-xl font-medium text-white transition-all duration-200
                 ${
                   !url || isAnalyzing
-                    ? 'bg-gray-200 dark:bg-white/5 cursor-not-allowed text-gray-400 dark:text-gray-500'
-                    : 'bg-gradient-to-r from-violet-600 to-violet-700 hover:from-violet-500 hover:to-violet-600 shadow-lg shadow-violet-600/30 hover:shadow-violet-600/50 active:scale-95'
+                    ? 'bg-[#7A5236]/40 dark:bg-white/5 cursor-not-allowed text-white/60'
+                    : 'bg-[#7A5236] hover:bg-[#5E3E28] shadow-lg shadow-[#7A5236]/40 hover:shadow-[#7A5236]/60 active:scale-95'
                 }`}
             >
               {isAnalyzing ? (
@@ -447,17 +426,17 @@ export default function Dashboard() {
             </button>
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+          <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-[#5E3E28] dark:text-[#D4B59E]/70">
             <div className="flex items-center gap-1">
               <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span>Google SERP rank tracking</span>
             </div>
             <div className="flex items-center gap-1">
-              <Sparkles className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+              <Sparkles className="w-4 h-4 text-[#7A5236] dark:text-[#D4B59E]" />
               <span>AI-powered suggestions</span>
             </div>
             <div className="flex items-center gap-1">
-              <TrendingUp className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+              <TrendingUp className="w-4 h-4 text-[#A47551] dark:text-[#D4B59E]" />
               <span>Keyword rank tracking</span>
             </div>
           </div>
@@ -469,20 +448,20 @@ export default function Dashboard() {
           {/* Total Records */}
           <div
             onClick={() => navigate('/history')}
-            className="bg-white dark:bg-[#0a0a1a]/80 backdrop-blur-xl border border-violet-200 dark:border-violet-500/20 rounded-2xl p-6 shadow-lg shadow-gray-200/50 dark:shadow-xl dark:shadow-black/20 hover:border-violet-300 dark:hover:border-violet-400/40 transition-all duration-300 cursor-pointer group"
+            className="bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-[#7A5236]/15 dark:border-[#A47551]/25 rounded-2xl p-6 shadow-lg shadow-[#7A5236]/5 dark:shadow-xl dark:shadow-black/40 hover:border-[#7A5236]/35 dark:hover:border-[#A47551]/40 transition-all duration-300 cursor-pointer group"
           >
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+              <p className="text-sm font-medium text-[#5E3E28] dark:text-[#D4B59E]/70">
                 Total Records
               </p>
-              <div className="p-2 bg-violet-100 dark:bg-violet-500/10 rounded-lg group-hover:scale-110 transition-transform">
-                <BarChart3 className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+              <div className="p-2 bg-[#7A5236]/10 dark:bg-[#A47551]/15 rounded-lg group-hover:scale-110 transition-transform">
+                <BarChart3 className="w-5 h-5 text-[#7A5236] dark:text-[#D4B59E]" />
               </div>
             </div>
-            <p className="text-3xl font-bold text-gray-900 dark:text-white">
+            <p className="text-3xl font-bold text-[#1A0F0A] dark:text-white">
               {dashboardData.totalRecords}
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+            <p className="text-xs text-[#5E3E28]/70 dark:text-[#D4B59E]/50 mt-2">
               All analysis activity
             </p>
           </div>
@@ -490,20 +469,20 @@ export default function Dashboard() {
           {/* Unique Websites */}
           <div
             onClick={() => navigate('/history')}
-            className="bg-white dark:bg-[#0a0a1a]/80 backdrop-blur-xl border border-cyan-200 dark:border-cyan-500/20 rounded-2xl p-6 shadow-lg shadow-gray-200/50 dark:shadow-xl dark:shadow-black/20 hover:border-cyan-300 dark:hover:border-cyan-400/40 transition-all duration-300 cursor-pointer group"
+            className="bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-[#A47551]/25 dark:border-[#A47551]/25 rounded-2xl p-6 shadow-lg shadow-[#7A5236]/5 dark:shadow-xl dark:shadow-black/40 hover:border-[#A47551]/45 dark:hover:border-[#A47551]/40 transition-all duration-300 cursor-pointer group"
           >
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+              <p className="text-sm font-medium text-[#5E3E28] dark:text-[#D4B59E]/70">
                 Unique Websites
               </p>
-              <div className="p-2 bg-cyan-100 dark:bg-cyan-500/10 rounded-lg group-hover:scale-110 transition-transform">
-                <Globe className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
+              <div className="p-2 bg-[#A47551]/10 dark:bg-[#A47551]/15 rounded-lg group-hover:scale-110 transition-transform">
+                <Globe className="w-5 h-5 text-[#A47551] dark:text-[#D4B59E]" />
               </div>
             </div>
-            <p className="text-3xl font-bold text-gray-900 dark:text-white">
+            <p className="text-3xl font-bold text-[#1A0F0A] dark:text-white">
               {dashboardData.uniqueWebsites}
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+            <p className="text-xs text-[#5E3E28]/70 dark:text-[#D4B59E]/50 mt-2">
               Different websites analyzed
             </p>
           </div>
@@ -511,20 +490,20 @@ export default function Dashboard() {
           {/* SEO Analyses */}
           <div
             onClick={() => navigate('/history')}
-            className="bg-white dark:bg-[#0a0a1a]/80 backdrop-blur-xl border border-violet-200 dark:border-violet-500/20 rounded-2xl p-6 shadow-lg shadow-gray-200/50 dark:shadow-xl dark:shadow-black/20 hover:border-violet-300 dark:hover:border-violet-400/40 transition-all duration-300 cursor-pointer group"
+            className="bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-[#7A5236]/15 dark:border-[#A47551]/25 rounded-2xl p-6 shadow-lg shadow-[#7A5236]/5 dark:shadow-xl dark:shadow-black/40 hover:border-[#7A5236]/35 dark:hover:border-[#A47551]/40 transition-all duration-300 cursor-pointer group"
           >
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+              <p className="text-sm font-medium text-[#5E3E28] dark:text-[#D4B59E]/70">
                 SEO Analyses
               </p>
-              <div className="p-2 bg-violet-100 dark:bg-violet-500/10 rounded-lg group-hover:scale-110 transition-transform">
-                <Search className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+              <div className="p-2 bg-[#7A5236]/10 dark:bg-[#A47551]/15 rounded-lg group-hover:scale-110 transition-transform">
+                <Search className="w-5 h-5 text-[#7A5236] dark:text-[#D4B59E]" />
               </div>
             </div>
-            <p className="text-3xl font-bold text-gray-900 dark:text-white">
+            <p className="text-3xl font-bold text-[#1A0F0A] dark:text-white">
               {dashboardData.seoAnalyses}
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+            <p className="text-xs text-[#5E3E28]/70 dark:text-[#D4B59E]/50 mt-2">
               Keyword ranking analyses
             </p>
           </div>
@@ -532,20 +511,20 @@ export default function Dashboard() {
           {/* Performance Checks */}
           <div
             onClick={() => navigate('/history')}
-            className="bg-white dark:bg-[#0a0a1a]/80 backdrop-blur-xl border border-emerald-200 dark:border-emerald-500/20 rounded-2xl p-6 shadow-lg shadow-gray-200/50 dark:shadow-xl dark:shadow-black/20 hover:border-emerald-300 dark:hover:border-emerald-400/40 transition-all duration-300 cursor-pointer group"
+            className="bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-emerald-200 dark:border-emerald-500/25 rounded-2xl p-6 shadow-lg shadow-[#7A5236]/5 dark:shadow-xl dark:shadow-black/40 hover:border-emerald-300 dark:hover:border-emerald-400/40 transition-all duration-300 cursor-pointer group"
           >
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+              <p className="text-sm font-medium text-[#5E3E28] dark:text-[#D4B59E]/70">
                 Performance Checks
               </p>
               <div className="p-2 bg-emerald-100 dark:bg-emerald-500/10 rounded-lg group-hover:scale-110 transition-transform">
                 <Zap className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
               </div>
             </div>
-            <p className="text-3xl font-bold text-gray-900 dark:text-white">
+            <p className="text-3xl font-bold text-[#1A0F0A] dark:text-white">
               {dashboardData.performanceChecks}
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+            <p className="text-xs text-[#5E3E28]/70 dark:text-[#D4B59E]/50 mt-2">
               PageSpeed analyses
             </p>
           </div>
@@ -553,40 +532,40 @@ export default function Dashboard() {
 
         {/* Your SEO Toolkit — 3 modules */}
         <div className="mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <Rocket className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+          <h3 className="text-lg font-semibold text-[#1A0F0A] dark:text-white mb-4 flex items-center gap-2">
+            <Rocket className="w-5 h-5 text-[#7A5236] dark:text-[#D4B59E]" />
             Your SEO Toolkit
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
             {/* SEO Analysis */}
-            <div className="bg-white dark:bg-[#0a0a1a]/80 backdrop-blur-xl border border-violet-200 dark:border-violet-500/20 rounded-2xl p-6 shadow-lg shadow-gray-200/50 dark:shadow-xl dark:shadow-black/20 hover:border-violet-300 dark:hover:border-violet-400/40 transition-all duration-300">
+            <div className="bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-[#7A5236]/15 dark:border-[#A47551]/25 rounded-2xl p-6 shadow-lg shadow-[#7A5236]/5 dark:shadow-xl dark:shadow-black/40 hover:border-[#7A5236]/35 dark:hover:border-[#A47551]/40 transition-all duration-300">
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-violet-100 dark:bg-violet-500/10 rounded-lg">
-                  <Search className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+                <div className="p-2 bg-[#7A5236]/10 dark:bg-[#A47551]/15 rounded-lg">
+                  <Search className="w-5 h-5 text-[#7A5236] dark:text-[#D4B59E]" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white">
+                  <h3 className="font-semibold text-[#1A0F0A] dark:text-white">
                     SEO Analysis
                   </h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-500">
+                  <p className="text-xs text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                     Keyword Rank Tracking
                   </p>
                 </div>
               </div>
 
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">
+              <p className="text-3xl font-bold text-[#1A0F0A] dark:text-white">
                 {dashboardData.seoAnalyses}
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60 mt-1">
                 analys{dashboardData.seoAnalyses === 1 ? 'is' : 'es'}{' '}
                 completed
               </p>
 
               <button
                 onClick={() => navigate('/analysis')}
-                className="mt-4 text-sm text-violet-600 dark:text-violet-400 flex items-center gap-1 hover:gap-2 transition-all font-medium"
+                className="mt-4 text-sm text-[#7A5236] dark:text-[#D4B59E] flex items-center gap-1 hover:gap-2 transition-all font-medium"
               >
                 Start Analysis
                 <ArrowRight className="w-4 h-4" />
@@ -594,16 +573,16 @@ export default function Dashboard() {
             </div>
 
             {/* SEO Audit */}
-            <div className="bg-white dark:bg-[#0a0a1a]/80 backdrop-blur-xl border border-cyan-200 dark:border-cyan-500/20 rounded-2xl p-6 shadow-lg shadow-gray-200/50 dark:shadow-xl dark:shadow-black/20 hover:border-cyan-300 dark:hover:border-cyan-400/40 transition-all duration-300">
+            <div className="bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-[#A47551]/25 dark:border-[#A47551]/25 rounded-2xl p-6 shadow-lg shadow-[#7A5236]/5 dark:shadow-xl dark:shadow-black/40 hover:border-[#A47551]/45 dark:hover:border-[#A47551]/40 transition-all duration-300">
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-cyan-100 dark:bg-cyan-500/10 rounded-lg">
-                  <FileText className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
+                <div className="p-2 bg-[#A47551]/10 dark:bg-[#A47551]/15 rounded-lg">
+                  <FileText className="w-5 h-5 text-[#A47551] dark:text-[#D4B59E]" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white">
+                  <h3 className="font-semibold text-[#1A0F0A] dark:text-white">
                     SEO Audit
                   </h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-500">
+                  <p className="text-xs text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                     On-Page SEO Analysis
                   </p>
                 </div>
@@ -617,19 +596,19 @@ export default function Dashboard() {
                 >
                   {dashboardData.averageAuditScore}
                 </p>
-                <span className="text-sm text-gray-500 dark:text-gray-500 mb-1">
+                <span className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60 mb-1">
                   avg / 100
                 </span>
               </div>
 
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60 mt-1">
                 {dashboardData.seoAudits} audit
                 {dashboardData.seoAudits === 1 ? '' : 's'} completed
               </p>
 
               <button
                 onClick={() => navigate('/seo-audit')}
-                className="mt-4 text-sm text-cyan-600 dark:text-cyan-400 flex items-center gap-1 hover:gap-2 transition-all font-medium"
+                className="mt-4 text-sm text-[#A47551] dark:text-[#D4B59E] flex items-center gap-1 hover:gap-2 transition-all font-medium"
               >
                 Run SEO Audit
                 <ArrowRight className="w-4 h-4" />
@@ -637,16 +616,16 @@ export default function Dashboard() {
             </div>
 
             {/* Performance */}
-            <div className="bg-white dark:bg-[#0a0a1a]/80 backdrop-blur-xl border border-emerald-200 dark:border-emerald-500/20 rounded-2xl p-6 shadow-lg shadow-gray-200/50 dark:shadow-xl dark:shadow-black/20 hover:border-emerald-300 dark:hover:border-emerald-400/40 transition-all duration-300">
+            <div className="bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-emerald-200 dark:border-emerald-500/25 rounded-2xl p-6 shadow-lg shadow-[#7A5236]/5 dark:shadow-xl dark:shadow-black/40 hover:border-emerald-300 dark:hover:border-emerald-400/40 transition-all duration-300">
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 bg-emerald-100 dark:bg-emerald-500/10 rounded-lg">
                   <Zap className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white">
+                  <h3 className="font-semibold text-[#1A0F0A] dark:text-white">
                     Performance
                   </h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-500">
+                  <p className="text-xs text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                     PageSpeed & Core Web Vitals
                   </p>
                 </div>
@@ -660,12 +639,12 @@ export default function Dashboard() {
                 >
                   {dashboardData.averagePerformance}
                 </p>
-                <span className="text-sm text-gray-500 dark:text-gray-500 mb-1">
+                <span className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60 mb-1">
                   avg / 100
                 </span>
               </div>
 
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60 mt-1">
                 {dashboardData.performanceChecks} check
                 {dashboardData.performanceChecks === 1 ? '' : 's'} completed
               </p>
@@ -685,81 +664,81 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
 
           {/* Platform Features */}
-          <div className="bg-white dark:bg-[#0a0a1a]/80 backdrop-blur-xl border border-violet-200 dark:border-violet-500/20 rounded-2xl p-6 shadow-lg shadow-gray-200/50 dark:shadow-xl dark:shadow-black/20 hover:border-violet-300 dark:hover:border-violet-400/30 transition-all duration-300">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <Rocket className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+          <div className="bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-[#7A5236]/15 dark:border-[#A47551]/25 rounded-2xl p-6 shadow-lg shadow-[#7A5236]/5 dark:shadow-xl dark:shadow-black/40 hover:border-[#7A5236]/30 dark:hover:border-[#A47551]/40 transition-all duration-300">
+            <h3 className="text-lg font-semibold text-[#1A0F0A] dark:text-white mb-4 flex items-center gap-2">
+              <Rocket className="w-5 h-5 text-[#7A5236] dark:text-[#D4B59E]" />
               Platform Features
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/5 hover:border-violet-200 dark:hover:border-violet-500/20 transition-colors cursor-default">
+              <div className="p-3 bg-[#F5EBDD] dark:bg-[#1A0F0A]/50 rounded-xl border border-[#7A5236]/10 dark:border-white/5 hover:border-[#7A5236]/25 dark:hover:border-[#A47551]/25 transition-colors cursor-default">
                 <div className="flex items-center gap-2 mb-1">
-                  <Search className="w-4 h-4 text-violet-600 dark:text-violet-400" />
-                  <p className="font-medium text-sm text-gray-900 dark:text-white">
+                  <Search className="w-4 h-4 text-[#7A5236] dark:text-[#D4B59E]" />
+                  <p className="font-medium text-sm text-[#1A0F0A] dark:text-white">
                     SEO Analysis
                   </p>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-500">
+                <p className="text-xs text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                   Google SERP rank tracking
                 </p>
               </div>
 
-              <div className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/5 hover:border-cyan-200 dark:hover:border-cyan-500/20 transition-colors cursor-default">
+              <div className="p-3 bg-[#F5EBDD] dark:bg-[#1A0F0A]/50 rounded-xl border border-[#7A5236]/10 dark:border-white/5 hover:border-emerald-300 dark:hover:border-emerald-500/25 transition-colors cursor-default">
                 <div className="flex items-center gap-2 mb-1">
-                  <Zap className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
-                  <p className="font-medium text-sm text-gray-900 dark:text-white">
+                  <Zap className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  <p className="font-medium text-sm text-[#1A0F0A] dark:text-white">
                     PageSpeed Insights
                   </p>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-500">
+                <p className="text-xs text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                   Core Web Vitals & performance metrics
                 </p>
               </div>
 
-              <div className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/5 hover:border-violet-200 dark:hover:border-violet-500/20 transition-colors cursor-default">
+              <div className="p-3 bg-[#F5EBDD] dark:bg-[#1A0F0A]/50 rounded-xl border border-[#7A5236]/10 dark:border-white/5 hover:border-[#7A5236]/25 dark:hover:border-[#A47551]/25 transition-colors cursor-default">
                 <div className="flex items-center gap-2 mb-1">
-                  <Sparkles className="w-4 h-4 text-violet-600 dark:text-violet-400" />
-                  <p className="font-medium text-sm text-gray-900 dark:text-white">
+                  <Sparkles className="w-4 h-4 text-[#7A5236] dark:text-[#D4B59E]" />
+                  <p className="font-medium text-sm text-[#1A0F0A] dark:text-white">
                     AI Suggestions
                   </p>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-500">
+                <p className="text-xs text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                   Gemini-powered SEO recommendations
                 </p>
               </div>
 
-              <div className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/5 hover:border-emerald-200 dark:hover:border-emerald-500/20 transition-colors cursor-default">
+              <div className="p-3 bg-[#F5EBDD] dark:bg-[#1A0F0A]/50 rounded-xl border border-[#7A5236]/10 dark:border-white/5 hover:border-emerald-300 dark:hover:border-emerald-500/25 transition-colors cursor-default">
                 <div className="flex items-center gap-2 mb-1">
                   <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                  <p className="font-medium text-sm text-gray-900 dark:text-white">
+                  <p className="font-medium text-sm text-[#1A0F0A] dark:text-white">
                     Rank Tracking
                   </p>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-500">
+                <p className="text-xs text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                   Google SERP position monitoring
                 </p>
               </div>
 
-              <div className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/5 hover:border-cyan-200 dark:hover:border-cyan-500/20 transition-colors cursor-default">
+              <div className="p-3 bg-[#F5EBDD] dark:bg-[#1A0F0A]/50 rounded-xl border border-[#7A5236]/10 dark:border-white/5 hover:border-[#A47551]/25 transition-colors cursor-default">
                 <div className="flex items-center gap-2 mb-1">
-                  <FileText className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
-                  <p className="font-medium text-sm text-gray-900 dark:text-white">
+                  <FileText className="w-4 h-4 text-[#A47551] dark:text-[#D4B59E]" />
+                  <p className="font-medium text-sm text-[#1A0F0A] dark:text-white">
                     Analysis History
                   </p>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-500">
+                <p className="text-xs text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                   Track progress over time
                 </p>
               </div>
 
-              <div className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/5 hover:border-violet-200 dark:hover:border-violet-500/20 transition-colors cursor-default">
+              <div className="p-3 bg-[#F5EBDD] dark:bg-[#1A0F0A]/50 rounded-xl border border-[#7A5236]/10 dark:border-white/5 hover:border-[#7A5236]/25 dark:hover:border-[#A47551]/25 transition-colors cursor-default">
                 <div className="flex items-center gap-2 mb-1">
-                  <Activity className="w-4 h-4 text-violet-600 dark:text-violet-400" />
-                  <p className="font-medium text-sm text-gray-900 dark:text-white">
+                  <Activity className="w-4 h-4 text-[#7A5236] dark:text-[#D4B59E]" />
+                  <p className="font-medium text-sm text-[#1A0F0A] dark:text-white">
                     API-Powered
                   </p>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-500">
+                <p className="text-xs text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                   Fresh data on every analysis
                 </p>
               </div>
@@ -767,55 +746,55 @@ export default function Dashboard() {
           </div>
 
           {/* Quick Stats */}
-          <div className="bg-white dark:bg-[#0a0a1a]/80 backdrop-blur-xl border border-violet-200 dark:border-violet-500/20 rounded-2xl p-6 shadow-lg shadow-gray-200/50 dark:shadow-xl dark:shadow-black/20 hover:border-violet-300 dark:hover:border-violet-400/30 transition-all duration-300">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <Shield className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+          <div className="bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-[#7A5236]/15 dark:border-[#A47551]/25 rounded-2xl p-6 shadow-lg shadow-[#7A5236]/5 dark:shadow-xl dark:shadow-black/40 hover:border-[#7A5236]/30 dark:hover:border-[#A47551]/40 transition-all duration-300">
+            <h3 className="text-lg font-semibold text-[#1A0F0A] dark:text-white mb-4 flex items-center gap-2">
+              <Shield className="w-5 h-5 text-[#7A5236] dark:text-[#D4B59E]" />
               Quick Stats
             </h3>
 
             <div className="space-y-3">
               {/* SEO Analyses */}
-              <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-4 border border-gray-200 dark:border-white/5 hover:border-violet-200 dark:hover:border-violet-500/20 transition-colors">
+              <div className="bg-[#F5EBDD] dark:bg-[#1A0F0A]/50 rounded-xl p-4 border border-[#7A5236]/10 dark:border-white/5 hover:border-[#7A5236]/25 dark:hover:border-[#A47551]/25 transition-colors">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-500">
+                    <p className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                       SEO Analyses
                     </p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    <p className="text-2xl font-bold text-[#1A0F0A] dark:text-white">
                       {dashboardData.seoAnalyses}
                     </p>
                   </div>
-                  <div className="w-12 h-12 rounded-full bg-violet-100 dark:bg-violet-500/10 flex items-center justify-center">
-                    <Search className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+                  <div className="w-12 h-12 rounded-full bg-[#7A5236]/10 dark:bg-[#A47551]/15 flex items-center justify-center">
+                    <Search className="w-6 h-6 text-[#7A5236] dark:text-[#D4B59E]" />
                   </div>
                 </div>
               </div>
 
               {/* SEO Audits */}
-              <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-4 border border-gray-200 dark:border-white/5 hover:border-cyan-200 dark:hover:border-cyan-500/20 transition-colors">
+              <div className="bg-[#F5EBDD] dark:bg-[#1A0F0A]/50 rounded-xl p-4 border border-[#7A5236]/10 dark:border-white/5 hover:border-[#A47551]/25 transition-colors">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-500">
+                    <p className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                       SEO Audits
                     </p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    <p className="text-2xl font-bold text-[#1A0F0A] dark:text-white">
                       {dashboardData.seoAudits}
                     </p>
                   </div>
-                  <div className="w-12 h-12 rounded-full bg-cyan-100 dark:bg-cyan-500/10 flex items-center justify-center">
-                    <FileText className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />
+                  <div className="w-12 h-12 rounded-full bg-[#A47551]/10 dark:bg-[#A47551]/15 flex items-center justify-center">
+                    <FileText className="w-6 h-6 text-[#A47551] dark:text-[#D4B59E]" />
                   </div>
                 </div>
               </div>
 
               {/* Performance Checks */}
-              <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-4 border border-gray-200 dark:border-white/5 hover:border-emerald-200 dark:hover:border-emerald-500/20 transition-colors">
+              <div className="bg-[#F5EBDD] dark:bg-[#1A0F0A]/50 rounded-xl p-4 border border-[#7A5236]/10 dark:border-white/5 hover:border-emerald-300 dark:hover:border-emerald-500/25 transition-colors">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-500">
+                    <p className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                       Performance Checks
                     </p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    <p className="text-2xl font-bold text-[#1A0F0A] dark:text-white">
                       {dashboardData.performanceChecks}
                     </p>
                   </div>
@@ -829,16 +808,16 @@ export default function Dashboard() {
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-white dark:bg-[#0a0a1a]/80 backdrop-blur-xl border border-violet-200 dark:border-violet-500/20 rounded-2xl p-6 shadow-lg shadow-gray-200/50 dark:shadow-xl dark:shadow-black/20 hover:border-violet-300 dark:hover:border-violet-400/30 transition-all duration-300">
+        <div className="bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-[#7A5236]/15 dark:border-[#A47551]/25 rounded-2xl p-6 shadow-lg shadow-[#7A5236]/5 dark:shadow-xl dark:shadow-black/40 hover:border-[#7A5236]/30 dark:hover:border-[#A47551]/40 transition-all duration-300">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <Clock className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+            <h3 className="text-lg font-semibold text-[#1A0F0A] dark:text-white flex items-center gap-2">
+              <Clock className="w-5 h-5 text-[#7A5236] dark:text-[#D4B59E]" />
               Recent Activity
             </h3>
 
             <button
               onClick={() => navigate('/history')}
-              className="text-sm text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-300 transition"
+              className="text-sm text-[#7A5236] dark:text-[#D4B59E] hover:text-[#5E3E28] dark:hover:text-[#A47551] transition"
             >
               View All →
             </button>
@@ -846,7 +825,7 @@ export default function Dashboard() {
 
           <div className="space-y-3">
             {dashboardData.recentActivity.length === 0 ? (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-500">
+              <div className="text-center py-8 text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                 <p>No activity yet</p>
                 <p className="text-sm mt-1">
                   Run an SEO analysis, audit, or performance check to see
@@ -861,7 +840,7 @@ export default function Dashboard() {
                 return (
                   <div
                     key={`${item.type}-${item.id}`}
-                    className="flex items-center justify-between p-4 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/5 hover:border-violet-200 dark:hover:border-violet-500/20 transition-colors"
+                    className="flex items-center justify-between p-4 bg-[#F5EBDD] dark:bg-[#1A0F0A]/50 rounded-xl border border-[#7A5236]/10 dark:border-white/5 hover:border-[#7A5236]/25 dark:hover:border-[#A47551]/25 transition-colors"
                   >
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       <div
@@ -872,19 +851,19 @@ export default function Dashboard() {
 
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <p className="font-medium text-gray-900 dark:text-white">
+                          <p className="font-medium text-[#1A0F0A] dark:text-white">
                             {item.label}
                           </p>
-                          <span className="text-xs text-gray-400 capitalize">
+                          <span className="text-xs text-[#5E3E28]/60 dark:text-[#D4B59E]/50 capitalize">
                             {item.status}
                           </span>
                         </div>
 
-                        <p className="text-sm text-gray-700 dark:text-gray-300 truncate">
+                        <p className="text-sm text-[#1A0F0A] dark:text-[#D4B59E] truncate">
                           {item.website}
                         </p>
 
-                        <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                        <p className="text-xs text-[#5E3E28]/70 dark:text-[#D4B59E]/50 mt-1">
                           {item.details} • {item.date}
                         </p>
                       </div>

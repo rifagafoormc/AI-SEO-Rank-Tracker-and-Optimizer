@@ -16,6 +16,9 @@ import {
   Wand2,
 } from "lucide-react";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 const SEOAudit = () => {
   const [url, setUrl] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -35,7 +38,6 @@ const SEOAudit = () => {
 
     let websiteUrl = url.trim();
 
-    // Automatically add https:// if user doesn't provide a protocol
     if (!websiteUrl.startsWith("http://") && !websiteUrl.startsWith("https://")) {
       websiteUrl = `https://${websiteUrl}`;
     }
@@ -50,7 +52,7 @@ const SEOAudit = () => {
       const token = localStorage.getItem("token");
 
       const response = await axios.post(
-        "http://localhost:5000/api/seo-audit",
+        `${API_BASE_URL}/api/seo-audit`,
         {
           url: websiteUrl,
         },
@@ -85,7 +87,7 @@ const SEOAudit = () => {
       const token = localStorage.getItem("token");
 
       const response = await axios.post(
-        "http://localhost:5000/api/seo-audit/suggestions",
+        `${API_BASE_URL}/api/seo-audit/suggestions`,
         {
           auditData: result,
         },
@@ -150,23 +152,23 @@ const SEOAudit = () => {
   };
 
   const MetricCard = ({ icon: Icon, title, value, description }) => (
-    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
+    <div className="bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-[#7A5236]/15 dark:border-[#A47551]/25 rounded-xl p-5 shadow-lg shadow-[#7A5236]/5 dark:shadow-black/40">
       <div className="flex items-center gap-3 mb-3">
-        <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20">
-          <Icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+        <div className="p-2 rounded-lg bg-[#7A5236]/10 dark:bg-[#A47551]/15">
+          <Icon className="w-5 h-5 text-[#7A5236] dark:text-[#D4B59E]" />
         </div>
 
-        <h3 className="font-semibold text-gray-800 dark:text-gray-100">
+        <h3 className="font-semibold text-[#1A0F0A] dark:text-white">
           {title}
         </h3>
       </div>
 
-      <p className="text-2xl font-bold text-gray-900 dark:text-white">
+      <p className="text-2xl font-bold text-[#1A0F0A] dark:text-white">
         {value}
       </p>
 
       {description && (
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60 mt-1">
           {description}
         </p>
       )}
@@ -174,22 +176,30 @@ const SEOAudit = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-[#F5EBDD] dark:bg-[#1A0F0A] p-6 transition-colors duration-300 relative overflow-hidden">
+
+      {/* Background glows */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-[#7A5236]/15 dark:bg-[#A47551]/20 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 -left-40 w-96 h-96 bg-[#A47551]/15 dark:bg-[#7A5236]/15 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#D4B59E]/20 dark:bg-[#3E2723]/40 rounded-full blur-3xl" />
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto">
 
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
-              <Search className="w-7 h-7 text-blue-600 dark:text-blue-400" />
+            <div className="p-3 bg-[#7A5236]/10 dark:bg-[#A47551]/15 rounded-xl">
+              <Search className="w-7 h-7 text-[#7A5236] dark:text-[#D4B59E]" />
             </div>
 
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-3xl font-bold text-[#1A0F0A] dark:text-white">
                 SEO Audit
               </h1>
 
-              <p className="text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-[#5E3E28] dark:text-[#D4B59E]/70 mt-1">
                 Analyze your website's on-page and technical SEO factors.
               </p>
             </div>
@@ -197,16 +207,16 @@ const SEOAudit = () => {
         </div>
 
         {/* URL Input */}
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 mb-8 shadow-sm">
+        <div className="bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-[#7A5236]/15 dark:border-[#A47551]/25 rounded-2xl p-6 mb-8 shadow-lg shadow-[#7A5236]/5 dark:shadow-black/40">
 
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-[#7A5236] dark:text-[#D4B59E] mb-2">
             Website URL
           </label>
 
           <div className="flex flex-col md:flex-row gap-3">
 
             <div className="relative flex-1">
-              <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#7A5236]/60 dark:text-[#D4B59E]/50" />
 
               <input
                 type="text"
@@ -218,14 +228,14 @@ const SEOAudit = () => {
                   }
                 }}
                 placeholder="example.com or https://example.com"
-                className="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-12 pr-4 py-3 border border-[#7A5236]/20 dark:border-[#A47551]/25 rounded-xl bg-[#F5EBDD] dark:bg-[#1A0F0A]/70 text-[#1A0F0A] dark:text-white placeholder:text-[#5E3E28]/50 dark:placeholder:text-[#D4B59E]/40 focus:outline-none focus:ring-2 focus:ring-[#7A5236]/30 dark:focus:ring-[#A47551]/30 focus:border-[#7A5236] dark:focus:border-[#A47551] transition-all"
               />
             </div>
 
             <button
               onClick={handleAudit}
               disabled={isAnalyzing}
-              className="px-7 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition"
+              className="px-7 py-3 bg-[#7A5236] hover:bg-[#5E3E28] disabled:bg-[#7A5236]/40 disabled:cursor-not-allowed text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition shadow-lg shadow-[#7A5236]/40"
             >
               {isAnalyzing ? (
                 <>
@@ -241,15 +251,15 @@ const SEOAudit = () => {
             </button>
           </div>
 
-          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+          <p className="mt-2 text-xs text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
             Enter a URL with or without <span className="font-mono">https://</span> — we'll add it automatically.
           </p>
 
           {error && (
-            <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-center gap-3">
-              <XCircle className="w-5 h-5 text-red-500 shrink-0" />
+            <div className="mt-4 p-4 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-xl flex items-center gap-3">
+              <XCircle className="w-5 h-5 text-rose-500 shrink-0" />
 
-              <p className="text-sm text-red-700 dark:text-red-300">
+              <p className="text-sm text-rose-700 dark:text-rose-300">
                 {error}
               </p>
             </div>
@@ -258,15 +268,15 @@ const SEOAudit = () => {
 
         {/* Loading */}
         {isAnalyzing && (
-          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-12 text-center">
+          <div className="bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-[#7A5236]/15 dark:border-[#A47551]/25 rounded-2xl p-12 text-center shadow-lg shadow-[#7A5236]/5 dark:shadow-black/40">
 
-            <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+            <Loader2 className="w-12 h-12 text-[#7A5236] dark:text-[#D4B59E] animate-spin mx-auto mb-4" />
 
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-[#1A0F0A] dark:text-white">
               Analyzing Website
             </h2>
 
-            <p className="text-gray-500 dark:text-gray-400 mt-2">
+            <p className="text-[#5E3E28]/70 dark:text-[#D4B59E]/60 mt-2">
               Extracting SEO information and checking your website...
             </p>
           </div>
@@ -277,23 +287,23 @@ const SEOAudit = () => {
           <div className="space-y-6">
 
             {/* Score */}
-            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-8">
+            <div className="bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-[#7A5236]/15 dark:border-[#A47551]/25 rounded-2xl p-8 shadow-lg shadow-[#7A5236]/5 dark:shadow-black/40">
 
               <div className="flex flex-col md:flex-row items-center justify-between gap-8">
 
                 <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                  <p className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60 mb-2">
                     Website
                   </p>
 
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white break-all">
+                  <h2 className="text-xl font-semibold text-[#1A0F0A] dark:text-white break-all">
                     {result.url}
                   </h2>
 
                   <div className="flex items-center gap-2 mt-3">
-                    <Globe className="w-4 h-4 text-gray-400" />
+                    <Globe className="w-4 h-4 text-[#7A5236]/60 dark:text-[#D4B59E]/50" />
 
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                    <span className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                       SEO Audit Report
                     </span>
                   </div>
@@ -301,24 +311,24 @@ const SEOAudit = () => {
 
                 <div className="flex items-center gap-5">
 
-                  <div className="w-32 h-32 rounded-full border-8 border-blue-100 dark:border-blue-900/40 flex items-center justify-center">
+                  <div className="w-32 h-32 rounded-full border-8 border-[#7A5236]/15 dark:border-[#A47551]/25 flex items-center justify-center">
                     <div className="text-center">
-                      <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                      <p className="text-3xl font-bold text-[#7A5236] dark:text-[#D4B59E]">
                         {result.score ?? 0}
                       </p>
 
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                         / 100
                       </p>
                     </div>
                   </div>
 
                   <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                       Overall SEO Score
                     </p>
 
-                    <p className="text-lg font-bold text-gray-900 dark:text-white">
+                    <p className="text-lg font-bold text-[#1A0F0A] dark:text-white">
                       {getScoreStatus(result.score ?? 0).label}
                     </p>
                   </div>
@@ -364,9 +374,9 @@ const SEOAudit = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
               {/* On Page */}
-              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-6">
+              <div className="bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-[#7A5236]/15 dark:border-[#A47551]/25 rounded-2xl p-6 shadow-lg shadow-[#7A5236]/5 dark:shadow-black/40">
 
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-5">
+                <h2 className="text-xl font-semibold text-[#1A0F0A] dark:text-white mb-5">
                   On-Page SEO
                 </h2>
 
@@ -374,11 +384,11 @@ const SEOAudit = () => {
 
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <p className="font-medium text-gray-800 dark:text-gray-200">
+                      <p className="font-medium text-[#1A0F0A] dark:text-[#D4B59E]/90">
                         Page Title
                       </p>
 
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60 mt-1">
                         {result.title || "No title found"}
                       </p>
                     </div>
@@ -386,15 +396,15 @@ const SEOAudit = () => {
                     <StatusIcon status={result.checks?.title} />
                   </div>
 
-                  <div className="border-t border-gray-100 dark:border-gray-800" />
+                  <div className="border-t border-[#7A5236]/10 dark:border-white/5" />
 
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <p className="font-medium text-gray-800 dark:text-gray-200">
+                      <p className="font-medium text-[#1A0F0A] dark:text-[#D4B59E]/90">
                         Meta Description
                       </p>
 
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60 mt-1">
                         {result.metaDescription || "No meta description found"}
                       </p>
                     </div>
@@ -402,15 +412,15 @@ const SEOAudit = () => {
                     <StatusIcon status={result.checks?.metaDescription} />
                   </div>
 
-                  <div className="border-t border-gray-100 dark:border-gray-800" />
+                  <div className="border-t border-[#7A5236]/10 dark:border-white/5" />
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-gray-800 dark:text-gray-200">
+                      <p className="font-medium text-[#1A0F0A] dark:text-[#D4B59E]/90">
                         H1 Tag
                       </p>
 
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                         {result.headings?.h1 ?? 0} found
                       </p>
                     </div>
@@ -418,15 +428,15 @@ const SEOAudit = () => {
                     <StatusIcon status={result.checks?.h1} />
                   </div>
 
-                  <div className="border-t border-gray-100 dark:border-gray-800" />
+                  <div className="border-t border-[#7A5236]/10 dark:border-white/5" />
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-gray-800 dark:text-gray-200">
+                      <p className="font-medium text-[#1A0F0A] dark:text-[#D4B59E]/90">
                         Canonical URL
                       </p>
 
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                         {result.canonical || "Not found"}
                       </p>
                     </div>
@@ -438,9 +448,9 @@ const SEOAudit = () => {
               </div>
 
               {/* Technical SEO */}
-              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-6">
+              <div className="bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-[#7A5236]/15 dark:border-[#A47551]/25 rounded-2xl p-6 shadow-lg shadow-[#7A5236]/5 dark:shadow-black/40">
 
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-5">
+                <h2 className="text-xl font-semibold text-[#1A0F0A] dark:text-white mb-5">
                   Technical SEO
                 </h2>
 
@@ -448,11 +458,11 @@ const SEOAudit = () => {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-gray-800 dark:text-gray-200">
+                      <p className="font-medium text-[#1A0F0A] dark:text-[#D4B59E]/90">
                         Robots Meta
                       </p>
 
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                         {result.robots || "Not specified"}
                       </p>
                     </div>
@@ -460,15 +470,15 @@ const SEOAudit = () => {
                     <StatusIcon status={result.checks?.robots} />
                   </div>
 
-                  <div className="border-t border-gray-100 dark:border-gray-800" />
+                  <div className="border-t border-[#7A5236]/10 dark:border-white/5" />
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-gray-800 dark:text-gray-200">
+                      <p className="font-medium text-[#1A0F0A] dark:text-[#D4B59E]/90">
                         Open Graph
                       </p>
 
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                         {result.openGraph ? "Detected" : "Not detected"}
                       </p>
                     </div>
@@ -476,15 +486,15 @@ const SEOAudit = () => {
                     <StatusIcon status={result.checks?.openGraph} />
                   </div>
 
-                  <div className="border-t border-gray-100 dark:border-gray-800" />
+                  <div className="border-t border-[#7A5236]/10 dark:border-white/5" />
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-gray-800 dark:text-gray-200">
+                      <p className="font-medium text-[#1A0F0A] dark:text-[#D4B59E]/90">
                         Internal Links
                       </p>
 
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                         {result.links?.internal ?? 0}
                       </p>
                     </div>
@@ -492,15 +502,15 @@ const SEOAudit = () => {
                     <CheckCircle className="w-5 h-5 text-green-500" />
                   </div>
 
-                  <div className="border-t border-gray-100 dark:border-gray-800" />
+                  <div className="border-t border-[#7A5236]/10 dark:border-white/5" />
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-gray-800 dark:text-gray-200">
+                      <p className="font-medium text-[#1A0F0A] dark:text-[#D4B59E]/90">
                         External Links
                       </p>
 
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                         {result.links?.external ?? 0}
                       </p>
                     </div>
@@ -513,9 +523,9 @@ const SEOAudit = () => {
             </div>
 
             {/* Issues */}
-            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-6">
+            <div className="bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-[#7A5236]/15 dark:border-[#A47551]/25 rounded-2xl p-6 shadow-lg shadow-[#7A5236]/5 dark:shadow-black/40">
 
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-5">
+              <h2 className="text-xl font-semibold text-[#1A0F0A] dark:text-white mb-5">
                 SEO Issues
               </h2>
 
@@ -525,17 +535,17 @@ const SEOAudit = () => {
                   {result.issues.map((issue, index) => (
                     <div
                       key={index}
-                      className="flex items-start gap-3 p-4 rounded-xl bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-900/30"
+                      className="flex items-start gap-3 p-4 rounded-xl bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/25"
                     >
                       <AlertTriangle className="w-5 h-5 text-yellow-500 shrink-0 mt-0.5" />
 
                       <div>
-                        <p className="font-medium text-gray-800 dark:text-gray-200">
+                        <p className="font-medium text-[#1A0F0A] dark:text-[#D4B59E]/90">
                           {issue.title || issue}
                         </p>
 
                         {issue.description && (
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                          <p className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/70 mt-1">
                             {issue.description}
                           </p>
                         )}
@@ -545,7 +555,7 @@ const SEOAudit = () => {
 
                 </div>
               ) : (
-                <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-900/30 rounded-xl">
+                <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/25 rounded-xl">
                   <CheckCircle className="w-5 h-5 text-green-500" />
 
                   <p className="text-green-700 dark:text-green-300">
@@ -556,26 +566,26 @@ const SEOAudit = () => {
             </div>
 
             {/* AI Optimization Suggestions */}
-            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-6">
+            <div className="bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-[#7A5236]/15 dark:border-[#A47551]/25 rounded-2xl p-6 shadow-lg shadow-[#7A5236]/5 dark:shadow-black/40">
 
               <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 rounded-lg bg-purple-50 dark:bg-purple-900/20">
-                  <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                <div className="p-2 rounded-lg bg-[#A47551]/10 dark:bg-[#A47551]/15">
+                  <Sparkles className="w-5 h-5 text-[#A47551] dark:text-[#D4B59E]" />
                 </div>
 
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                <h2 className="text-xl font-semibold text-[#1A0F0A] dark:text-white">
                   AI Optimization Suggestions
                 </h2>
               </div>
 
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
+              <p className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60 mb-5">
                 Generate evidence-based recommendations from the audit findings above.
               </p>
 
               <button
                 onClick={handleGenerateSuggestions}
                 disabled={isGeneratingSuggestions}
-                className="px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition"
+                className="px-6 py-3 bg-[#A47551] hover:bg-[#8B6044] disabled:bg-[#A47551]/40 disabled:cursor-not-allowed text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition shadow-lg shadow-[#A47551]/30"
               >
                 {isGeneratingSuggestions ? (
                   <>
@@ -593,10 +603,10 @@ const SEOAudit = () => {
               </button>
 
               {suggestionsError && (
-                <div className="mt-5 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-center gap-3">
-                  <XCircle className="w-5 h-5 text-red-500 shrink-0" />
+                <div className="mt-5 p-4 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-xl flex items-center gap-3">
+                  <XCircle className="w-5 h-5 text-rose-500 shrink-0" />
 
-                  <p className="text-sm text-red-700 dark:text-red-300">
+                  <p className="text-sm text-rose-700 dark:text-rose-300">
                     {suggestionsError}
                   </p>
                 </div>
@@ -607,25 +617,25 @@ const SEOAudit = () => {
                   {suggestions.map((s, i) => (
                     <div
                       key={i}
-                      className="p-5 rounded-xl bg-purple-50/50 dark:bg-purple-900/10 border border-purple-200 dark:border-purple-900/30"
+                      className="p-5 rounded-xl bg-[#F5EBDD] dark:bg-[#A47551]/10 border border-[#7A5236]/20 dark:border-[#A47551]/25"
                     >
                       <div className="flex items-start gap-3">
-                        <Sparkles className="w-5 h-5 text-purple-500 shrink-0 mt-0.5" />
+                        <Sparkles className="w-5 h-5 text-[#A47551] dark:text-[#D4B59E] shrink-0 mt-0.5" />
 
                         <div className="flex-1">
-                          <h3 className="font-semibold text-gray-900 dark:text-white">
+                          <h3 className="font-semibold text-[#1A0F0A] dark:text-white">
                             {s.issue}
                           </h3>
 
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                            <span className="font-medium text-gray-700 dark:text-gray-300">
+                          <p className="text-sm text-[#5E3E28]/80 dark:text-[#D4B59E]/70 mt-2">
+                            <span className="font-medium text-[#7A5236] dark:text-[#D4B59E]">
                               Evidence:
                             </span>{" "}
                             {s.evidence}
                           </p>
 
-                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
-                            <span className="font-medium text-gray-800 dark:text-gray-200">
+                          <p className="text-sm text-[#5E3E28]/80 dark:text-[#D4B59E]/70 mt-2">
+                            <span className="font-medium text-[#7A5236] dark:text-[#D4B59E]">
                               Recommendation:
                             </span>{" "}
                             {s.recommendation}
@@ -638,7 +648,7 @@ const SEOAudit = () => {
               )}
 
               {suggestions && suggestions.length === 0 && (
-                <p className="mt-5 text-sm text-gray-500 dark:text-gray-400">
+                <p className="mt-5 text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                   No optimization suggestions were returned.
                 </p>
               )}
@@ -649,7 +659,7 @@ const SEOAudit = () => {
 
               <button
                 onClick={handleAudit}
-                className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2 transition"
+                className="px-6 py-3 border border-[#7A5236]/25 dark:border-[#A47551]/30 rounded-xl text-[#7A5236] dark:text-[#D4B59E] hover:bg-[#7A5236]/10 dark:hover:bg-[#A47551]/15 flex items-center gap-2 transition"
               >
                 <RefreshCw className="w-5 h-5" />
                 Run Audit Again

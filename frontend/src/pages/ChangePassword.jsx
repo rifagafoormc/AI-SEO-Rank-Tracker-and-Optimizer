@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Navbar from "../components/Navbar";
 import axios from "axios";
-import { 
-  Lock, Key, CheckCircle, XCircle, 
+import {
+  Lock, Key, CheckCircle, XCircle,
   ArrowLeft, Shield, Eye, EyeOff
 } from 'lucide-react';
+
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function ChangePassword() {
   const navigate = useNavigate();
@@ -30,7 +32,6 @@ export default function ChangePassword() {
       return;
     }
 
-    // ✅ Password validation (same as Register)
     const hasMinimumLength = newPassword.length >= 6;
     const hasNumber = /\d/.test(newPassword);
     const hasSpecialCharacter = /[!@#$%^&*(),.?":{}|<>_\-\[\]\\\/`~;'+=]/.test(newPassword);
@@ -65,7 +66,7 @@ export default function ChangePassword() {
       }
 
       const response = await axios.put(
-        "http://localhost:5000/api/auth/change-password",
+        `${API_BASE_URL}/api/auth/change-password`,
         {
           currentPassword,
           newPassword,
@@ -82,8 +83,7 @@ export default function ChangePassword() {
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
-        
-        // Redirect to profile after 2 seconds
+
         setTimeout(() => {
           navigate("/profile");
         }, 2000);
@@ -98,170 +98,165 @@ export default function ChangePassword() {
   };
 
   return (
-    <>
-      <Navbar />
+    <div className="min-h-screen bg-[#F5EBDD] dark:bg-[#1A0F0A] text-[#1A0F0A] dark:text-white relative overflow-hidden transition-colors duration-300">
 
-      <div className="min-h-screen bg-gray-50 dark:bg-[#070714] text-gray-900 dark:text-white relative overflow-hidden transition-colors duration-300">
-        
-        {/* Background Glows - Light/Dark mode aware */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-96 h-96 bg-violet-300/20 dark:bg-violet-600/15 rounded-full blur-3xl" />
-          <div className="absolute top-1/2 -left-40 w-96 h-96 bg-cyan-200/20 dark:bg-cyan-500/8 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-200/20 dark:bg-indigo-500/5 rounded-full blur-3xl" />
-          
-          {/* Grid Pattern - Dark mode only */}
-          <div
-            className="absolute inset-0 opacity-[0.04] dark:opacity-[0.08]"
-            style={{
-              backgroundImage: `
-                linear-gradient(rgba(139,92,246,0.15) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(139,92,246,0.15) 1px, transparent 1px)
-              `,
-              backgroundSize: "48px 48px",
-            }}
-          />
-        </div>
+      {/* Background Glows */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-[#7A5236]/15 dark:bg-[#A47551]/20 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 -left-40 w-96 h-96 bg-[#A47551]/15 dark:bg-[#7A5236]/15 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#D4B59E]/20 dark:bg-[#3E2723]/40 rounded-full blur-3xl" />
 
-        <div className="relative z-10 flex items-center justify-center min-h-screen p-6">
-          
-          <div className="bg-white dark:bg-[#0a0a1a]/80 backdrop-blur-xl border border-violet-200 dark:border-violet-500/20 rounded-2xl shadow-lg shadow-gray-200/50 dark:shadow-xl dark:shadow-black/20 hover:border-violet-300 dark:hover:border-violet-400/30 transition-all duration-300 w-full max-w-md p-8">
-            
-            {/* Back Button */}
-            <button
-              onClick={() => navigate("/profile")}
-              className="mb-4 text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-300 flex items-center gap-2 transition"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Profile
-            </button>
+        <div
+          className="absolute inset-0 opacity-[0.04] dark:opacity-[0.06]"
+          style={{
+            backgroundImage: `
+              linear-gradient(rgba(122,82,54,0.4) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(122,82,54,0.4) 1px, transparent 1px)
+            `,
+            backgroundSize: "48px 48px",
+          }}
+        />
+      </div>
 
-            {/* Header */}
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-xl bg-violet-100 dark:bg-violet-500/10">
-                <Key className="w-6 h-6 text-violet-600 dark:text-violet-400" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Change Password
-              </h2>
+      <div className="relative z-10 flex items-center justify-center min-h-screen p-6">
+
+        <div className="bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-[#7A5236]/15 dark:border-[#A47551]/25 rounded-2xl shadow-lg shadow-[#7A5236]/5 dark:shadow-xl dark:shadow-black/40 hover:border-[#7A5236]/30 dark:hover:border-[#A47551]/40 transition-all duration-300 w-full max-w-md p-8">
+
+          {/* Back Button */}
+          <button
+            onClick={() => navigate("/profile")}
+            className="mb-4 text-[#7A5236] dark:text-[#D4B59E] hover:text-[#5E3E28] dark:hover:text-[#A47551] flex items-center gap-2 transition"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Profile
+          </button>
+
+          {/* Header */}
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 rounded-xl bg-[#7A5236]/10 dark:bg-[#A47551]/15">
+              <Key className="w-6 h-6 text-[#7A5236] dark:text-[#D4B59E]" />
             </div>
-            <p className="text-gray-600 dark:text-violet-300/60 mb-6">
-              Enter your current password and choose a new one
-            </p>
+            <h2 className="text-2xl font-bold text-[#1A0F0A] dark:text-white">
+              Change Password
+            </h2>
+          </div>
+          <p className="text-[#5E3E28] dark:text-[#D4B59E]/70 mb-6">
+            Enter your current password and choose a new one
+          </p>
 
-            {/* Error Message */}
-            {error && (
-              <div className="flex items-center gap-2 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-700 dark:text-rose-400 px-4 py-3 rounded-xl mb-4 text-sm">
-                <XCircle className="w-5 h-5 flex-shrink-0" />
-                {error}
-              </div>
-            )}
+          {/* Error Message */}
+          {error && (
+            <div className="flex items-center gap-2 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-700 dark:text-rose-400 px-4 py-3 rounded-xl mb-4 text-sm">
+              <XCircle className="w-5 h-5 flex-shrink-0" />
+              {error}
+            </div>
+          )}
 
-            {/* Success Message */}
-            {success && (
-              <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-4 py-3 rounded-xl mb-4 text-sm">
-                <CheckCircle className="w-5 h-5 flex-shrink-0" />
-                {success}
-              </div>
-            )}
+          {/* Success Message */}
+          {success && (
+            <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-4 py-3 rounded-xl mb-4 text-sm">
+              <CheckCircle className="w-5 h-5 flex-shrink-0" />
+              {success}
+            </div>
+          )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              
-              {/* Current Password */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-violet-300 mb-1">
-                  Current Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-violet-400" />
-                  <input
-                    type={showCurrentPassword ? "text" : "password"}
-                    placeholder="Enter current password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="w-full pl-10 pr-12 py-3 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-violet-500/20 rounded-xl focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition"
-                  >
-                    {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
-              </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
 
-              {/* New Password */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-violet-300 mb-1">
-                  New Password
-                </label>
-                <div className="relative">
-                  <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-violet-400" />
-                  <input
-                    type={showNewPassword ? "text" : "password"}
-                    placeholder="Enter new password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full pl-10 pr-12 py-3 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-violet-500/20 rounded-xl focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition"
-                  >
-                    {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
-                <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                  Must be at least 6 characters, 1 number and 1 special character
-                </p>
-              </div>
-
-              {/* Confirm Password */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-violet-300 mb-1">
-                  Confirm New Password
-                </label>
-                <div className="relative">
-                  <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-violet-400" />
-                  <input
-                    type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Confirm new password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full pl-10 pr-12 py-3 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-violet-500/20 rounded-xl focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition"
-                  >
-                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Buttons */}
-              <div className="flex gap-3 pt-2">
+            {/* Current Password */}
+            <div>
+              <label className="block text-sm font-medium text-[#7A5236] dark:text-[#D4B59E] mb-1">
+                Current Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#7A5236]/60 dark:text-[#D4B59E]/50" />
+                <input
+                  type={showCurrentPassword ? "text" : "password"}
+                  placeholder="Enter current password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="w-full pl-10 pr-12 py-3 bg-[#F5EBDD] dark:bg-[#1A0F0A]/70 border border-[#7A5236]/20 dark:border-[#A47551]/25 rounded-xl focus:border-[#7A5236] focus:ring-2 focus:ring-[#7A5236]/25 dark:focus:border-[#A47551] dark:focus:ring-[#A47551]/25 transition-all duration-200 text-[#1A0F0A] dark:text-white placeholder:text-[#5E3E28]/50 dark:placeholder:text-[#D4B59E]/40 outline-none"
+                />
                 <button
                   type="button"
-                  onClick={() => navigate("/profile")}
-                  className="flex-1 px-4 py-3 rounded-xl border border-gray-300 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition font-medium"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7A5236]/60 dark:text-[#D4B59E]/50 hover:text-[#7A5236] dark:hover:text-[#D4B59E] transition"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 bg-gradient-to-r from-violet-600 to-violet-700 hover:from-violet-500 hover:to-violet-600 text-white px-4 py-3 rounded-xl transition shadow-lg shadow-violet-600/30 hover:shadow-violet-600/50 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? "Updating..." : "Update Password"}
+                  {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
-            </form>
-          </div>
+            </div>
+
+            {/* New Password */}
+            <div>
+              <label className="block text-sm font-medium text-[#7A5236] dark:text-[#D4B59E] mb-1">
+                New Password
+              </label>
+              <div className="relative">
+                <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#7A5236]/60 dark:text-[#D4B59E]/50" />
+                <input
+                  type={showNewPassword ? "text" : "password"}
+                  placeholder="Enter new password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full pl-10 pr-12 py-3 bg-[#F5EBDD] dark:bg-[#1A0F0A]/70 border border-[#7A5236]/20 dark:border-[#A47551]/25 rounded-xl focus:border-[#7A5236] focus:ring-2 focus:ring-[#7A5236]/25 dark:focus:border-[#A47551] dark:focus:ring-[#A47551]/25 transition-all duration-200 text-[#1A0F0A] dark:text-white placeholder:text-[#5E3E28]/50 dark:placeholder:text-[#D4B59E]/40 outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7A5236]/60 dark:text-[#D4B59E]/50 hover:text-[#7A5236] dark:hover:text-[#D4B59E] transition"
+                >
+                  {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              <p className="text-xs text-[#5E3E28]/70 dark:text-[#D4B59E]/60 mt-1">
+                Must be at least 6 characters, 1 number and 1 special character
+              </p>
+            </div>
+
+            {/* Confirm Password */}
+            <div>
+              <label className="block text-sm font-medium text-[#7A5236] dark:text-[#D4B59E] mb-1">
+                Confirm New Password
+              </label>
+              <div className="relative">
+                <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#7A5236]/60 dark:text-[#D4B59E]/50" />
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirm new password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full pl-10 pr-12 py-3 bg-[#F5EBDD] dark:bg-[#1A0F0A]/70 border border-[#7A5236]/20 dark:border-[#A47551]/25 rounded-xl focus:border-[#7A5236] focus:ring-2 focus:ring-[#7A5236]/25 dark:focus:border-[#A47551] dark:focus:ring-[#A47551]/25 transition-all duration-200 text-[#1A0F0A] dark:text-white placeholder:text-[#5E3E28]/50 dark:placeholder:text-[#D4B59E]/40 outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7A5236]/60 dark:text-[#D4B59E]/50 hover:text-[#7A5236] dark:hover:text-[#D4B59E] transition"
+                >
+                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Buttons */}
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => navigate("/profile")}
+                className="flex-1 px-4 py-3 rounded-xl border border-[#7A5236]/25 dark:border-white/10 text-[#7A5236] dark:text-[#D4B59E] hover:bg-[#7A5236]/10 dark:hover:bg-white/5 transition font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-1 bg-[#7A5236] hover:bg-[#5E3E28] text-white px-4 py-3 rounded-xl transition shadow-lg shadow-[#7A5236]/40 hover:shadow-[#7A5236]/60 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? "Updating..." : "Update Password"}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
-    </>
+    </div>
   );
 }

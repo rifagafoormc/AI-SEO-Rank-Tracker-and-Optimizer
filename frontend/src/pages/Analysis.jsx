@@ -41,65 +41,44 @@ export default function Analysis() {
   const [result, setResult] = useState(null);
   const [analysisId, setAnalysisId] = useState(null);
 
-  // Relevance
   const [checkingRelevance, setCheckingRelevance] = useState(false);
 
-  // Evidence
   const [keywordEvidence, setKeywordEvidence] = useState({});
   const [evidenceErrors, setEvidenceErrors] = useState({});
   const [collectingEvidence, setCollectingEvidence] = useState(null);
 
-  // Optimization
   const [optimizingKeyword, setOptimizingKeyword] = useState(null);
   const [keywordOptimizations, setKeywordOptimizations] = useState({});
   const [optimizationErrors, setOptimizationErrors] = useState({});
 
-  // Dropdowns
   const [isCountryOpen, setIsCountryOpen] = useState(false);
   const [isDepthOpen, setIsDepthOpen] = useState(false);
 
   const countryRef = useRef(null);
   const depthRef = useRef(null);
 
-  // ------------------------------------------------------------
-  // Load URL passed from another page
-  // ------------------------------------------------------------
   useEffect(() => {
     if (location.state?.url) {
       setUrl(location.state.url);
     }
   }, [location]);
 
-  // ------------------------------------------------------------
-  // Close dropdowns when clicking outside
-  // ------------------------------------------------------------
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        countryRef.current &&
-        !countryRef.current.contains(event.target)
-      ) {
+      if (countryRef.current && !countryRef.current.contains(event.target)) {
         setIsCountryOpen(false);
       }
-
-      if (
-        depthRef.current &&
-        !depthRef.current.contains(event.target)
-      ) {
+      if (depthRef.current && !depthRef.current.contains(event.target)) {
         setIsDepthOpen(false);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
-  // ------------------------------------------------------------
-  // Analyze website
-  // ------------------------------------------------------------
   const handleAnalyze = async () => {
     const trimmedUrl = url.trim();
 
@@ -158,15 +137,11 @@ export default function Analysis() {
       );
 
       if (!response.data?.success) {
-        throw new Error(
-          response.data?.message || 'Analysis failed.'
-        );
+        throw new Error(response.data?.message || 'Analysis failed.');
       }
 
       if (!response.data?.data?.results) {
-        throw new Error(
-          'The server returned no ranking results.'
-        );
+        throw new Error('The server returned no ranking results.');
       }
 
       setResult(response.data.data);
@@ -184,9 +159,6 @@ export default function Analysis() {
     }
   };
 
-  // ------------------------------------------------------------
-  // Check keyword relevance
-  // ------------------------------------------------------------
   const handleCheckRelevance = async () => {
     if (!analysisId) {
       alert('Please run website analysis first.');
@@ -218,8 +190,7 @@ export default function Analysis() {
 
       if (!response.data?.success) {
         throw new Error(
-          response.data?.message ||
-            'Unable to check keyword relevance.'
+          response.data?.message || 'Unable to check keyword relevance.'
         );
       }
 
@@ -240,9 +211,6 @@ export default function Analysis() {
     }
   };
 
-  // ------------------------------------------------------------
-  // Collect Evidence
-  // ------------------------------------------------------------
   const handleCollectEvidence = async (item) => {
     if (!analysisId) {
       alert('Please run website analysis first.');
@@ -284,8 +252,7 @@ export default function Analysis() {
 
       if (!response.data?.success) {
         throw new Error(
-          response.data?.message ||
-            'Unable to collect page evidence.'
+          response.data?.message || 'Unable to collect page evidence.'
         );
       }
 
@@ -311,9 +278,6 @@ export default function Analysis() {
     }
   };
 
-  // ------------------------------------------------------------
-  // Generate Optimization (uses stored evidence)
-  // ------------------------------------------------------------
   const handleOptimizeKeyword = async (item) => {
     if (!analysisId) {
       alert('Please run website analysis first.');
@@ -385,9 +349,6 @@ export default function Analysis() {
     }
   };
 
-  // ------------------------------------------------------------
-  // Countries & Depth
-  // ------------------------------------------------------------
   const countries = [
     { code: 'in', name: 'India', flag: '🇮🇳' },
     { code: 'us', name: 'United States', flag: '🇺🇸' },
@@ -449,21 +410,21 @@ export default function Analysis() {
   );
 
   const thClass =
-    'text-left p-3 text-gray-700 dark:text-violet-300 font-medium';
+    'text-left p-3 text-[#5E3E28] dark:text-[#D4B59E]/80 font-medium';
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#070714] text-gray-900 dark:text-white relative transition-colors duration-300">
+    <div className="min-h-screen bg-[#F5EBDD] dark:bg-[#1A0F0A] text-[#1A0F0A] dark:text-white relative transition-colors duration-300">
       {/* Background */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-violet-300/20 dark:bg-violet-600/15 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 -left-40 w-96 h-96 bg-cyan-200/20 dark:bg-cyan-500/8 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-200/20 dark:bg-indigo-500/5 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-[#7A5236]/15 dark:bg-[#A47551]/20 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 -left-40 w-96 h-96 bg-[#A47551]/15 dark:bg-[#7A5236]/15 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#D4B59E]/20 dark:bg-[#3E2723]/40 rounded-full blur-3xl" />
         <div
-          className="absolute inset-0 opacity-[0.04] dark:opacity-[0.08]"
+          className="absolute inset-0 opacity-[0.04] dark:opacity-[0.06]"
           style={{
             backgroundImage: `
-              linear-gradient(rgba(139,92,246,0.15) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(139,92,246,0.15) 1px, transparent 1px)
+              linear-gradient(rgba(122,82,54,0.4) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(122,82,54,0.4) 1px, transparent 1px)
             `,
             backgroundSize: '48px 48px',
           }}
@@ -474,7 +435,7 @@ export default function Analysis() {
         {/* Back */}
         <button
           onClick={() => navigate('/dashboard')}
-          className="mb-6 text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-300 flex items-center gap-2 transition"
+          className="mb-6 text-[#7A5236] dark:text-[#D4B59E] hover:text-[#5E3E28] dark:hover:text-[#A47551] flex items-center gap-2 transition"
         >
           <ArrowLeft className="w-5 h-5" />
           Back to Dashboard
@@ -483,42 +444,40 @@ export default function Analysis() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-3xl font-bold text-[#1A0F0A] dark:text-white">
               SEO Analysis
             </h1>
-            <p className="text-gray-600 dark:text-violet-300/60 mt-1">
+            <p className="text-[#5E3E28] dark:text-[#D4B59E]/70 mt-1">
               Collect ranking evidence, then generate AI-powered SEO suggestions
             </p>
           </div>
         </div>
 
-        {/* =====================================================
-            ANALYSIS FORM
-        ====================================================== */}
-        <div className="relative z-20 bg-white dark:bg-[#0a0a1a]/80 backdrop-blur-xl border border-violet-200 dark:border-violet-500/20 rounded-2xl p-6 mb-8 shadow-lg shadow-gray-200/50 dark:shadow-xl dark:shadow-black/20">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-            <Search className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+        {/* ANALYSIS FORM */}
+        <div className="relative z-20 bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-[#7A5236]/15 dark:border-[#A47551]/25 rounded-2xl p-6 mb-8 shadow-lg shadow-[#7A5236]/5 dark:shadow-xl dark:shadow-black/40">
+          <h2 className="text-xl font-semibold text-[#1A0F0A] dark:text-white mb-6 flex items-center gap-2">
+            <Search className="w-5 h-5 text-[#7A5236] dark:text-[#D4B59E]" />
             Website Details
           </h2>
 
           <div className="space-y-5">
             {/* URL */}
             <div>
-              <label className="block mb-2 font-medium text-gray-700 dark:text-violet-300">
+              <label className="block mb-2 font-medium text-[#7A5236] dark:text-[#D4B59E]">
                 Website URL *
               </label>
               <input
-                type="url"
+                type="text"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://example.com"
-                className="w-full bg-gray-100 dark:bg-white/5 border border-violet-200 dark:border-violet-500/20 rounded-xl px-4 py-3 focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none"
+                placeholder="example.com"
+                className="w-full bg-[#F5EBDD] dark:bg-[#1A0F0A]/70 border border-[#7A5236]/20 dark:border-[#A47551]/25 rounded-xl px-4 py-3 focus:border-[#7A5236] focus:ring-2 focus:ring-[#7A5236]/25 dark:focus:border-[#A47551] dark:focus:ring-[#A47551]/25 transition-all duration-200 text-[#1A0F0A] dark:text-white placeholder:text-[#5E3E28]/50 dark:placeholder:text-[#D4B59E]/40 outline-none"
               />
             </div>
 
             {/* Keywords */}
             <div>
-              <label className="block mb-2 font-medium text-gray-700 dark:text-violet-300">
+              <label className="block mb-2 font-medium text-[#7A5236] dark:text-[#D4B59E]">
                 Target Keywords *
               </label>
               <input
@@ -526,9 +485,9 @@ export default function Analysis() {
                 value={keywords}
                 onChange={(e) => setKeywords(e.target.value)}
                 placeholder="seo, digital marketing, react"
-                className="w-full bg-gray-100 dark:bg-white/5 border border-violet-200 dark:border-violet-500/20 rounded-xl px-4 py-3 focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none"
+                className="w-full bg-[#F5EBDD] dark:bg-[#1A0F0A]/70 border border-[#7A5236]/20 dark:border-[#A47551]/25 rounded-xl px-4 py-3 focus:border-[#7A5236] focus:ring-2 focus:ring-[#7A5236]/25 dark:focus:border-[#A47551] dark:focus:ring-[#A47551]/25 transition-all duration-200 text-[#1A0F0A] dark:text-white placeholder:text-[#5E3E28]/50 dark:placeholder:text-[#D4B59E]/40 outline-none"
               />
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                 Separate keywords with commas
               </p>
             </div>
@@ -536,7 +495,7 @@ export default function Analysis() {
             {/* Country + Depth */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div ref={countryRef}>
-                <label className="block mb-2 font-medium text-gray-700 dark:text-violet-300">
+                <label className="block mb-2 font-medium text-[#7A5236] dark:text-[#D4B59E]">
                   Target Country
                 </label>
                 <div className="relative">
@@ -546,7 +505,7 @@ export default function Analysis() {
                       setIsCountryOpen(!isCountryOpen);
                       setIsDepthOpen(false);
                     }}
-                    className="w-full bg-gray-100 dark:bg-white/5 border border-violet-200 dark:border-violet-500/20 rounded-xl px-4 py-3 text-gray-900 dark:text-white outline-none flex items-center justify-between"
+                    className="w-full bg-[#F5EBDD] dark:bg-[#1A0F0A]/70 border border-[#7A5236]/20 dark:border-[#A47551]/25 rounded-xl px-4 py-3 text-[#1A0F0A] dark:text-white outline-none flex items-center justify-between"
                   >
                     <span>{getCountryLabel(country)}</span>
                     <ChevronDown
@@ -556,7 +515,7 @@ export default function Analysis() {
                     />
                   </button>
                   {isCountryOpen && (
-                    <div className="absolute z-50 w-full mt-2 bg-white dark:bg-[#1a1a2e] border border-violet-200 dark:border-violet-500/20 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                    <div className="absolute z-50 w-full mt-2 bg-white dark:bg-[#251710] border border-[#7A5236]/20 dark:border-[#A47551]/25 rounded-xl shadow-lg max-h-60 overflow-y-auto">
                       {countries.map((c) => (
                         <button
                           key={c.code}
@@ -565,10 +524,10 @@ export default function Analysis() {
                             setCountry(c.code);
                             setIsCountryOpen(false);
                           }}
-                          className={`w-full px-4 py-2.5 text-left hover:bg-violet-50 dark:hover:bg-violet-500/10 transition-colors flex items-center gap-2 ${
+                          className={`w-full px-4 py-2.5 text-left hover:bg-[#7A5236]/10 dark:hover:bg-[#A47551]/15 transition-colors flex items-center gap-2 ${
                             country === c.code
-                              ? 'bg-violet-50 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400'
-                              : 'text-gray-700 dark:text-gray-300'
+                              ? 'bg-[#7A5236]/10 dark:bg-[#A47551]/20 text-[#7A5236] dark:text-[#D4B59E]'
+                              : 'text-[#1A0F0A] dark:text-[#D4B59E]/80'
                           }`}
                         >
                           <span>{c.flag}</span>
@@ -578,13 +537,13 @@ export default function Analysis() {
                     </div>
                   )}
                 </div>
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                   Check Google rankings for the selected country
                 </p>
               </div>
 
               <div ref={depthRef}>
-                <label className="block mb-2 font-medium text-gray-700 dark:text-violet-300">
+                <label className="block mb-2 font-medium text-[#7A5236] dark:text-[#D4B59E]">
                   Search Depth
                 </label>
                 <div className="relative">
@@ -594,7 +553,7 @@ export default function Analysis() {
                       setIsDepthOpen(!isDepthOpen);
                       setIsCountryOpen(false);
                     }}
-                    className="w-full bg-gray-100 dark:bg-white/5 border border-violet-200 dark:border-violet-500/20 rounded-xl px-4 py-3 text-gray-900 dark:text-white outline-none flex items-center justify-between"
+                    className="w-full bg-[#F5EBDD] dark:bg-[#1A0F0A]/70 border border-[#7A5236]/20 dark:border-[#A47551]/25 rounded-xl px-4 py-3 text-[#1A0F0A] dark:text-white outline-none flex items-center justify-between"
                   >
                     <span>{getDepthLabel(searchDepth)}</span>
                     <ChevronDown
@@ -604,7 +563,7 @@ export default function Analysis() {
                     />
                   </button>
                   {isDepthOpen && (
-                    <div className="absolute z-50 w-full mt-2 bg-white dark:bg-[#1a1a2e] border border-violet-200 dark:border-violet-500/20 rounded-xl shadow-lg">
+                    <div className="absolute z-50 w-full mt-2 bg-white dark:bg-[#251710] border border-[#7A5236]/20 dark:border-[#A47551]/25 rounded-xl shadow-lg">
                       {depthOptions.map((option) => (
                         <button
                           key={option.value}
@@ -613,10 +572,10 @@ export default function Analysis() {
                             setSearchDepth(option.value);
                             setIsDepthOpen(false);
                           }}
-                          className={`w-full px-4 py-2.5 text-left hover:bg-violet-50 dark:hover:bg-violet-500/10 transition-colors ${
+                          className={`w-full px-4 py-2.5 text-left hover:bg-[#7A5236]/10 dark:hover:bg-[#A47551]/15 transition-colors ${
                             searchDepth === option.value
-                              ? 'bg-violet-50 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400'
-                              : 'text-gray-700 dark:text-gray-300'
+                              ? 'bg-[#7A5236]/10 dark:bg-[#A47551]/20 text-[#7A5236] dark:text-[#D4B59E]'
+                              : 'text-[#1A0F0A] dark:text-[#D4B59E]/80'
                           }`}
                         >
                           {option.label}
@@ -625,7 +584,7 @@ export default function Analysis() {
                     </div>
                   )}
                 </div>
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                   How many Google results to search
                 </p>
               </div>
@@ -638,8 +597,8 @@ export default function Analysis() {
               disabled={!url.trim() || !keywords.trim() || isAnalyzing}
               className={`w-full px-8 py-3.5 rounded-xl font-medium text-white transition-all duration-200 ${
                 !url.trim() || !keywords.trim() || isAnalyzing
-                  ? 'bg-gray-200 dark:bg-white/5 cursor-not-allowed text-gray-400 dark:text-gray-500'
-                  : 'bg-gradient-to-r from-violet-600 to-violet-700 hover:from-violet-500 hover:to-violet-600 shadow-lg shadow-violet-600/30'
+                  ? 'bg-[#7A5236]/40 dark:bg-white/5 cursor-not-allowed text-white/60'
+                  : 'bg-[#7A5236] hover:bg-[#5E3E28] shadow-lg shadow-[#7A5236]/40 hover:shadow-[#7A5236]/60'
               }`}
             >
               {isAnalyzing ? (
@@ -654,38 +613,36 @@ export default function Analysis() {
           </div>
         </div>
 
-        {/* =====================================================
-            RESULTS
-        ====================================================== */}
-        <div className="relative z-10 bg-white dark:bg-[#0a0a1a]/80 backdrop-blur-xl border border-violet-200 dark:border-violet-500/20 rounded-2xl p-6 shadow-lg">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+        {/* RESULTS */}
+        <div className="relative z-10 bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-[#7A5236]/15 dark:border-[#A47551]/25 rounded-2xl p-6 shadow-lg shadow-[#7A5236]/5 dark:shadow-xl dark:shadow-black/40">
+          <h2 className="text-xl font-semibold text-[#1A0F0A] dark:text-white mb-6 flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-[#7A5236] dark:text-[#D4B59E]" />
             Rank Tracking Result
           </h2>
 
           {!result ? (
-            <p className="text-gray-500">
+            <p className="text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
               No tracking data yet. Enter a website and keywords.
             </p>
           ) : (
             <>
               {/* Website info */}
-              <div className="mb-6 p-4 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/5">
-                <p className="font-medium text-gray-700 dark:text-violet-300">
+              <div className="mb-6 p-4 bg-[#F5EBDD] dark:bg-[#1A0F0A]/50 rounded-xl border border-[#7A5236]/15 dark:border-white/5">
+                <p className="font-medium text-[#7A5236] dark:text-[#D4B59E]">
                   Website
                 </p>
-                <p className="text-gray-900 dark:text-white break-all">
+                <p className="text-[#1A0F0A] dark:text-white break-all">
                   {result.url}
                 </p>
                 {result.selectedCountry && (
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60 mt-1">
                     🌍 Country: {result.selectedCountry.toUpperCase()}
                     {' | '}
                     🔎 Depth: {result.selectedSearchDepth || 10} results
                   </p>
                 )}
                 {analysisId && (
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-[#5E3E28]/60 dark:text-[#D4B59E]/50 mt-1">
                     Analysis ID: {analysisId}
                   </p>
                 )}
@@ -695,7 +652,7 @@ export default function Analysis() {
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
-                    <tr className="border-b border-violet-200 dark:border-violet-500/20 bg-gray-50 dark:bg-white/5">
+                    <tr className="border-b border-[#7A5236]/20 dark:border-[#A47551]/25 bg-[#F5EBDD] dark:bg-[#1A0F0A]/50">
                       <th className={thClass}>Keyword</th>
                       <th className={thClass}>Google Rank</th>
                       <th className={thClass}>Search Result Title</th>
@@ -706,12 +663,12 @@ export default function Analysis() {
                     {result.results?.map((item, index) => (
                       <tr
                         key={`${item.keyword}-${index}`}
-                        className="border-b border-gray-100 dark:border-white/5"
+                        className="border-b border-[#7A5236]/10 dark:border-white/5"
                       >
-                        <td className="p-3 font-medium text-gray-900 dark:text-white">
+                        <td className="p-3 font-medium text-[#1A0F0A] dark:text-white">
                           {item.keyword}
                         </td>
-                        <td className="p-3 text-violet-600 dark:text-violet-400 font-bold">
+                        <td className="p-3 text-[#7A5236] dark:text-[#D4B59E] font-bold">
                           {item.rank !== 'Not Found' && item.rank != null
                             ? `#${item.rank}`
                             : '—'}
@@ -723,16 +680,18 @@ export default function Analysis() {
                                 href={item.rankingUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-sm text-violet-600 dark:text-violet-400 hover:underline break-words"
+                                className="text-sm text-[#7A5236] dark:text-[#D4B59E] hover:underline break-words"
                               >
                                 {item.serpTitle || item.rankingUrl}
                               </a>
-                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 break-all">
+                              <div className="text-xs text-[#5E3E28]/60 dark:text-[#D4B59E]/50 mt-0.5 break-all">
                                 {getHostname(item.rankingUrl)}
                               </div>
                             </>
                           ) : (
-                            <span className="text-gray-400">—</span>
+                            <span className="text-[#5E3E28]/40 dark:text-[#D4B59E]/30">
+                              —
+                            </span>
                           )}
                         </td>
                         <td className="p-3">
@@ -760,7 +719,7 @@ export default function Analysis() {
                   type="button"
                   onClick={handleCheckRelevance}
                   disabled={!analysisId || checkingRelevance}
-                  className="px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-700 text-white font-medium hover:from-cyan-500 hover:to-cyan-600 disabled:opacity-50 transition flex items-center gap-2"
+                  className="px-5 py-3 rounded-xl bg-[#A47551] dark:bg-[#A47551] text-white font-medium hover:bg-[#8B6044] dark:hover:bg-[#D4B59E] dark:hover:text-[#1A0F0A] disabled:opacity-50 transition flex items-center gap-2"
                 >
                   <Sparkles className="w-4 h-4" />
                   {checkingRelevance
@@ -769,7 +728,7 @@ export default function Analysis() {
                     ? 'Re-check Keyword Relevance'
                     : 'Check Keyword Relevance'}
                 </button>
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-[#5E3E28]/70 dark:text-[#D4B59E]/60 mt-2">
                   Uses AI to determine whether each target keyword is
                   relevant to the website. Relevance is independent of
                   current ranking.
@@ -779,15 +738,15 @@ export default function Analysis() {
               {/* RELEVANCE TABLE */}
               {hasRelevanceResults && (
                 <div className="mt-8">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <ShieldCheck className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
+                  <h3 className="text-lg font-semibold text-[#1A0F0A] dark:text-white mb-4 flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5 text-[#A47551] dark:text-[#D4B59E]" />
                     Keyword Relevance Result
                   </h3>
 
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse">
                       <thead>
-                        <tr className="border-b border-violet-200 dark:border-violet-500/20 bg-gray-50 dark:bg-white/5">
+                        <tr className="border-b border-[#7A5236]/20 dark:border-[#A47551]/25 bg-[#F5EBDD] dark:bg-[#1A0F0A]/50">
                           <th className={thClass}>Keyword</th>
                           <th className={thClass}>Relevance</th>
                           <th className={thClass}>Confidence</th>
@@ -799,9 +758,9 @@ export default function Analysis() {
                         {result.results?.map((item, index) => (
                           <tr
                             key={`${item.keyword}-relevance-${index}`}
-                            className="border-b border-gray-100 dark:border-white/5"
+                            className="border-b border-[#7A5236]/10 dark:border-white/5"
                           >
-                            <td className="p-3 font-medium text-gray-900 dark:text-white">
+                            <td className="p-3 font-medium text-[#1A0F0A] dark:text-white">
                               {item.keyword}
                             </td>
                             <td className="p-3">
@@ -821,13 +780,13 @@ export default function Analysis() {
                                 </span>
                               )}
                             </td>
-                            <td className="p-3 text-sm text-gray-700 dark:text-gray-300">
+                            <td className="p-3 text-sm text-[#1A0F0A] dark:text-[#D4B59E]/80">
                               {item.relevant === null ||
                               item.relevant === undefined
                                 ? '—'
                                 : `${item.confidence ?? 0}%`}
                             </td>
-                            <td className="p-3 text-xs text-gray-500 dark:text-gray-400 max-w-xs">
+                            <td className="p-3 text-xs text-[#5E3E28]/70 dark:text-[#D4B59E]/60 max-w-xs">
                               {item.reason || '—'}
                             </td>
                             <td className="p-3">
@@ -838,7 +797,7 @@ export default function Analysis() {
                                   disabled={
                                     collectingEvidence === item.keyword
                                   }
-                                  className="px-3 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-violet-700 text-white text-sm font-medium hover:from-violet-500 hover:to-violet-600 disabled:opacity-50 transition flex items-center gap-2 whitespace-nowrap"
+                                  className="px-3 py-2 rounded-lg bg-[#7A5236] dark:bg-[#A47551] text-white text-sm font-medium hover:bg-[#5E3E28] dark:hover:bg-[#D4B59E] dark:hover:text-[#1A0F0A] disabled:opacity-50 transition flex items-center gap-2 whitespace-nowrap"
                                 >
                                   <FileSearch className="w-4 h-4" />
                                   {collectingEvidence === item.keyword
@@ -848,11 +807,11 @@ export default function Analysis() {
                                     : 'Collect Evidence'}
                                 </button>
                               ) : item.relevant === false ? (
-                                <span className="text-xs text-gray-400">
+                                <span className="text-xs text-[#5E3E28]/50 dark:text-[#D4B59E]/40">
                                   Keyword not relevant
                                 </span>
                               ) : (
-                                <span className="text-xs text-gray-400">
+                                <span className="text-xs text-[#5E3E28]/50 dark:text-[#D4B59E]/40">
                                   Not available
                                 </span>
                               )}
@@ -863,7 +822,7 @@ export default function Analysis() {
                     </table>
                   </div>
 
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-[#5E3E28]/70 dark:text-[#D4B59E]/60 mt-2">
                     Only relevant keywords can collect evidence. Evidence
                     is fetched from the actual ranking page.
                   </p>
@@ -894,8 +853,8 @@ export default function Analysis() {
               {/* EVIDENCE DISPLAY */}
               {Object.keys(keywordEvidence).length > 0 && (
                 <div className="mt-8">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <FileSearch className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+                  <h3 className="text-lg font-semibold text-[#1A0F0A] dark:text-white mb-4 flex items-center gap-2">
+                    <FileSearch className="w-5 h-5 text-[#7A5236] dark:text-[#D4B59E]" />
                     Ranking Page Evidence
                   </h3>
 
@@ -941,7 +900,7 @@ export default function Analysis() {
               {/* OPTIMIZATION RESULTS */}
               {Object.keys(keywordOptimizations).length > 0 && (
                 <div className="mt-8 space-y-6">
-                  <h3 className="text-lg font-semibold text-violet-700 dark:text-violet-400 flex items-center gap-2">
+                  <h3 className="text-lg font-semibold text-[#7A5236] dark:text-[#D4B59E] flex items-center gap-2">
                     <Sparkles className="w-5 h-5" />
                     AI Keyword Optimization
                   </h3>
@@ -979,39 +938,39 @@ function EvidencePanel({
   const links = evidence.links || {};
 
   const Row = ({ label, value }) => (
-    <div className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-4 py-1.5 border-b border-gray-100 dark:border-white/5 last:border-0">
-      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 sm:w-44 shrink-0">
+    <div className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-4 py-1.5 border-b border-[#7A5236]/10 dark:border-white/5 last:border-0">
+      <span className="text-xs font-medium text-[#5E3E28]/70 dark:text-[#D4B59E]/60 sm:w-44 shrink-0">
         {label}
       </span>
-      <span className="text-sm text-gray-800 dark:text-gray-200 break-words">
+      <span className="text-sm text-[#1A0F0A] dark:text-[#D4B59E]/90 break-words">
         {value || '—'}
       </span>
     </div>
   );
 
   const StatCard = ({ icon, label, value }) => (
-    <div className="p-3 bg-white dark:bg-[#0a0a1a]/80 border border-violet-100 dark:border-violet-500/10 rounded-lg">
-      <div className="flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+    <div className="p-3 bg-white/90 dark:bg-[#1A0F0A]/70 border border-[#7A5236]/15 dark:border-[#A47551]/20 rounded-lg">
+      <div className="flex items-center gap-2 text-xs font-medium text-[#5E3E28]/70 dark:text-[#D4B59E]/60 mb-1">
         {icon}
         {label}
       </div>
-      <div className="text-lg font-semibold text-violet-700 dark:text-violet-300">
+      <div className="text-lg font-semibold text-[#7A5236] dark:text-[#D4B59E]">
         {value}
       </div>
     </div>
   );
 
   return (
-    <div className="mb-6 p-5 bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20 rounded-xl">
+    <div className="mb-6 p-5 bg-[#F5EBDD] dark:bg-[#A47551]/10 border border-[#7A5236]/20 dark:border-[#A47551]/25 rounded-xl">
       {/* Header */}
       <div className="mb-4">
-        <h4 className="text-base font-semibold text-violet-800 dark:text-violet-300">
+        <h4 className="text-base font-semibold text-[#7A5236] dark:text-[#D4B59E]">
           Keyword:{' '}
-          <span className="text-gray-900 dark:text-white">{keyword}</span>
+          <span className="text-[#1A0F0A] dark:text-white">{keyword}</span>
         </h4>
-        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+        <p className="text-xs text-[#5E3E28]/70 dark:text-[#D4B59E]/60 mt-1">
           Current Rank:{' '}
-          <span className="font-medium text-violet-600 dark:text-violet-400">
+          <span className="font-medium text-[#7A5236] dark:text-[#D4B59E]">
             {payload.currentRank === 'Not Found' ||
             payload.currentRank == null
               ? 'Not Found'
@@ -1025,7 +984,7 @@ function EvidencePanel({
                 href={payload.targetPage}
                 target="_blank"
                 rel="noreferrer"
-                className="text-violet-500 hover:underline break-all"
+                className="text-[#7A5236] dark:text-[#D4B59E] hover:underline break-all"
               >
                 {payload.targetPage}
               </a>
@@ -1035,8 +994,8 @@ function EvidencePanel({
       </div>
 
       {/* On-page SEO */}
-      <div className="mb-4 p-4 bg-white dark:bg-[#0a0a1a]/80 rounded-lg border border-violet-100 dark:border-violet-500/10">
-        <div className="flex items-center gap-2 mb-2 text-sm font-semibold text-violet-700 dark:text-violet-400">
+      <div className="mb-4 p-4 bg-white/90 dark:bg-[#1A0F0A]/70 rounded-lg border border-[#7A5236]/15 dark:border-[#A47551]/20">
+        <div className="flex items-center gap-2 mb-2 text-sm font-semibold text-[#7A5236] dark:text-[#D4B59E]">
           <FileText className="w-4 h-4" />
           On-page SEO
         </div>
@@ -1097,7 +1056,7 @@ function EvidencePanel({
 
       {/* Generate Button */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="text-xs text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
           Evidence is collected server-side. AI uses this verified data
           to generate suggestions.
         </p>
@@ -1105,7 +1064,7 @@ function EvidencePanel({
           type="button"
           onClick={onGenerate}
           disabled={generating}
-          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-violet-700 text-white text-sm font-medium hover:from-violet-500 hover:to-violet-600 disabled:opacity-50 transition flex items-center gap-2 whitespace-nowrap"
+          className="px-5 py-2.5 rounded-xl bg-[#7A5236] dark:bg-[#A47551] text-white text-sm font-medium hover:bg-[#5E3E28] dark:hover:bg-[#D4B59E] dark:hover:text-[#1A0F0A] disabled:opacity-50 transition flex items-center gap-2 whitespace-nowrap"
         >
           <Sparkles className="w-4 h-4" />
           {generating
@@ -1135,15 +1094,15 @@ function KeywordOptimizationCard({ keyword, optimization }) {
     : [];
 
   return (
-    <div className="p-5 bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20 rounded-xl">
+    <div className="p-5 bg-[#F5EBDD] dark:bg-[#A47551]/10 border border-[#7A5236]/20 dark:border-[#A47551]/25 rounded-xl">
       <div className="mb-4">
-        <h4 className="text-base font-semibold text-violet-800 dark:text-violet-300">
+        <h4 className="text-base font-semibold text-[#7A5236] dark:text-[#D4B59E]">
           Keyword:{' '}
-          <span className="text-gray-900 dark:text-white">{keyword}</span>
+          <span className="text-[#1A0F0A] dark:text-white">{keyword}</span>
         </h4>
-        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+        <p className="text-xs text-[#5E3E28]/70 dark:text-[#D4B59E]/60 mt-1">
           Current Rank:{' '}
-          <span className="font-medium text-violet-600 dark:text-violet-400">
+          <span className="font-medium text-[#7A5236] dark:text-[#D4B59E]">
             {optimization.currentRank === 'Not Found' ||
             optimization.currentRank === 'Not available' ||
             optimization.currentRank == null
@@ -1158,7 +1117,7 @@ function KeywordOptimizationCard({ keyword, optimization }) {
                 href={optimization.targetPage}
                 target="_blank"
                 rel="noreferrer"
-                className="text-violet-500 hover:underline break-all"
+                className="text-[#7A5236] dark:text-[#D4B59E] hover:underline break-all"
               >
                 {optimization.targetPage}
               </a>
@@ -1168,7 +1127,7 @@ function KeywordOptimizationCard({ keyword, optimization }) {
       </div>
 
       {recs.length === 0 ? (
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <p className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
           No specific recommendations were generated for this keyword.
         </p>
       ) : (
@@ -1176,23 +1135,23 @@ function KeywordOptimizationCard({ keyword, optimization }) {
           {recs.map((rec, index) => (
             <div
               key={index}
-              className="p-4 bg-white dark:bg-[#0a0a1a]/80 border border-violet-100 dark:border-violet-500/10 rounded-lg"
+              className="p-4 bg-white/90 dark:bg-[#1A0F0A]/70 border border-[#7A5236]/15 dark:border-[#A47551]/20 rounded-lg"
             >
               <div className="flex items-center justify-between mb-2 gap-3">
-                <span className="font-semibold text-violet-700 dark:text-violet-400 text-sm">
+                <span className="font-semibold text-[#7A5236] dark:text-[#D4B59E] text-sm">
                   {rec.element}
                 </span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300">
+                <span className="text-xs px-2 py-0.5 rounded-full bg-[#7A5236]/15 dark:bg-[#A47551]/25 text-[#7A5236] dark:text-[#D4B59E]">
                   {rec.status}
                 </span>
               </div>
 
               {rec.current && (
                 <div className="mb-2">
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                  <p className="text-xs font-medium text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                     Current
                   </p>
-                  <p className="text-sm text-gray-800 dark:text-gray-200 break-words">
+                  <p className="text-sm text-[#1A0F0A] dark:text-[#D4B59E]/90 break-words">
                     {rec.current}
                   </p>
                 </div>
@@ -1211,10 +1170,10 @@ function KeywordOptimizationCard({ keyword, optimization }) {
 
               {rec.reason && (
                 <div className="mb-1">
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                  <p className="text-xs font-medium text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                     Why
                   </p>
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                  <p className="text-sm text-[#1A0F0A] dark:text-[#D4B59E]/80">
                     {rec.reason}
                   </p>
                 </div>
@@ -1222,10 +1181,10 @@ function KeywordOptimizationCard({ keyword, optimization }) {
 
               {rec.impact && (
                 <div>
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                  <p className="text-xs font-medium text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
                     Potential benefit
                   </p>
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                  <p className="text-sm text-[#1A0F0A] dark:text-[#D4B59E]/80">
                     {rec.impact}
                   </p>
                 </div>
@@ -1236,11 +1195,11 @@ function KeywordOptimizationCard({ keyword, optimization }) {
       )}
 
       {notes.length > 0 && (
-        <div className="mt-4 pt-3 border-t border-violet-200 dark:border-violet-500/20">
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+        <div className="mt-4 pt-3 border-t border-[#7A5236]/20 dark:border-[#A47551]/25">
+          <p className="text-xs font-medium text-[#5E3E28]/70 dark:text-[#D4B59E]/60 mb-1">
             General Notes
           </p>
-          <ul className="list-disc list-inside text-sm text-gray-700 dark:text-gray-300 space-y-0.5">
+          <ul className="list-disc list-inside text-sm text-[#1A0F0A] dark:text-[#D4B59E]/80 space-y-0.5">
             {notes.map((note, index) => (
               <li key={index}>{note}</li>
             ))}
