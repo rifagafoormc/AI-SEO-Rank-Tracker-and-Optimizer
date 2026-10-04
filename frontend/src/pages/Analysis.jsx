@@ -252,7 +252,7 @@ export default function Analysis() {
 
       if (!response.data?.success) {
         throw new Error(
-          response.data?.message || 'Unable to collect page evidence.'
+          response.data?.message || 'Unable to fetch SEO data.'
         );
       }
 
@@ -262,7 +262,7 @@ export default function Analysis() {
       }));
     } catch (error) {
       console.error(
-        `Evidence collection failed for "${item.keyword}":`,
+        `SEO data fetch failed for "${item.keyword}":`,
         error
       );
 
@@ -271,7 +271,7 @@ export default function Analysis() {
         [item.keyword]:
           error.response?.data?.message ||
           error.message ||
-          'Unable to collect page evidence.',
+          'Unable to fetch SEO data.',
       }));
     } finally {
       setCollectingEvidence(null);
@@ -285,7 +285,7 @@ export default function Analysis() {
     }
 
     if (!keywordEvidence[item.keyword]) {
-      alert('Please collect page evidence first.');
+      alert('Please fetch SEO data first.');
       return;
     }
 
@@ -408,6 +408,34 @@ export default function Analysis() {
   const hasRelevanceResults = result?.results?.some(
     (item) => item.relevant !== undefined
   );
+
+  // Determine whether the ranking page was found for an item
+  const hasRankingPage = (item) =>
+    item.found === true &&
+    item.rankingUrl &&
+    item.rank !== 'Not Found' &&
+    item.rank != null;
+
+  // Fetch button label based on ranking page availability
+  const getFetchButtonLabel = (item) => {
+    const isLoading = collectingEvidence === item.keyword;
+    const hasData = Boolean(keywordEvidence[item.keyword]);
+    const rankingFound = hasRankingPage(item);
+
+    if (isLoading) {
+      return rankingFound
+        ? 'Fetching Ranking Page...'
+        : 'Fetching Website Data...';
+    }
+
+    if (hasData) {
+      return 'Refresh SEO Data';
+    }
+
+    return rankingFound
+      ? 'Fetch Ranking Page SEO Data'
+      : 'Fetch Website SEO Data';
+  };
 
   const thClass =
     'text-left p-3 text-[#5E3E28] dark:text-[#D4B59E]/80 font-medium';
@@ -751,85 +779,113 @@ export default function Analysis() {
                           <th className={thClass}>Relevance</th>
                           <th className={thClass}>Confidence</th>
                           <th className={thClass}>Reason</th>
-                          <th className={thClass}>Evidence</th>
+                          <th className={thClass}>SEO Data</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {result.results?.map((item, index) => (
-                          <tr
-                            key={`${item.keyword}-relevance-${index}`}
-                            className="border-b border-[#7A5236]/10 dark:border-white/5"
-                          >
-                            <td className="p-3 font-medium text-[#1A0F0A] dark:text-white">
-                              {item.keyword}
-                            </td>
-                            <td className="p-3">
-                              {item.relevant === true ? (
-                                <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
-                                  <CheckCircle className="w-4 h-4" />
-                                  Relevant
-                                </span>
-                              ) : item.relevant === false ? (
-                                <span className="text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1">
-                                  <XCircle className="w-4 h-4" />
-                                  Unrelated
-                                </span>
-                              ) : (
-                                <span className="text-yellow-600 dark:text-yellow-400 font-medium">
-                                  ⚠️ Unable to determine
-                                </span>
-                              )}
-                            </td>
-                            <td className="p-3 text-sm text-[#1A0F0A] dark:text-[#D4B59E]/80">
-                              {item.relevant === null ||
-                              item.relevant === undefined
-                                ? '—'
-                                : `${item.confidence ?? 0}%`}
-                            </td>
-                            <td className="p-3 text-xs text-[#5E3E28]/70 dark:text-[#D4B59E]/60 max-w-xs">
-                              {item.reason || '—'}
-                            </td>
-                            <td className="p-3">
-                              {item.relevant === true ? (
-                                <button
-                                  type="button"
-                                  onClick={() => handleCollectEvidence(item)}
-                                  disabled={
-                                    collectingEvidence === item.keyword
-                                  }
-                                  className="px-3 py-2 rounded-lg bg-[#7A5236] dark:bg-[#A47551] text-white text-sm font-medium hover:bg-[#5E3E28] dark:hover:bg-[#D4B59E] dark:hover:text-[#1A0F0A] disabled:opacity-50 transition flex items-center gap-2 whitespace-nowrap"
-                                >
-                                  <FileSearch className="w-4 h-4" />
-                                  {collectingEvidence === item.keyword
-                                    ? 'Collecting...'
-                                    : keywordEvidence[item.keyword]
-                                    ? 'Re-collect Evidence'
-                                    : 'Collect Evidence'}
-                                </button>
-                              ) : item.relevant === false ? (
-                                <span className="text-xs text-[#5E3E28]/50 dark:text-[#D4B59E]/40">
-                                  Keyword not relevant
-                                </span>
-                              ) : (
-                                <span className="text-xs text-[#5E3E28]/50 dark:text-[#D4B59E]/40">
-                                  Not available
-                                </span>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
+                        {result.results?.map((item, index) => {
+                          const rankingFound = hasRankingPage(item);
+                          const evidenceLoaded = Boolean(
+                            keywordEvidence[item.keyword]
+                          );
+
+                          return (
+                            <tr
+                              key={`${item.keyword}-relevance-${index}`}
+                              className="border-b border-[#7A5236]/10 dark:border-white/5"
+                            >
+                              <td className="p-3 font-medium text-[#1A0F0A] dark:text-white">
+                                {item.keyword}
+                              </td>
+                              <td className="p-3">
+                                {item.relevant === true ? (
+                                  <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+                                    <CheckCircle className="w-4 h-4" />
+                                    Relevant
+                                  </span>
+                                ) : item.relevant === false ? (
+                                  <span className="text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1">
+                                    <XCircle className="w-4 h-4" />
+                                    Unrelated
+                                  </span>
+                                ) : (
+                                  <span className="text-yellow-600 dark:text-yellow-400 font-medium">
+                                    ⚠️ Unable to determine
+                                  </span>
+                                )}
+                              </td>
+                              <td className="p-3 text-sm text-[#1A0F0A] dark:text-[#D4B59E]/80">
+                                {item.relevant === null ||
+                                item.relevant === undefined
+                                  ? '—'
+                                  : `${item.confidence ?? 0}%`}
+                              </td>
+                              <td className="p-3 text-xs text-[#5E3E28]/70 dark:text-[#D4B59E]/60 max-w-xs">
+                                {item.reason || '—'}
+                              </td>
+                              <td className="p-3">
+                                {item.relevant === true ? (
+                                  <div className="flex flex-col gap-1">
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleCollectEvidence(item)
+                                      }
+                                      disabled={
+                                        collectingEvidence === item.keyword
+                                      }
+                                      className="px-3 py-2 rounded-lg bg-[#7A5236] dark:bg-[#A47551] text-white text-sm font-medium hover:bg-[#5E3E28] dark:hover:bg-[#D4B59E] dark:hover:text-[#1A0F0A] disabled:opacity-50 transition flex items-center gap-2 whitespace-nowrap"
+                                    >
+                                      <FileSearch className="w-4 h-4" />
+                                      {getFetchButtonLabel(item)}
+                                    </button>
+                                    {!rankingFound && (
+                                      <span className="text-[10px] text-[#5E3E28]/60 dark:text-[#D4B59E]/50">
+                                        Not found within selected depth.
+                                        Your website will be analyzed
+                                        for optimization.
+                                      </span>
+                                    )}
+                                    {evidenceLoaded &&
+                                      !rankingFound && (
+                                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400">
+                                          ✓ Fetched from your website
+                                        </span>
+                                      )}
+                                    {evidenceLoaded && rankingFound && (
+                                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400">
+                                        ✓ Fetched from ranking page
+                                      </span>
+                                    )}
+                                  </div>
+                                ) : item.relevant === false ? (
+                                  <span className="text-xs text-[#5E3E28]/50 dark:text-[#D4B59E]/40">
+                                    Keyword not relevant
+                                  </span>
+                                ) : (
+                                  <span className="text-xs text-[#5E3E28]/50 dark:text-[#D4B59E]/40">
+                                    Not available
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
 
                   <p className="text-xs text-[#5E3E28]/70 dark:text-[#D4B59E]/60 mt-2">
-                    Only relevant keywords can collect evidence. Evidence
-                    is fetched from the actual ranking page.
+                    Only relevant keywords can fetch SEO data. If a
+                    ranking page exists, data is pulled from it.
+                    Otherwise, data is pulled from your own website
+                    so optimization suggestions can still be
+                    generated.
                   </p>
                 </div>
               )}
 
-              {/* EVIDENCE ERRORS */}
+              {/* SEO DATA ERRORS */}
               {Object.entries(evidenceErrors).some(([, v]) => v) && (
                 <div className="mt-6 space-y-2">
                   {Object.entries(evidenceErrors)
@@ -850,12 +906,12 @@ export default function Analysis() {
                 </div>
               )}
 
-              {/* EVIDENCE DISPLAY */}
+              {/* SEO DATA DISPLAY */}
               {Object.keys(keywordEvidence).length > 0 && (
                 <div className="mt-8">
                   <h3 className="text-lg font-semibold text-[#1A0F0A] dark:text-white mb-4 flex items-center gap-2">
                     <FileSearch className="w-5 h-5 text-[#7A5236] dark:text-[#D4B59E]" />
-                    Ranking Page Evidence
+                    SEO Data
                   </h3>
 
                   {Object.entries(keywordEvidence).map(([kw, payload]) => (
@@ -937,6 +993,13 @@ function EvidencePanel({
   const images = evidence.images || {};
   const links = evidence.links || {};
 
+  const sourceLabel =
+    payload?.source === 'ranking-page'
+      ? 'Ranking Page'
+      : payload?.source === 'website'
+      ? 'Your Website'
+      : null;
+
   const Row = ({ label, value }) => (
     <div className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-4 py-1.5 border-b border-[#7A5236]/10 dark:border-white/5 last:border-0">
       <span className="text-xs font-medium text-[#5E3E28]/70 dark:text-[#D4B59E]/60 sm:w-44 shrink-0">
@@ -964,10 +1027,19 @@ function EvidencePanel({
     <div className="mb-6 p-5 bg-[#F5EBDD] dark:bg-[#A47551]/10 border border-[#7A5236]/20 dark:border-[#A47551]/25 rounded-xl">
       {/* Header */}
       <div className="mb-4">
-        <h4 className="text-base font-semibold text-[#7A5236] dark:text-[#D4B59E]">
-          Keyword:{' '}
-          <span className="text-[#1A0F0A] dark:text-white">{keyword}</span>
-        </h4>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <h4 className="text-base font-semibold text-[#7A5236] dark:text-[#D4B59E]">
+            Keyword:{' '}
+            <span className="text-[#1A0F0A] dark:text-white">
+              {keyword}
+            </span>
+          </h4>
+          {sourceLabel && (
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#7A5236]/15 dark:bg-[#A47551]/25 text-[#7A5236] dark:text-[#D4B59E] font-medium uppercase tracking-wide">
+              Source: {sourceLabel}
+            </span>
+          )}
+        </div>
         <p className="text-xs text-[#5E3E28]/70 dark:text-[#D4B59E]/60 mt-1">
           Current Rank:{' '}
           <span className="font-medium text-[#7A5236] dark:text-[#D4B59E]">
@@ -1057,8 +1129,9 @@ function EvidencePanel({
       {/* Generate Button */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <p className="text-xs text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
-          Evidence is collected server-side. AI uses this verified data
-          to generate suggestions.
+          SEO data is fetched from the ranking page when available,
+          otherwise from your own website, and used by AI to generate
+          keyword-specific suggestions.
         </p>
         <button
           type="button"

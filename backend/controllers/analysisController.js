@@ -9,7 +9,7 @@ import {
 } from '../utils/gemini.js';
 
 /* ------------------------------------------------------------------ */
-/* ENV CHECK                                                           */
+/* ENV CHECK                                                          */
 /* ------------------------------------------------------------------ */
 
 console.log('🔧 ENV CHECK:', {
@@ -18,6 +18,8 @@ console.log('🔧 ENV CHECK:', {
   HAS_SERP_KEY: Boolean(process.env.SERP_API_KEY)
 });
 
+/* ------------------------------------------------------------------ */
+/* CONSTANTS                                                          */
 /* ------------------------------------------------------------------ */
 
 const SERP_API_URL = 'https://serpapi.com/search.json';
@@ -31,16 +33,18 @@ const DEFAULT_COUNTRY = 'in';
 const DEFAULT_LANGUAGE = 'en';
 
 const DEFAULT_LOCATION = process.env.SERP_LOCATION || '';
+
 const DEFAULT_DEVICE = 'desktop';
 
-const SERP_NO_CACHE = process.env.SERP_NO_CACHE === 'true';
+const SERP_NO_CACHE =
+  process.env.SERP_NO_CACHE === 'true';
 
 const USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36';
 
-/* ==========================================================================
-   HELPERS
-========================================================================== */
+/* ========================================================================== */
+/* HELPERS                                                                    */
+/* ========================================================================== */
 
 const cleanText = (text = '') =>
   String(text).replace(/\s+/g, ' ').trim();
@@ -58,7 +62,9 @@ const getMetaDescription = ($) => {
       ''
     ).toLowerCase();
 
-    const content = cleanText($(el).attr('content') || '');
+    const content = cleanText(
+      $(el).attr('content') || ''
+    );
 
     if (content && !found[key]) {
       found[key] = content;
@@ -113,61 +119,95 @@ const normalizeUrl = (url) => {
   const parsed = new URL(normalized);
 
   if (!['http:', 'https:'].includes(parsed.protocol)) {
-    throw new Error('Please enter a valid HTTP or HTTPS website URL.');
+    throw new Error(
+      'Please enter a valid HTTP or HTTPS website URL.'
+    );
   }
 
   return parsed.href;
 };
 
-const domainMatches = (resultDomain, targetDomain) => {
+const domainMatches = (
+  resultDomain,
+  targetDomain
+) => {
   const result = normalizeDomain(resultDomain);
   const target = normalizeDomain(targetDomain);
 
   if (!result || !target) return false;
 
-  return result === target || result.endsWith(`.${target}`);
+  return (
+    result === target ||
+    result.endsWith(`.${target}`)
+  );
 };
 
-const getAnalysisForUser = async (analysisId, userId) =>
+const getAnalysisForUser = async (
+  analysisId,
+  userId
+) =>
   Analysis.findOne({
     _id: analysisId,
     userId
   });
 
-/* ==========================================================================
-   WEBSITE CONTEXT
-========================================================================== */
+/* ========================================================================== */
+/* WEBSITE CONTEXT                                                            */
+/* Used during keyword relevance checking.                                   */
+/* ========================================================================== */
 
 const extractWebsiteContext = async (url) => {
   try {
-    console.log('🌐 Extracting website context:', url);
+    console.log(
+      '🌐 Extracting website context:',
+      url
+    );
 
     const response = await axios.get(url, {
       timeout: 15000,
-      headers: { 'User-Agent': USER_AGENT }
+      headers: {
+        'User-Agent': USER_AGENT
+      }
     });
 
     const $ = cheerio.load(response.data);
 
-    const title = cleanText($('title').first().text());
-    const description = getMetaDescription($);
+    const title = cleanText(
+      $('title').first().text()
+    );
+
+    const description =
+      getMetaDescription($);
+
     const headings = [];
 
     $('h1, h2, h3').each((_, element) => {
       if (headings.length >= 15) return;
 
-      const text = cleanText($(element).text());
+      const text = cleanText(
+        $(element).text()
+      );
 
-      if (text) headings.push(text);
+      if (text) {
+        headings.push(text);
+      }
     });
 
-    const bodyText = cleanText($('body').text()).slice(0, 5000);
+    const bodyText = cleanText(
+      $('body').text()
+    ).slice(0, 5000);
 
-    return { title, description, headings, bodyText };
+    return {
+      title,
+      description,
+      headings,
+      bodyText
+    };
   } catch (error) {
     console.error(
       '⚠️ Website context extraction failed:',
-      error.response?.status || error.message
+      error.response?.status ||
+        error.message
     );
 
     return {
@@ -179,13 +219,25 @@ const extractWebsiteContext = async (url) => {
   }
 };
 
-/* ==========================================================================
-   DETAILED RANKING PAGE EXTRACTION
-========================================================================== */
+/* ========================================================================== */
+/* DETAILED PAGE SEO EXTRACTION                                               */
+/*                                                                            */
+/* This function fetches a webpage and extracts SEO-related information.      */
+/* It can be used for either:                                                 */
+/*                                                                            */
+/* 1. A Google ranking page                                                   */
+/* 2. The user's own website when no ranking page was found                   */
+/* ========================================================================== */
 
-const extractDetailedPageData = async (url, keyword = '') => {
+const extractDetailedPageData = async (
+  url,
+  keyword = ''
+) => {
   try {
-    console.log('📄 Extracting ranking page:', url);
+    console.log(
+      '📄 Extracting SEO data from:',
+      url
+    );
 
     const response = await axios.get(url, {
       timeout: 20000,
@@ -198,8 +250,14 @@ const extractDetailedPageData = async (url, keyword = '') => {
 
     const $ = cheerio.load(response.data);
 
-    const title = cleanText($('title').first().text());
-    const metaDescription = getMetaDescription($);
+    /* -------------------- BASIC SEO -------------------- */
+
+    const title = cleanText(
+      $('title').first().text()
+    );
+
+    const metaDescription =
+      getMetaDescription($);
 
     const canonical = cleanText(
       $('link[rel="canonical"]').attr('href') || ''
@@ -213,195 +271,347 @@ const extractDetailedPageData = async (url, keyword = '') => {
       $('meta[name="viewport"]').attr('content') || ''
     );
 
-    const language = cleanText($('html').attr('lang') || '');
+    const language = cleanText(
+      $('html').attr('lang') || ''
+    );
+
+    /* -------------------- HEADINGS -------------------- */
 
     const h1 = [];
     const h2 = [];
     const h3 = [];
-    const paragraphs = [];
-    const imageAlts = [];
-    const missingAltSamples = [];
-    const internalLinks = [];
-    const externalLinks = [];
 
     $('h1').each((_, el) => {
       if (h1.length >= 10) return;
-      const text = cleanText($(el).text());
-      if (text) h1.push(text);
+
+      const text = cleanText(
+        $(el).text()
+      );
+
+      if (text) {
+        h1.push(text);
+      }
     });
 
     $('h2').each((_, el) => {
       if (h2.length >= 20) return;
-      const text = cleanText($(el).text());
-      if (text) h2.push(text);
+
+      const text = cleanText(
+        $(el).text()
+      );
+
+      if (text) {
+        h2.push(text);
+      }
     });
 
     $('h3').each((_, el) => {
       if (h3.length >= 20) return;
-      const text = cleanText($(el).text());
-      if (text) h3.push(text);
+
+      const text = cleanText(
+        $(el).text()
+      );
+
+      if (text) {
+        h3.push(text);
+      }
     });
+
+    /* -------------------- PARAGRAPHS -------------------- */
+
+    const paragraphs = [];
 
     $('p').each((_, el) => {
       if (paragraphs.length >= 30) return;
-      const text = cleanText($(el).text());
-      if (text) paragraphs.push(text);
+
+      const text = cleanText(
+        $(el).text()
+      );
+
+      if (text) {
+        paragraphs.push(text);
+      }
     });
+
+    /* -------------------- IMAGES -------------------- */
+
+    const imageAlts = [];
+    const missingAltSamples = [];
 
     $('img').each((_, el) => {
       if (imageAlts.length >= 30) return;
 
-      const alt = cleanText($(el).attr('alt') || '');
+      const alt = cleanText(
+        $(el).attr('alt') || ''
+      );
+
       imageAlts.push(alt);
 
-      if (!alt && missingAltSamples.length < 10) {
-        missingAltSamples.push(cleanText($(el).attr('src') || ''));
+      if (
+        !alt &&
+        missingAltSamples.length < 10
+      ) {
+        missingAltSamples.push(
+          cleanText(
+            $(el).attr('src') || ''
+          )
+        );
       }
     });
 
-    const baseDomain = normalizeDomain(url);
+    /* -------------------- LINKS -------------------- */
+
+    const internalLinks = [];
+    const externalLinks = [];
+
+    const baseDomain =
+      normalizeDomain(url);
 
     $('a[href]').each((_, el) => {
-      if (internalLinks.length >= 30 && externalLinks.length >= 30) {
+      if (
+        internalLinks.length >= 30 &&
+        externalLinks.length >= 30
+      ) {
         return;
       }
 
       const href = $(el).attr('href');
+
       if (!href) return;
 
       try {
-        const absoluteUrl = new URL(href, url);
+        const absoluteUrl = new URL(
+          href,
+          url
+        );
 
-        if (!['http:', 'https:'].includes(absoluteUrl.protocol)) {
+        if (
+          !['http:', 'https:'].includes(
+            absoluteUrl.protocol
+          )
+        ) {
           return;
         }
 
         const link = {
-          text: cleanText($(el).text()),
+          text: cleanText(
+            $(el).text()
+          ),
           url: absoluteUrl.href
         };
 
-        if (normalizeDomain(absoluteUrl.href) === baseDomain) {
-          if (internalLinks.length < 30) internalLinks.push(link);
+        if (
+          normalizeDomain(
+            absoluteUrl.href
+          ) === baseDomain
+        ) {
+          if (
+            internalLinks.length < 30
+          ) {
+            internalLinks.push(link);
+          }
         } else {
-          if (externalLinks.length < 30) externalLinks.push(link);
+          if (
+            externalLinks.length < 30
+          ) {
+            externalLinks.push(link);
+          }
         }
       } catch {
         /* Ignore invalid links. */
       }
     });
 
-    const content = cleanText($('body').text()).slice(0, 10000);
+    /* -------------------- CONTENT -------------------- */
 
-    const keywordLower = String(keyword).toLowerCase().trim();
+    const content = cleanText(
+      $('body').text()
+    ).slice(0, 10000);
+
+    /* -------------------- KEYWORD OCCURRENCES -------------------- */
+
+    const keywordLower = String(
+      keyword
+    )
+      .toLowerCase()
+      .trim();
 
     let keywordOccurrences = 0;
 
-    if (keywordLower && content) {
-      const escapedKeyword = keywordLower.replace(
-        /[.*+?^${}()|[\]\\]/g,
-        '\\$&'
-      );
+    if (
+      keywordLower &&
+      content
+    ) {
+      const escapedKeyword =
+        keywordLower.replace(
+          /[.*+?^${}()|[\]\\]/g,
+          '\\$&'
+        );
 
       keywordOccurrences =
-        content.match(new RegExp(escapedKeyword, 'gi'))?.length || 0;
+        content.match(
+          new RegExp(
+            escapedKeyword,
+            'gi'
+          )
+        )?.length || 0;
     }
 
-    const wordCount = content ? content.split(/\s+/).length : 0;
+    /* -------------------- COUNTS -------------------- */
 
-    const totalImages = $('img').length;
+    const wordCount = content
+      ? content.split(/\s+/).length
+      : 0;
 
-    const imagesWithAlt = $('img').filter((_, el) =>
-      Boolean(cleanText($(el).attr('alt') || ''))
-    ).length;
+    const totalImages =
+      $('img').length;
+
+    const imagesWithAlt =
+      $('img').filter(
+        (_, el) =>
+          Boolean(
+            cleanText(
+              $(el).attr('alt') || ''
+            )
+          )
+      ).length;
 
     return {
       success: true,
       url,
       keyword,
+
       title,
       metaDescription,
+
       canonical,
       robots,
       viewport,
       language,
+
       h1,
       h2,
       h3,
+
       paragraphs,
+
       imageAlts,
       missingAltSamples,
+
       internalLinks,
       externalLinks,
+
       content,
+
       wordCount,
       totalImages,
       imagesWithAlt,
+
       keywordOccurrences
     };
   } catch (error) {
-    const statusCode = error.response?.status;
+    const statusCode =
+      error.response?.status;
 
     console.error(
-      '⚠️ Ranking page extraction failed:',
-      statusCode || error.message
+      '⚠️ SEO data extraction failed:',
+      statusCode ||
+        error.message
     );
 
     return {
       success: false,
-      errorType: statusCode === 403 ? 'FORBIDDEN' : 'FETCH_FAILED',
-      statusCode: statusCode || null,
+
+      errorType:
+        statusCode === 403
+          ? 'FORBIDDEN'
+          : 'FETCH_FAILED',
+
+      statusCode:
+        statusCode || null,
+
       error: error.message,
+
       url,
       keyword
     };
   }
 };
 
-/* ==========================================================================
-   SERPAPI REQUEST
-========================================================================== */
+/* ========================================================================== */
+/* SERPAPI REQUEST                                                            */
+/* ========================================================================== */
 
-const fetchSerpPage = async (params) => {
+const fetchSerpPage = async (
+  params
+) => {
   const maxAttempts = 3;
+
   let lastData = null;
 
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+  for (
+    let attempt = 1;
+    attempt <= maxAttempts;
+    attempt++
+  ) {
     try {
       console.log(
         `➡️ SERP REQUEST | keyword="${params.q}" | start=${params.start} | attempt=${attempt}`
       );
 
-      const response = await axios.get(SERP_API_URL, {
-        params,
-        timeout: 60000
-      });
+      const response =
+        await axios.get(
+          SERP_API_URL,
+          {
+            params,
+            timeout: 60000
+          }
+        );
 
       lastData = response.data;
 
       if (lastData?.error) {
-        console.error('❌ SERPAPI ERROR:', lastData.error);
+        console.error(
+          '❌ SERPAPI ERROR:',
+          lastData.error
+        );
 
-        if (attempt === maxAttempts) {
-          return { data: lastData, organic: [] };
+        if (
+          attempt === maxAttempts
+        ) {
+          return {
+            data: lastData,
+            organic: []
+          };
         }
       } else {
-        const organic = Array.isArray(lastData?.organic_results)
-          ? lastData.organic_results
-          : [];
+        const organic =
+          Array.isArray(
+            lastData?.organic_results
+          )
+            ? lastData.organic_results
+            : [];
 
-        if (organic.length > 0) {
-          return { data: lastData, organic };
+        if (
+          organic.length > 0
+        ) {
+          return {
+            data: lastData,
+            organic
+          };
         }
 
         console.log(
           `⚠️ No organic results (attempt ${attempt}/${maxAttempts}). State: ${
-            lastData?.search_information?.organic_results_state || 'unknown'
+            lastData?.search_information
+              ?.organic_results_state ||
+            'unknown'
           }`
         );
       }
     } catch (error) {
-      const status = error.response?.status;
+      const status =
+        error.response?.status;
 
       const retryable =
         !status ||
@@ -413,23 +623,32 @@ const fetchSerpPage = async (params) => {
 
       console.error(
         `❌ SERP request attempt ${attempt} failed:`,
-        error.response?.data || error.message
+        error.response?.data ||
+          error.message
       );
 
-      if (!retryable || attempt === maxAttempts) {
+      if (
+        !retryable ||
+        attempt === maxAttempts
+      ) {
         throw error;
       }
     }
 
-    await sleep(attempt * 1500);
+    await sleep(
+      attempt * 1500
+    );
   }
 
-  return { data: lastData, organic: [] };
+  return {
+    data: lastData,
+    organic: []
+  };
 };
 
-/* ==========================================================================
-   FIND WEBSITE RANK
-========================================================================== */
+/* ========================================================================== */
+/* FIND WEBSITE RANK                                                         */
+/* ========================================================================== */
 
 const findRankForKeyword = async ({
   keyword,
@@ -439,30 +658,77 @@ const findRankForKeyword = async ({
   searchDepth,
   apiKey
 }) => {
-  const targetDomain = normalizeDomain(domain);
-  const pagesToFetch = Math.ceil(searchDepth / RESULTS_PER_PAGE);
+  const targetDomain =
+    normalizeDomain(domain);
 
-  console.log('\n========================================');
-  console.log('🔎 SEARCHING KEYWORD:', keyword);
-  console.log('🌐 TARGET DOMAIN:', targetDomain);
-  console.log('🌍 COUNTRY:', country);
-  console.log('📍 LOCATION:', location || 'default');
-  console.log('📊 SEARCH DEPTH:', searchDepth);
-  console.log('📄 PAGES:', pagesToFetch);
-  console.log('🗂️ NO CACHE:', SERP_NO_CACHE);
-  console.log('========================================');
+  const pagesToFetch =
+    Math.ceil(
+      searchDepth /
+        RESULTS_PER_PAGE
+    );
+
+  console.log(
+    '\n========================================'
+  );
+
+  console.log(
+    '🔎 SEARCHING KEYWORD:',
+    keyword
+  );
+
+  console.log(
+    '🌐 TARGET DOMAIN:',
+    targetDomain
+  );
+
+  console.log(
+    '🌍 COUNTRY:',
+    country
+  );
+
+  console.log(
+    '📍 LOCATION:',
+    location || 'default'
+  );
+
+  console.log(
+    '📊 SEARCH DEPTH:',
+    searchDepth
+  );
+
+  console.log(
+    '📄 PAGES:',
+    pagesToFetch
+  );
+
+  console.log(
+    '🗂️ NO CACHE:',
+    SERP_NO_CACHE
+  );
+
+  console.log(
+    '========================================'
+  );
 
   let totalOrganicResults = 0;
   let pagesChecked = 0;
 
-  for (let page = 0; page < pagesToFetch; page++) {
-    const start = page * RESULTS_PER_PAGE;
+  for (
+    let page = 0;
+    page < pagesToFetch;
+    page++
+  ) {
+    const start =
+      page *
+      RESULTS_PER_PAGE;
 
     const params = {
       engine: 'google',
       q: keyword,
       google_domain: GOOGLE_DOMAIN,
-      gl: country || DEFAULT_COUNTRY,
+      gl:
+        country ||
+        DEFAULT_COUNTRY,
       hl: DEFAULT_LANGUAGE,
       device: DEFAULT_DEVICE,
       num: RESULTS_PER_PAGE,
@@ -471,94 +737,202 @@ const findRankForKeyword = async ({
       api_key: apiKey
     };
 
-    if (location) params.location = location;
+    if (location) {
+      params.location =
+        location;
+    }
 
-    const { data, organic } = await fetchSerpPage(params);
+    const {
+      data,
+      organic
+    } =
+      await fetchSerpPage(
+        params
+      );
 
     pagesChecked++;
 
-    console.log('🔗 Google URL:', data?.search_metadata?.google_url);
-    console.log('🆔 SerpApi Search ID:', data?.search_metadata?.id);
+    console.log(
+      '🔗 Google URL:',
+      data?.search_metadata
+        ?.google_url
+    );
+
+    console.log(
+      '🆔 SerpApi Search ID:',
+      data?.search_metadata?.id
+    );
+
     console.log(
       '📡 SerpApi status:',
-      data?.search_metadata?.status || 'unknown'
+      data?.search_metadata
+        ?.status || 'unknown'
     );
+
     console.log(
       '📍 Location requested:',
-      data?.search_parameters?.location_requested || 'default'
+      data?.search_parameters
+        ?.location_requested ||
+        'default'
     );
+
     console.log(
       '📍 Location used:',
-      data?.search_parameters?.location_used || 'default'
+      data?.search_parameters
+        ?.location_used ||
+        'default'
     );
+
     console.log(
       '📊 Organic result state:',
-      data?.search_information?.organic_results_state || 'unknown'
+      data?.search_information
+        ?.organic_results_state ||
+        'unknown'
     );
-    console.log(`✅ Page ${page + 1}: ${organic.length} organic results`);
 
-    totalOrganicResults += organic.length;
+    console.log(
+      `✅ Page ${page + 1}: ${organic.length} organic results`
+    );
 
-    organic.forEach((item, index) => {
-      console.log(
-        `${index + 1}. position=${item.position} | title=${item.title} | link=${item.link}`
-      );
-    });
+    totalOrganicResults +=
+      organic.length;
 
-    for (let i = 0; i < organic.length; i++) {
-      const item = organic[i];
-      const resultUrl = item.link || item.redirect_link || '';
+    organic.forEach(
+      (item, index) => {
+        console.log(
+          `${index + 1}. position=${item.position} | title=${item.title} | link=${item.link}`
+        );
+      }
+    );
 
-      if (!resultUrl) continue;
+    for (
+      let i = 0;
+      i < organic.length;
+      i++
+    ) {
+      const item =
+        organic[i];
 
-      const resultPosition = Number(item.position);
+      const resultUrl =
+        item.link ||
+        item.redirect_link ||
+        '';
+
+      if (!resultUrl) {
+        continue;
+      }
+
+      const resultPosition =
+        Number(
+          item.position
+        );
 
       const actualPosition =
-        Number.isFinite(resultPosition) && resultPosition > 0
+        Number.isFinite(
+          resultPosition
+        ) &&
+        resultPosition > 0
           ? resultPosition
           : start + i + 1;
 
-      if (actualPosition > searchDepth) continue;
+      if (
+        actualPosition >
+        searchDepth
+      ) {
+        continue;
+      }
 
-      const resultDomain = normalizeDomain(resultUrl);
-      const matches = domainMatches(resultDomain, targetDomain);
+      const resultDomain =
+        normalizeDomain(
+          resultUrl
+        );
+
+      const matches =
+        domainMatches(
+          resultDomain,
+          targetDomain
+        );
 
       console.log(
         '🔍 DOMAIN CHECK:',
         resultDomain,
         'vs',
         targetDomain,
-        matches ? '→ MATCH' : '→ no'
+        matches
+          ? '→ MATCH'
+          : '→ no'
       );
 
-      if (!matches) continue;
+      if (!matches) {
+        continue;
+      }
 
-      console.log('\n🎯 MATCH FOUND!');
-      console.log('Keyword:', keyword);
-      console.log('Rank:', actualPosition);
-      console.log('URL:', resultUrl);
-      console.log('Title:', item.title);
+      console.log(
+        '\n🎯 MATCH FOUND!'
+      );
+
+      console.log(
+        'Keyword:',
+        keyword
+      );
+
+      console.log(
+        'Rank:',
+        actualPosition
+      );
+
+      console.log(
+        'URL:',
+        resultUrl
+      );
+
+      console.log(
+        'Title:',
+        item.title
+      );
 
       return {
         rank: actualPosition,
-        rankingUrl: resultUrl,
-        serpTitle: item.title || '',
-        serpSnippet: item.snippet || '',
+        rankingUrl:
+          resultUrl,
+        serpTitle:
+          item.title || '',
+        serpSnippet:
+          item.snippet || '',
         found: true,
         pagesChecked
       };
     }
 
-    if (organic.length === 0) {
-      console.log('ℹ️ No organic results returned. Stopping.');
+    if (
+      organic.length === 0
+    ) {
+      console.log(
+        'ℹ️ No organic results returned. Stopping.'
+      );
+
       break;
     }
   }
 
-  console.log('\n❌ NO MATCH FOUND');
-  console.log('Keyword:', keyword);
-  console.log('Target domain:', targetDomain);
-  console.log('Total organic results checked:', totalOrganicResults);
+  console.log(
+    '\n❌ NO MATCH FOUND'
+  );
+
+  console.log(
+    'Keyword:',
+    keyword
+  );
+
+  console.log(
+    'Target domain:',
+    targetDomain
+  );
+
+  console.log(
+    'Total organic results checked:',
+    totalOrganicResults
+  );
 
   return {
     rank: null,
@@ -570,647 +944,1322 @@ const findRankForKeyword = async ({
   };
 };
 
-/* ==========================================================================
-   POST /api/analysis
-========================================================================== */
+/* ========================================================================== */
+/* POST /api/analysis                                                         */
+/* RANK TRACKING                                                              */
+/* ========================================================================== */
 
-export const analyzeWebsite = async (req, res) => {
-  try {
-    console.log('\n🔍 RANK TRACKING STARTED');
-    console.log('Request body:', req.body);
-    console.log('User ID:', req.userId);
-
-    const { url, keywords, country, searchDepth, location } = req.body;
-
-    if (!url) {
-      return res.status(400).json({
-        success: false,
-        message: 'Website URL is required.'
-      });
-    }
-
-    let normalizedUrl;
-    let domain;
-
+export const analyzeWebsite =
+  async (req, res) => {
     try {
-      normalizedUrl = normalizeUrl(url);
-      domain = normalizeDomain(normalizedUrl);
+      console.log(
+        '\n🔍 RANK TRACKING STARTED'
+      );
 
-      if (!domain) throw new Error('Invalid domain');
-    } catch {
-      return res.status(400).json({
-        success: false,
-        message: 'Please enter a valid website URL.'
-      });
-    }
+      console.log(
+        'Request body:',
+        req.body
+      );
 
-    const keywordArray = Array.isArray(keywords)
-      ? keywords.map((item) => String(item).trim()).filter(Boolean)
-      : String(keywords || '')
-          .split(',')
-          .map((item) => item.trim())
-          .filter(Boolean);
+      console.log(
+        'User ID:',
+        req.userId
+      );
 
-    if (keywordArray.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please enter at least one keyword.'
-      });
-    }
+      const {
+        url,
+        keywords,
+        country,
+        searchDepth,
+        location
+      } = req.body;
 
-    const selectedCountry = String(
-      country || DEFAULT_COUNTRY
-    ).toLowerCase();
-
-    const requestedDepth = Number(searchDepth) || DEFAULT_SEARCH_DEPTH;
-
-    const selectedSearchDepth = Math.min(
-      Math.max(requestedDepth, RESULTS_PER_PAGE),
-      MAX_SEARCH_DEPTH
-    );
-
-    const selectedLocation = String(
-      location || DEFAULT_LOCATION
-    ).trim();
-
-    const serpApiKey = process.env.SERP_API_KEY;
-
-    if (!serpApiKey) {
-      return res.status(500).json({
-        success: false,
-        message: 'SERP_API_KEY is not configured on the server.'
-      });
-    }
-
-    console.log('🌐 Website:', normalizedUrl);
-    console.log('🏷️ Domain:', domain);
-    console.log('🌍 Country:', selectedCountry);
-    console.log('📍 Location:', selectedLocation || 'default');
-    console.log('🔎 Search depth:', selectedSearchDepth);
-    console.log('🏷️ Keywords:', keywordArray);
-
-    const results = [];
-
-    for (const keyword of keywordArray) {
-      try {
-        const found = await findRankForKeyword({
-          keyword,
-          domain,
-          country: selectedCountry,
-          location: selectedLocation,
-          searchDepth: selectedSearchDepth,
-          apiKey: serpApiKey
-        });
-
-        results.push({
-          keyword,
-          rank: found.rank !== null ? found.rank : 'Not Found',
-          googlePage: found.rank
-            ? Math.ceil(found.rank / RESULTS_PER_PAGE)
-            : null,
-          rankingUrl: found.rankingUrl || null,
-          found: found.rank !== null,
-          serpTitle: found.serpTitle || '',
-          serpSnippet: found.serpSnippet || '',
-          status:
-            found.rank !== null
-              ? 'Found'
-              : 'Not Found in selected depth',
-          pagesChecked: found.pagesChecked
-        });
-      } catch (error) {
-        console.error(
-          `❌ SerpAPI failed for "${keyword}":`,
-          error.response?.data || error.message
-        );
-
-        return res.status(502).json({
+      if (!url) {
+        return res.status(400).json({
           success: false,
-          message: `SerpAPI search failed for keyword "${keyword}".`,
-          error: error.response?.data?.error || error.message
+          message:
+            'Website URL is required.'
         });
       }
-    }
 
-    const savedAnalysis = await Analysis.create({
-      userId: req.userId,
-      websiteUrl: normalizedUrl,
-      keywords: keywordArray,
-      rankingData: { results },
-      status: 'completed',
-      country: selectedCountry,
-      searchDepth: selectedSearchDepth,
-      aiSuggestions: ''
-    });
-
-    console.log('✅ Analysis saved:', savedAnalysis._id);
-
-    return res.status(200).json({
-      success: true,
-      message: 'Google rank tracking completed.',
-      data: {
-        url: normalizedUrl,
-        results,
-        selectedCountry,
-        selectedSearchDepth,
-        searchEngine: 'Google',
-        googleDomain: GOOGLE_DOMAIN,
-        language: DEFAULT_LANGUAGE,
-        searchLocation: selectedLocation,
-        device: DEFAULT_DEVICE
-      },
-      analysisId: savedAnalysis._id
-    });
-  } catch (error) {
-    console.error(
-      '❌ ANALYSIS CONTROLLER ERROR:',
-      error.response?.data || error.message || error
-    );
-
-    return res.status(500).json({
-      success: false,
-      message: 'Unable to complete website analysis.',
-      error: error.response?.data?.error || error.message
-    });
-  }
-};
-
-/* ==========================================================================
-   POST /api/analysis/check-relevance
-========================================================================== */
-
-export const checkRelevance = async (req, res) => {
-  try {
-    const { analysisId } = req.body;
-
-    if (!analysisId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Analysis ID is required.'
-      });
-    }
-
-    const analysis = await getAnalysisForUser(analysisId, req.userId);
-
-    if (!analysis) {
-      return res.status(404).json({
-        success: false,
-        message: 'Analysis not found.'
-      });
-    }
-
-    const websiteUrl = analysis.websiteUrl;
-
-    console.log('🤖 KEYWORD RELEVANCE CHECK:', websiteUrl);
-
-    const websiteContext = await extractWebsiteContext(websiteUrl);
-
-    const updatedResults = [];
-    const storedResults = analysis.rankingData?.results || [];
-
-    for (const item of storedResults) {
-      const plainItem = item.toObject?.() ?? item;
+      let normalizedUrl;
+      let domain;
 
       try {
-        console.log(`🔎 Checking relevance: "${plainItem.keyword}"`);
+        normalizedUrl =
+          normalizeUrl(url);
 
-        const relevance = await checkKeywordRelevance({
-          keyword: plainItem.keyword,
-          websiteUrl,
-          websiteContext,
-          rankingResult: plainItem
-        });
+        domain =
+          normalizeDomain(
+            normalizedUrl
+          );
 
-        updatedResults.push({
-          ...plainItem,
-          relevant: relevance?.relevant ?? null,
-          confidence: relevance?.confidence ?? null,
-          reason: relevance?.reason || '',
-          relevanceStatus: relevance?.status || 'completed'
-        });
-      } catch (error) {
-        console.error(
-          `⚠️ Relevance failed for "${plainItem.keyword}":`,
-          error.message
-        );
-
-        updatedResults.push({
-          ...plainItem,
-          relevant: null,
-          confidence: null,
-          reason: 'Unable to determine relevance.',
-          relevanceStatus: 'error'
+        if (!domain) {
+          throw new Error(
+            'Invalid domain'
+          );
+        }
+      } catch {
+        return res.status(400).json({
+          success: false,
+          message:
+            'Please enter a valid website URL.'
         });
       }
-    }
 
-    analysis.rankingData.results = updatedResults;
-    await analysis.save();
+      const keywordArray =
+        Array.isArray(keywords)
+          ? keywords
+              .map((item) =>
+                String(item).trim()
+              )
+              .filter(Boolean)
+          : String(
+              keywords || ''
+            )
+              .split(',')
+              .map((item) =>
+                item.trim()
+              )
+              .filter(Boolean);
 
-    return res.status(200).json({
-      success: true,
-      data: {
-        results: updatedResults,
-        websiteContext: {
-          title: websiteContext.title,
-          description: websiteContext.description,
-          headings: websiteContext.headings
+      if (
+        keywordArray.length ===
+        0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            'Please enter at least one keyword.'
+        });
+      }
+
+      const selectedCountry =
+        String(
+          country ||
+            DEFAULT_COUNTRY
+        ).toLowerCase();
+
+      const requestedDepth =
+        Number(searchDepth) ||
+        DEFAULT_SEARCH_DEPTH;
+
+      const selectedSearchDepth =
+        Math.min(
+          Math.max(
+            requestedDepth,
+            RESULTS_PER_PAGE
+          ),
+          MAX_SEARCH_DEPTH
+        );
+
+      const selectedLocation =
+        String(
+          location ||
+            DEFAULT_LOCATION
+        ).trim();
+
+      const serpApiKey =
+        process.env.SERP_API_KEY;
+
+      if (!serpApiKey) {
+        return res.status(500).json({
+          success: false,
+          message:
+            'SERP_API_KEY is not configured on the server.'
+        });
+      }
+
+      console.log(
+        '🌐 Website:',
+        normalizedUrl
+      );
+
+      console.log(
+        '🏷️ Domain:',
+        domain
+      );
+
+      console.log(
+        '🌍 Country:',
+        selectedCountry
+      );
+
+      console.log(
+        '📍 Location:',
+        selectedLocation ||
+          'default'
+      );
+
+      console.log(
+        '🔎 Search depth:',
+        selectedSearchDepth
+      );
+
+      console.log(
+        '🏷️ Keywords:',
+        keywordArray
+      );
+
+      const results = [];
+
+      for (
+        const keyword of keywordArray
+      ) {
+        try {
+          const found =
+            await findRankForKeyword({
+              keyword,
+              domain,
+              country:
+                selectedCountry,
+              location:
+                selectedLocation,
+              searchDepth:
+                selectedSearchDepth,
+              apiKey:
+                serpApiKey
+            });
+
+          results.push({
+            keyword,
+
+            rank:
+              found.rank !== null
+                ? found.rank
+                : 'Not Found',
+
+            googlePage:
+              found.rank
+                ? Math.ceil(
+                    found.rank /
+                      RESULTS_PER_PAGE
+                  )
+                : null,
+
+            rankingUrl:
+              found.rankingUrl ||
+              null,
+
+            found:
+              found.rank !== null,
+
+            serpTitle:
+              found.serpTitle || '',
+
+            serpSnippet:
+              found.serpSnippet || '',
+
+            status:
+              found.rank !== null
+                ? 'Found'
+                : 'Not Found in selected depth',
+
+            pagesChecked:
+              found.pagesChecked
+          });
+        } catch (error) {
+          console.error(
+            `❌ SerpAPI failed for "${keyword}":`,
+            error.response?.data ||
+              error.message
+          );
+
+          return res.status(502).json({
+            success: false,
+            message: `SerpAPI search failed for keyword "${keyword}".`,
+            error:
+              error.response?.data
+                ?.error ||
+              error.message
+          });
         }
       }
-    });
-  } catch (error) {
-    console.error(
-      '❌ Relevance controller error:',
-      error.response?.data || error.message || error
-    );
 
-    return res.status(500).json({
-      success: false,
-      message: 'Unable to check keyword relevance.',
-      error: error.response?.data?.error || error.message
-    });
-  }
-};
+      const savedAnalysis =
+        await Analysis.create({
+          userId: req.userId,
+          websiteUrl:
+            normalizedUrl,
+          keywords:
+            keywordArray,
 
-/* ==========================================================================
-   POST /api/analysis/collect-evidence
-   ----------------------------------------------------------
-   Stage 1: Fetch the ranking page and extract raw evidence.
-   No Gemini call. Persists evidence on the analysis document
-   so that a later optimization request can rely on backend
-   verified data (not frontend-supplied data).
-========================================================================== */
+          rankingData: {
+            results
+          },
 
-export const collectEvidence = async (req, res) => {
-  try {
-    const { analysisId, keyword, rank, rankingUrl } = req.body;
+          status: 'completed',
 
-    console.log('\n================ EVIDENCE COLLECTION START ================');
-    console.log('analysisId:', analysisId);
-    console.log('keyword:', keyword);
-    console.log('rank:', rank);
-    console.log('rankingUrl:', rankingUrl);
+          country:
+            selectedCountry,
 
-    if (!analysisId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Analysis ID is required.'
+          searchDepth:
+            selectedSearchDepth,
+
+          aiSuggestions: ''
+        });
+
+      console.log(
+        '✅ Analysis saved:',
+        savedAnalysis._id
+      );
+
+      return res.status(200).json({
+        success: true,
+
+        message:
+          'Google rank tracking completed.',
+
+        data: {
+          url: normalizedUrl,
+          results,
+
+          selectedCountry,
+          selectedSearchDepth,
+
+          searchEngine: 'Google',
+          googleDomain:
+            GOOGLE_DOMAIN,
+
+          language:
+            DEFAULT_LANGUAGE,
+
+          searchLocation:
+            selectedLocation,
+
+          device:
+            DEFAULT_DEVICE
+        },
+
+        analysisId:
+          savedAnalysis._id
       });
-    }
+    } catch (error) {
+      console.error(
+        '❌ ANALYSIS CONTROLLER ERROR:',
+        error.response?.data ||
+          error.message ||
+          error
+      );
 
-    if (!keyword || !String(keyword).trim()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Keyword is required.'
-      });
-    }
-
-    const analysis = await getAnalysisForUser(analysisId, req.userId);
-
-    if (!analysis) {
-      return res.status(404).json({
-        success: false,
-        message: 'Analysis not found.'
-      });
-    }
-
-    const storedResults = analysis.rankingData?.results || [];
-
-    const storedResult = storedResults.find(
-      (item) =>
-        String(item.keyword || '').trim().toLowerCase() ===
-        String(keyword).trim().toLowerCase()
-    );
-
-    if (!storedResult) {
-      return res.status(404).json({
-        success: false,
-        message: `Keyword "${keyword}" was not found in this analysis.`
-      });
-    }
-
-    const targetPage =
-      rankingUrl || storedResult.rankingUrl || null;
-
-    if (!targetPage) {
-      return res.status(422).json({
+      return res.status(500).json({
         success: false,
         message:
-          'No ranking page was found for this keyword. Run the analysis again with a sufficient search depth.'
+          'Unable to complete website analysis.',
+        error:
+          error.response?.data
+            ?.error ||
+          error.message
       });
     }
+  };
 
-    let validTargetPage;
+/* ========================================================================== */
+/* POST /api/analysis/check-relevance                                         */
+/* ========================================================================== */
 
+export const checkRelevance =
+  async (req, res) => {
     try {
-      validTargetPage = normalizeUrl(targetPage);
-    } catch {
-      return res.status(400).json({
+      const {
+        analysisId
+      } = req.body;
+
+      if (!analysisId) {
+        return res.status(400).json({
+          success: false,
+          message:
+            'Analysis ID is required.'
+        });
+      }
+
+      const analysis =
+        await getAnalysisForUser(
+          analysisId,
+          req.userId
+        );
+
+      if (!analysis) {
+        return res.status(404).json({
+          success: false,
+          message:
+            'Analysis not found.'
+        });
+      }
+
+      const websiteUrl =
+        analysis.websiteUrl;
+
+      console.log(
+        '🤖 KEYWORD RELEVANCE CHECK:',
+        websiteUrl
+      );
+
+      const websiteContext =
+        await extractWebsiteContext(
+          websiteUrl
+        );
+
+      const updatedResults = [];
+
+      const storedResults =
+        analysis.rankingData
+          ?.results || [];
+
+      for (
+        const item of storedResults
+      ) {
+        const plainItem =
+          item.toObject?.() ??
+          item;
+
+        try {
+          console.log(
+            `🔎 Checking relevance: "${plainItem.keyword}"`
+          );
+
+          const relevance =
+            await checkKeywordRelevance({
+              keyword:
+                plainItem.keyword,
+
+              websiteUrl,
+
+              websiteContext,
+
+              rankingResult:
+                plainItem
+            });
+
+          updatedResults.push({
+            ...plainItem,
+
+            relevant:
+              relevance?.relevant ??
+              null,
+
+            confidence:
+              relevance?.confidence ??
+              null,
+
+            reason:
+              relevance?.reason ||
+              '',
+
+            relevanceStatus:
+              relevance?.status ||
+              'completed'
+          });
+        } catch (error) {
+          console.error(
+            `⚠️ Relevance failed for "${plainItem.keyword}":`,
+            error.message
+          );
+
+          updatedResults.push({
+            ...plainItem,
+
+            relevant: null,
+            confidence: null,
+
+            reason:
+              'Unable to determine relevance.',
+
+            relevanceStatus:
+              'error'
+          });
+        }
+      }
+
+      analysis.rankingData.results =
+        updatedResults;
+
+      await analysis.save();
+
+      return res.status(200).json({
+        success: true,
+
+        data: {
+          results:
+            updatedResults,
+
+          websiteContext: {
+            title:
+              websiteContext.title,
+
+            description:
+              websiteContext.description,
+
+            headings:
+              websiteContext.headings
+          }
+        }
+      });
+    } catch (error) {
+      console.error(
+        '❌ Relevance controller error:',
+        error.response?.data ||
+          error.message ||
+          error
+      );
+
+      return res.status(500).json({
         success: false,
-        message: 'Please provide a valid ranking page URL.'
+        message:
+          'Unable to check keyword relevance.',
+        error:
+          error.response?.data
+            ?.error ||
+          error.message
       });
     }
+  };
 
-    const currentRank =
-      rank ?? storedResult.rank ?? 'Not Found';
+/* ========================================================================== */
+/* POST /api/analysis/collect-evidence                                        */
+/*                                                                            */
+/* Stage 1: Fetch SEO-related data.                                           */
+/*                                                                            */
+/* If Google found a ranking page:                                            */
+/*     ranking page is fetched.                                               */
+/*                                                                            */
+/* If Google did NOT find a ranking page:                                     */
+/*     the user's own website is fetched.                                     */
+/*                                                                            */
+/* No Gemini call happens here.                                               */
+/* ========================================================================== */
 
-    console.log('🎯 TARGET PAGE:', validTargetPage);
-    console.log('🎯 CURRENT RANK:', currentRank);
+export const collectEvidence =
+  async (req, res) => {
+    try {
+      const {
+        analysisId,
+        keyword,
+        rank,
+        rankingUrl
+      } = req.body;
 
-    const pageData = await extractDetailedPageData(
-      validTargetPage,
-      String(keyword).trim()
-    );
+      console.log(
+        '\n================ EVIDENCE COLLECTION START ================'
+      );
 
-    if (!pageData?.success) {
-      if (pageData?.errorType === 'FORBIDDEN') {
+      console.log(
+        'analysisId:',
+        analysisId
+      );
+
+      console.log(
+        'keyword:',
+        keyword
+      );
+
+      console.log(
+        'rank:',
+        rank
+      );
+
+      console.log(
+        'rankingUrl:',
+        rankingUrl
+      );
+
+      if (!analysisId) {
+        return res.status(400).json({
+          success: false,
+          message:
+            'Analysis ID is required.'
+        });
+      }
+
+      if (
+        !keyword ||
+        !String(keyword).trim()
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            'Keyword is required.'
+        });
+      }
+
+      const analysis =
+        await getAnalysisForUser(
+          analysisId,
+          req.userId
+        );
+
+      if (!analysis) {
+        return res.status(404).json({
+          success: false,
+          message:
+            'Analysis not found.'
+        });
+      }
+
+      const storedResults =
+        analysis.rankingData
+          ?.results || [];
+
+      const storedResult =
+        storedResults.find(
+          (item) =>
+            String(
+              item.keyword || ''
+            )
+              .trim()
+              .toLowerCase() ===
+            String(keyword)
+              .trim()
+              .toLowerCase()
+        );
+
+      if (!storedResult) {
+        return res.status(404).json({
+          success: false,
+          message: `Keyword "${keyword}" was not found in this analysis.`
+        });
+      }
+
+      /* ------------------------------------------------------------------ */
+      /* IMPORTANT SOURCE DECISION                                           */
+      /* ------------------------------------------------------------------ */
+
+      const hasRankingPage =
+        Boolean(
+          rankingUrl ||
+            storedResult.rankingUrl
+        );
+
+      let targetPage;
+      let source;
+
+      if (hasRankingPage) {
+        /*
+         * Google found this website's page
+         * in the selected search depth.
+         */
+        targetPage =
+          rankingUrl ||
+          storedResult.rankingUrl;
+
+        source =
+          'ranking-page';
+
+        console.log(
+          '🎯 SOURCE: RANKING PAGE'
+        );
+      } else {
+        /*
+         * Google did NOT find a ranking page
+         * within the selected depth.
+         *
+         * We therefore analyze the user's
+         * own website instead.
+         */
+        targetPage =
+          analysis.websiteUrl;
+
+        source =
+          'website';
+
+        console.log(
+          '🎯 SOURCE: USER WEBSITE'
+        );
+      }
+
+      if (!targetPage) {
         return res.status(422).json({
           success: false,
           message:
-            'The ranking page blocked access (HTTP 403), so page evidence could not be collected.'
+            'Unable to determine a webpage for SEO data collection.'
         });
       }
 
-      return res.status(422).json({
-        success: false,
-        message:
-          'Unable to fetch the ranking page. Evidence collection requires access to the actual ranking page.'
-      });
-    }
+      /* ------------------------------------------------------------------ */
+      /* NORMALIZE TARGET URL                                                */
+      /* ------------------------------------------------------------------ */
 
-    if (
-      !pageData.title &&
-      !pageData.metaDescription &&
-      (!pageData.h1 || pageData.h1.length === 0) &&
-      (!pageData.content || !pageData.content.trim())
-    ) {
-      return res.status(422).json({
-        success: false,
-        message:
-          'The ranking page was fetched, but no usable page content was detected.'
-      });
-    }
+      let validTargetPage;
 
-    /* -------- Build normalized evidence object -------- */
+      try {
+        validTargetPage =
+          normalizeUrl(
+            targetPage
+          );
+      } catch {
+        return res.status(400).json({
+          success: false,
+          message:
+            'Unable to determine a valid webpage URL for SEO data collection.'
+        });
+      }
 
-    const evidence = {
-      title: pageData.title || '',
-      metaDescription: pageData.metaDescription || '',
-      canonical: pageData.canonical || '',
-      robots: pageData.robots || '',
-      viewport: pageData.viewport || '',
-      language: pageData.language || '',
+      const currentRank =
+        rank ??
+        storedResult.rank ??
+        'Not Found';
 
-      h1: pageData.h1 || [],
-      h2: pageData.h2 || [],
-      h3: pageData.h3 || [],
+      console.log(
+        '🎯 TARGET PAGE:',
+        validTargetPage
+      );
 
-      wordCount: pageData.wordCount || 0,
-      keywordOccurrences: pageData.keywordOccurrences || 0,
+      console.log(
+        '🎯 CURRENT RANK:',
+        currentRank
+      );
 
-      images: {
-        total: pageData.totalImages || 0,
-        withAlt: pageData.imagesWithAlt || 0,
-        missingAltSamples: pageData.missingAltSamples || []
-      },
+      console.log(
+        '🎯 DATA SOURCE:',
+        source
+      );
 
-      links: {
-        internal: (pageData.internalLinks || []).length,
-        external: (pageData.externalLinks || []).length
-      },
+      /* ------------------------------------------------------------------ */
+      /* FETCH SEO DATA                                                      */
+      /* ------------------------------------------------------------------ */
 
-      /* Content snippet is retained for Gemini but not
-         necessarily displayed in the UI. */
-      content: (pageData.content || '').slice(0, 6000),
+      const pageData =
+        await extractDetailedPageData(
+          validTargetPage,
+          String(keyword).trim()
+        );
 
-      internalLinksList: pageData.internalLinks || [],
-      externalLinksList: pageData.externalLinks || []
-    };
+      if (!pageData?.success) {
+        if (
+          pageData?.errorType ===
+          'FORBIDDEN'
+        ) {
+          return res.status(422).json({
+            success: false,
 
-    /* -------- Persist evidence on the analysis -------- */
+            message:
+              source ===
+              'ranking-page'
+                ? 'The ranking page blocked access (HTTP 403), so SEO data could not be collected.'
+                : 'Your website blocked access (HTTP 403), so SEO data could not be collected.'
+          });
+        }
 
-    const targetIndex = storedResults.findIndex(
-      (item) =>
-        String(item.keyword || '').trim().toLowerCase() ===
-        String(keyword).trim().toLowerCase()
-    );
+        return res.status(422).json({
+          success: false,
 
-    if (targetIndex >= 0) {
-      const existing =
-        storedResults[targetIndex].toObject?.() ??
-        storedResults[targetIndex];
+          message:
+            source ===
+            'ranking-page'
+              ? 'Unable to fetch the ranking page. SEO data collection requires access to the ranking page.'
+              : 'Unable to fetch your website. SEO data collection requires access to the website.'
+        });
+      }
 
-      storedResults[targetIndex] = {
-        ...existing,
-        rank: currentRank,
-        rankingUrl: validTargetPage,
-        evidence,
-        evidenceCollectedAt: new Date()
+      /* ------------------------------------------------------------------ */
+      /* CHECK WHETHER USABLE DATA EXISTS                                   */
+      /* ------------------------------------------------------------------ */
+
+      if (
+        !pageData.title &&
+        !pageData.metaDescription &&
+        (!pageData.h1 ||
+          pageData.h1.length === 0) &&
+        (!pageData.content ||
+          !pageData.content.trim())
+      ) {
+        return res.status(422).json({
+          success: false,
+
+          message:
+            source ===
+            'ranking-page'
+              ? 'The ranking page was fetched, but no usable SEO content was detected.'
+              : 'Your website was fetched, but no usable SEO content was detected.'
+        });
+      }
+
+      /* ------------------------------------------------------------------ */
+      /* BUILD NORMALIZED EVIDENCE                                           */
+      /* ------------------------------------------------------------------ */
+
+      const evidence = {
+        title:
+          pageData.title || '',
+
+        metaDescription:
+          pageData.metaDescription ||
+          '',
+
+        canonical:
+          pageData.canonical || '',
+
+        robots:
+          pageData.robots || '',
+
+        viewport:
+          pageData.viewport || '',
+
+        language:
+          pageData.language || '',
+
+        h1:
+          pageData.h1 || [],
+
+        h2:
+          pageData.h2 || [],
+
+        h3:
+          pageData.h3 || [],
+
+        wordCount:
+          pageData.wordCount || 0,
+
+        keywordOccurrences:
+          pageData.keywordOccurrences ||
+          0,
+
+        images: {
+          total:
+            pageData.totalImages ||
+            0,
+
+          withAlt:
+            pageData.imagesWithAlt ||
+            0,
+
+          missingAltSamples:
+            pageData.missingAltSamples ||
+            []
+        },
+
+        links: {
+          internal:
+            (
+              pageData.internalLinks ||
+              []
+            ).length,
+
+          external:
+            (
+              pageData.externalLinks ||
+              []
+            ).length
+        },
+
+        /*
+         * Keep the actual content for Gemini.
+         */
+        content:
+          (
+            pageData.content ||
+            ''
+          ).slice(0, 6000),
+
+        internalLinksList:
+          pageData.internalLinks ||
+          [],
+
+        externalLinksList:
+          pageData.externalLinks ||
+          []
       };
 
-      analysis.rankingData.results = storedResults;
-      analysis.markModified('rankingData.results');
+      /* ------------------------------------------------------------------ */
+      /* PERSIST EVIDENCE                                                    */
+      /* ------------------------------------------------------------------ */
 
-      await analysis.save();
-    }
+      const targetIndex =
+        storedResults.findIndex(
+          (item) =>
+            String(
+              item.keyword || ''
+            )
+              .trim()
+              .toLowerCase() ===
+            String(keyword)
+              .trim()
+              .toLowerCase()
+        );
 
-    console.log('================ EVIDENCE COLLECTION END ================\n');
+      if (targetIndex >= 0) {
+        const existing =
+          storedResults[
+            targetIndex
+          ].toObject?.() ??
+          storedResults[
+            targetIndex
+          ];
 
-    /* -------- Return the evidence for display -------- */
+        storedResults[
+          targetIndex
+        ] = {
+          ...existing,
 
-    return res.json({
-      success: true,
-      data: {
-        keyword: String(keyword).trim(),
-        currentRank,
-        targetPage: validTargetPage,
-        evidence: {
-          title: evidence.title,
-          metaDescription: evidence.metaDescription,
-          canonical: evidence.canonical,
-          robots: evidence.robots,
-          viewport: evidence.viewport,
-          language: evidence.language,
+          /*
+           * IMPORTANT:
+           * rankingUrl remains the real Google
+           * ranking URL.
+           *
+           * If there was no ranking page,
+           * it remains null.
+           */
+          rank: currentRank,
 
-          h1: evidence.h1,
-          h2: evidence.h2,
-          h3: evidence.h3,
+          rankingUrl:
+            existing.rankingUrl ||
+            null,
 
-          wordCount: evidence.wordCount,
-          keywordOccurrences: evidence.keywordOccurrences,
+          /*
+           * Store the source of the collected data.
+           */
+          evidenceSource:
+            source,
 
-          images: evidence.images,
-          links: evidence.links
-        }
+          /*
+           * Store which page was actually analyzed.
+           */
+          evidenceTargetPage:
+            validTargetPage,
+
+          evidence,
+
+          evidenceCollectedAt:
+            new Date()
+        };
+
+        analysis.rankingData.results =
+          storedResults;
+
+        analysis.markModified(
+          'rankingData.results'
+        );
+
+        await analysis.save();
       }
-    });
-  } catch (error) {
-    console.error('❌ COLLECT EVIDENCE FAILED:', error);
 
-    return res.status(500).json({
-      success: false,
-      message:
-        error.message || 'Unable to collect page evidence.'
-    });
-  }
-};
+      console.log(
+        '================ EVIDENCE COLLECTION END ================\n'
+      );
 
-/* ==========================================================================
-   POST /api/analysis/optimize-keyword
-   ----------------------------------------------------------
-   Stage 2: Uses previously collected evidence (verified
-   server-side) and asks Gemini for keyword optimization
-   suggestions. This endpoint never scrapes a page.
-========================================================================== */
+      /* ------------------------------------------------------------------ */
+      /* RETURN SEO DATA TO FRONTEND                                         */
+      /* ------------------------------------------------------------------ */
 
-export const optimizeKeyword = async (req, res) => {
-  try {
-    const { analysisId, keyword } = req.body;
+      return res.json({
+        success: true,
 
-    console.log('\n================ OPTIMIZATION START ================');
-    console.log('analysisId:', analysisId);
-    console.log('keyword:', keyword);
+        data: {
+          keyword:
+            String(keyword).trim(),
 
-    if (!analysisId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Analysis ID is required.'
+          currentRank,
+
+          /*
+           * This is the page whose SEO data
+           * was actually collected.
+           */
+          targetPage:
+            validTargetPage,
+
+          /*
+           * ranking-page = Google ranking page
+           * website       = user's own website
+           */
+          source,
+
+          evidence: {
+            title:
+              evidence.title,
+
+            metaDescription:
+              evidence.metaDescription,
+
+            canonical:
+              evidence.canonical,
+
+            robots:
+              evidence.robots,
+
+            viewport:
+              evidence.viewport,
+
+            language:
+              evidence.language,
+
+            h1:
+              evidence.h1,
+
+            h2:
+              evidence.h2,
+
+            h3:
+              evidence.h3,
+
+            wordCount:
+              evidence.wordCount,
+
+            keywordOccurrences:
+              evidence.keywordOccurrences,
+
+            images:
+              evidence.images,
+
+            links:
+              evidence.links
+          }
+        }
       });
-    }
+    } catch (error) {
+      console.error(
+        '❌ COLLECT EVIDENCE FAILED:',
+        error
+      );
 
-    if (!keyword || !String(keyword).trim()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Keyword is required.'
-      });
-    }
-
-    const analysis = await getAnalysisForUser(analysisId, req.userId);
-
-    if (!analysis) {
-      return res.status(404).json({
-        success: false,
-        message: 'Analysis not found.'
-      });
-    }
-
-    const storedResults = analysis.rankingData?.results || [];
-
-    const storedResult = storedResults.find(
-      (item) =>
-        String(item.keyword || '').trim().toLowerCase() ===
-        String(keyword).trim().toLowerCase()
-    );
-
-    if (!storedResult) {
-      return res.status(404).json({
-        success: false,
-        message: `Keyword "${keyword}" was not found in this analysis.`
-      });
-    }
-
-    const plainResult =
-      storedResult.toObject?.() ?? storedResult;
-
-    const evidence = plainResult.evidence;
-
-    if (!evidence) {
-      return res.status(422).json({
-        success: false,
-        message:
-          'No evidence has been collected for this keyword yet. Please collect evidence first.'
-      });
-    }
-
-    const targetPage = plainResult.rankingUrl;
-
-    if (!targetPage) {
-      return res.status(422).json({
-        success: false,
-        message:
-          'No ranking page was found for this keyword. Run the analysis again with a sufficient search depth.'
-      });
-    }
-
-    const currentRank = plainResult.rank ?? 'Not Found';
-
-    console.log('🎯 TARGET PAGE:', targetPage);
-    console.log('🎯 CURRENT RANK:', currentRank);
-
-    const optimization = await generateKeywordOptimization({
-      keyword: String(keyword).trim(),
-      currentRank,
-      targetPage,
-      websiteUrl: analysis.websiteUrl,
-      country: analysis.country || DEFAULT_COUNTRY,
-
-      title: evidence.title || '',
-      metaDescription: evidence.metaDescription || '',
-      canonical: evidence.canonical || '',
-      robots: evidence.robots || '',
-      viewport: evidence.viewport || '',
-      language: evidence.language || '',
-
-      h1: evidence.h1 || [],
-      headings: {
-        h2s: evidence.h2 || [],
-        h3s: evidence.h3 || []
-      },
-
-      content: evidence.content || '',
-      wordCount: evidence.wordCount || 0,
-
-      images: {
-        total: evidence.images?.total || 0,
-        withAlt: evidence.images?.withAlt || 0,
-        missingAltSamples: evidence.images?.missingAltSamples || []
-      },
-
-      internalLinks: evidence.links?.internal || 0,
-      externalLinks: evidence.links?.external || 0,
-
-      keywordOccurrences: evidence.keywordOccurrences || 0,
-
-      serpTitle: plainResult.serpTitle || '',
-      serpSnippet: plainResult.serpSnippet || ''
-    });
-
-    if (!optimization) {
       return res.status(500).json({
         success: false,
-        message: 'No optimization result was generated.'
+
+        message:
+          error.message ||
+          'Unable to collect SEO data.'
       });
     }
+  };
 
-    console.log('================ OPTIMIZATION END ================\n');
+/* ========================================================================== */
+/* POST /api/analysis/optimize-keyword                                        */
+/*                                                                            */
+/* Stage 2:                                                                  */
+/* Uses previously collected SEO evidence and asks Gemini for optimization   */
+/* suggestions.                                                              */
+/*                                                                            */
+/* This endpoint does NOT scrape the page again.                              */
+/* ========================================================================== */
 
-    return res.json({
-      success: true,
-      data: {
-        ...optimization,
-        current: {
-          title: evidence.title || '',
-          metaDescription: evidence.metaDescription || '',
-          canonical: evidence.canonical || '',
-          robots: evidence.robots || '',
-          viewport: evidence.viewport || '',
-          language: evidence.language || '',
-          h1: evidence.h1 || [],
-          h2: evidence.h2 || [],
-          h3: evidence.h3 || [],
-          keywordOccurrences: evidence.keywordOccurrences || 0,
-          wordCount: evidence.wordCount || 0
-        }
+export const optimizeKeyword =
+  async (req, res) => {
+    try {
+      const {
+        analysisId,
+        keyword
+      } = req.body;
+
+      console.log(
+        '\n================ OPTIMIZATION START ================'
+      );
+
+      console.log(
+        'analysisId:',
+        analysisId
+      );
+
+      console.log(
+        'keyword:',
+        keyword
+      );
+
+      if (!analysisId) {
+        return res.status(400).json({
+          success: false,
+          message:
+            'Analysis ID is required.'
+        });
       }
-    });
-  } catch (error) {
-    console.error('❌ OPTIMIZE KEYWORD FAILED:', error);
 
-    return res.status(500).json({
-      success: false,
-      message:
-        error.message ||
-        'Unable to generate optimization suggestions.'
-    });
-  }
-};
+      if (
+        !keyword ||
+        !String(keyword).trim()
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            'Keyword is required.'
+        });
+      }
+
+      const analysis =
+        await getAnalysisForUser(
+          analysisId,
+          req.userId
+        );
+
+      if (!analysis) {
+        return res.status(404).json({
+          success: false,
+          message:
+            'Analysis not found.'
+        });
+      }
+
+      const storedResults =
+        analysis.rankingData
+          ?.results || [];
+
+      const storedResult =
+        storedResults.find(
+          (item) =>
+            String(
+              item.keyword || ''
+            )
+              .trim()
+              .toLowerCase() ===
+            String(keyword)
+              .trim()
+              .toLowerCase()
+        );
+
+      if (!storedResult) {
+        return res.status(404).json({
+          success: false,
+          message: `Keyword "${keyword}" was not found in this analysis.`
+        });
+      }
+
+      const plainResult =
+        storedResult.toObject?.() ??
+        storedResult;
+
+      /* ------------------------------------------------------------------ */
+      /* EVIDENCE CHECK                                                      */
+      /* ------------------------------------------------------------------ */
+
+      const evidence =
+        plainResult.evidence;
+
+      if (!evidence) {
+        return res.status(422).json({
+          success: false,
+
+          message:
+            'No SEO data has been collected for this keyword yet. Please fetch SEO data first.'
+        });
+      }
+
+      /* ------------------------------------------------------------------ */
+      /* DETERMINE ACTUAL TARGET PAGE                                       */
+      /* ------------------------------------------------------------------ */
+
+      /*
+       * If SEO data came from a ranking page,
+       * use that page.
+       *
+       * If SEO data came from the user's website,
+       * use the saved evidence target page.
+       *
+       * Final fallback:
+       * analysis.websiteUrl
+       */
+
+      const targetPage =
+        plainResult.evidenceTargetPage ||
+        plainResult.rankingUrl ||
+        analysis.websiteUrl;
+
+      const source =
+        plainResult.evidenceSource ||
+        (
+          plainResult.rankingUrl
+            ? 'ranking-page'
+            : 'website'
+        );
+
+      if (!targetPage) {
+        return res.status(422).json({
+          success: false,
+
+          message:
+            'Unable to determine the webpage used for SEO analysis.'
+        });
+      }
+
+      const currentRank =
+        plainResult.rank ??
+        'Not Found';
+
+      console.log(
+        '🎯 TARGET PAGE:',
+        targetPage
+      );
+
+      console.log(
+        '🎯 CURRENT RANK:',
+        currentRank
+      );
+
+      console.log(
+        '🎯 DATA SOURCE:',
+        source
+      );
+
+      /* ------------------------------------------------------------------ */
+      /* GEMINI OPTIMIZATION                                                 */
+      /* ------------------------------------------------------------------ */
+
+      const optimization =
+        await generateKeywordOptimization({
+          keyword:
+            String(keyword).trim(),
+
+          currentRank,
+
+          targetPage,
+
+          websiteUrl:
+            analysis.websiteUrl,
+
+          country:
+            analysis.country ||
+            DEFAULT_COUNTRY,
+
+          title:
+            evidence.title || '',
+
+          metaDescription:
+            evidence.metaDescription ||
+            '',
+
+          canonical:
+            evidence.canonical || '',
+
+          robots:
+            evidence.robots || '',
+
+          viewport:
+            evidence.viewport || '',
+
+          language:
+            evidence.language || '',
+
+          h1:
+            evidence.h1 || [],
+
+          headings: {
+            h2s:
+              evidence.h2 || [],
+
+            h3s:
+              evidence.h3 || []
+          },
+
+          content:
+            evidence.content || '',
+
+          wordCount:
+            evidence.wordCount || 0,
+
+          images: {
+            total:
+              evidence.images
+                ?.total || 0,
+
+            withAlt:
+              evidence.images
+                ?.withAlt || 0,
+
+            missingAltSamples:
+              evidence.images
+                ?.missingAltSamples ||
+              []
+          },
+
+          internalLinks:
+            evidence.links
+              ?.internal || 0,
+
+          externalLinks:
+            evidence.links
+              ?.external || 0,
+
+          keywordOccurrences:
+            evidence.keywordOccurrences ||
+            0,
+
+          serpTitle:
+            plainResult.serpTitle ||
+            '',
+
+          serpSnippet:
+            plainResult.serpSnippet ||
+            ''
+        });
+
+      if (!optimization) {
+        return res.status(500).json({
+          success: false,
+
+          message:
+            'No optimization result was generated.'
+        });
+      }
+
+      console.log(
+        '================ OPTIMIZATION END ================\n'
+      );
+
+      /* ------------------------------------------------------------------ */
+      /* RETURN OPTIMIZATION                                                 */
+      /* ------------------------------------------------------------------ */
+
+      return res.json({
+        success: true,
+
+        data: {
+          ...optimization,
+
+          /*
+           * Tell frontend where the SEO data
+           * came from.
+           */
+          source,
+
+          targetPage,
+
+          current: {
+            title:
+              evidence.title || '',
+
+            metaDescription:
+              evidence.metaDescription ||
+              '',
+
+            canonical:
+              evidence.canonical || '',
+
+            robots:
+              evidence.robots || '',
+
+            viewport:
+              evidence.viewport || '',
+
+            language:
+              evidence.language || '',
+
+            h1:
+              evidence.h1 || [],
+
+            h2:
+              evidence.h2 || [],
+
+            h3:
+              evidence.h3 || [],
+
+            keywordOccurrences:
+              evidence.keywordOccurrences ||
+              0,
+
+            wordCount:
+              evidence.wordCount ||
+              0
+          }
+        }
+      });
+    } catch (error) {
+      console.error(
+        '❌ OPTIMIZE KEYWORD FAILED:',
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+
+        message:
+          error.message ||
+          'Unable to generate optimization suggestions.'
+      });
+    }
+  };
