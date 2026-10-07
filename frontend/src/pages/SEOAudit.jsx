@@ -38,7 +38,10 @@ const SEOAudit = () => {
 
     let websiteUrl = url.trim();
 
-    if (!websiteUrl.startsWith("http://") && !websiteUrl.startsWith("https://")) {
+    if (
+      !websiteUrl.startsWith("http://") &&
+      !websiteUrl.startsWith("https://")
+    ) {
       websiteUrl = `https://${websiteUrl}`;
     }
 
@@ -175,13 +178,34 @@ const SEOAudit = () => {
     </div>
   );
 
+  // ---------------------------------------------------------
+  // Score color
+  // ---------------------------------------------------------
+  const score = result?.score ?? 0;
+
+  const scoreColor =
+    score >= 80
+      ? "#22C55E" // Green
+      : score >= 50
+      ? "#F59E0B" // Orange
+      : "#EF4444"; // Red
+
+  const scoreBackground =
+    score >= 80
+      ? "rgba(34, 197, 94, 0.15)"
+      : score >= 50
+      ? "rgba(245, 158, 11, 0.15)"
+      : "rgba(239, 68, 68, 0.15)";
+
   return (
     <div className="min-h-screen bg-[#F5EBDD] dark:bg-[#1A0F0A] p-6 transition-colors duration-300 relative overflow-hidden">
 
       {/* Background glows */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-[#7A5236]/15 dark:bg-[#A47551]/20 rounded-full blur-3xl" />
+
         <div className="absolute top-1/2 -left-40 w-96 h-96 bg-[#A47551]/15 dark:bg-[#7A5236]/15 rounded-full blur-3xl" />
+
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#D4B59E]/20 dark:bg-[#3E2723]/40 rounded-full blur-3xl" />
       </div>
 
@@ -252,7 +276,9 @@ const SEOAudit = () => {
           </div>
 
           <p className="mt-2 text-xs text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
-            Enter a URL with or without <span className="font-mono">https://</span> — we'll add it automatically.
+            Enter a URL with or without{" "}
+            <span className="font-mono">https://</span> — we'll add it
+            automatically.
           </p>
 
           {error && (
@@ -311,10 +337,22 @@ const SEOAudit = () => {
 
                 <div className="flex items-center gap-5">
 
-                  <div className="w-32 h-32 rounded-full border-8 border-[#7A5236]/15 dark:border-[#A47551]/25 flex items-center justify-center">
-                    <div className="text-center">
-                      <p className="text-3xl font-bold text-[#7A5236] dark:text-[#D4B59E]">
-                        {result.score ?? 0}
+                  {/* Dynamic Score Circle */}
+                  <div
+                    className="w-32 h-32 rounded-full flex items-center justify-center"
+                    style={{
+                      background: `conic-gradient(
+                        ${scoreColor} ${score * 3.6}deg,
+                        ${scoreBackground} ${score * 3.6}deg
+                      )`,
+                    }}
+                  >
+                    <div className="w-24 h-24 rounded-full bg-white dark:bg-[#251710] flex flex-col items-center justify-center">
+                      <p
+                        className="text-3xl font-bold"
+                        style={{ color: scoreColor }}
+                      >
+                        {score}
                       </p>
 
                       <p className="text-xs text-[#5E3E28]/70 dark:text-[#D4B59E]/60">
@@ -328,8 +366,11 @@ const SEOAudit = () => {
                       Overall SEO Score
                     </p>
 
-                    <p className="text-lg font-bold text-[#1A0F0A] dark:text-white">
-                      {getScoreStatus(result.score ?? 0).label}
+                    <p
+                      className="text-lg font-bold"
+                      style={{ color: scoreColor }}
+                    >
+                      {getScoreStatus(score).label}
                     </p>
                   </div>
 
@@ -405,7 +446,8 @@ const SEOAudit = () => {
                       </p>
 
                       <p className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60 mt-1">
-                        {result.metaDescription || "No meta description found"}
+                        {result.metaDescription ||
+                          "No meta description found"}
                       </p>
                     </div>
 
@@ -556,11 +598,13 @@ const SEOAudit = () => {
                 </div>
               ) : (
                 <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/25 rounded-xl">
+
                   <CheckCircle className="w-5 h-5 text-green-500" />
 
                   <p className="text-green-700 dark:text-green-300">
                     No major SEO issues were detected.
                   </p>
+
                 </div>
               )}
             </div>
@@ -569,6 +613,7 @@ const SEOAudit = () => {
             <div className="bg-white/90 dark:bg-[#251710]/80 backdrop-blur-xl border border-[#7A5236]/15 dark:border-[#A47551]/25 rounded-2xl p-6 shadow-lg shadow-[#7A5236]/5 dark:shadow-black/40">
 
               <div className="flex items-center gap-3 mb-2">
+
                 <div className="p-2 rounded-lg bg-[#A47551]/10 dark:bg-[#A47551]/15">
                   <Sparkles className="w-5 h-5 text-[#A47551] dark:text-[#D4B59E]" />
                 </div>
@@ -576,10 +621,12 @@ const SEOAudit = () => {
                 <h2 className="text-xl font-semibold text-[#1A0F0A] dark:text-white">
                   AI Optimization Suggestions
                 </h2>
+
               </div>
 
               <p className="text-sm text-[#5E3E28]/70 dark:text-[#D4B59E]/60 mb-5">
-                Generate evidence-based recommendations from the audit findings above.
+                Generate evidence-based recommendations from the audit findings
+                above.
               </p>
 
               <button
@@ -604,25 +651,31 @@ const SEOAudit = () => {
 
               {suggestionsError && (
                 <div className="mt-5 p-4 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-xl flex items-center gap-3">
+
                   <XCircle className="w-5 h-5 text-rose-500 shrink-0" />
 
                   <p className="text-sm text-rose-700 dark:text-rose-300">
                     {suggestionsError}
                   </p>
+
                 </div>
               )}
 
               {suggestions && suggestions.length > 0 && (
                 <div className="mt-6 space-y-4">
+
                   {suggestions.map((s, i) => (
                     <div
                       key={i}
                       className="p-5 rounded-xl bg-[#F5EBDD] dark:bg-[#A47551]/10 border border-[#7A5236]/20 dark:border-[#A47551]/25"
                     >
+
                       <div className="flex items-start gap-3">
+
                         <Sparkles className="w-5 h-5 text-[#A47551] dark:text-[#D4B59E] shrink-0 mt-0.5" />
 
                         <div className="flex-1">
+
                           <h3 className="font-semibold text-[#1A0F0A] dark:text-white">
                             {s.issue}
                           </h3>
@@ -640,10 +693,12 @@ const SEOAudit = () => {
                             </span>{" "}
                             {s.recommendation}
                           </p>
+
                         </div>
                       </div>
                     </div>
                   ))}
+
                 </div>
               )}
 
@@ -652,6 +707,7 @@ const SEOAudit = () => {
                   No optimization suggestions were returned.
                 </p>
               )}
+
             </div>
 
             {/* Re-analyze */}
